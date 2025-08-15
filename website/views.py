@@ -10,8 +10,8 @@ def home(request):
         'tagline': 'Software Developer & Strategic Businessman',
         'description': 'Building innovative solutions through code and driving business growth through strategic thinking',
         'email': 'abdurakhmon@mkhmd.uk',
-        'github': 'https://github.com/abdurakhmon',
-        'linkedin': 'https://linkedin.com/in/abdurakhmon',
+        'github': 'https://github.com/mukhammad-develop',
+        'linkedin': 'https://linkedin.com/in/abdurakhmon-dev',
         
         # Software Developer Identity
         'dev_skills': [
