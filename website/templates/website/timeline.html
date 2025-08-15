@@ -1,0 +1,617 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .timeline-container {
+        position: relative;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 0;
+    }
+
+    .timeline-line {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, var(--primary-purple), var(--light-purple));
+        transform: translateX(-50%);
+        opacity: 0.3;
+    }
+
+    .timeline-progress {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 3px;
+        background: var(--primary-purple);
+        transform: translateX(-50%);
+        transition: height 0.3s ease;
+        box-shadow: 0 0 10px var(--primary-purple);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 4rem;
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.6s ease;
+    }
+
+    .timeline-item.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .timeline-item:nth-child(odd) .timeline-content {
+        margin-left: 0;
+        margin-right: calc(50% + 2rem);
+        text-align: right;
+    }
+
+    .timeline-item:nth-child(even) .timeline-content {
+        margin-left: calc(50% + 2rem);
+        margin-right: 0;
+        text-align: left;
+    }
+
+    .timeline-content {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 15px;
+        padding: 2.5rem;
+        position: relative;
+        transition: all 0.4s ease;
+        cursor: pointer;
+    }
+
+    .timeline-content::before {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        border: 15px solid transparent;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .timeline-item:nth-child(odd) .timeline-content::before {
+        right: -30px;
+        border-left-color: var(--border-gray);
+    }
+
+    .timeline-item:nth-child(even) .timeline-content::before {
+        left: -30px;
+        border-right-color: var(--border-gray);
+    }
+
+    .timeline-content:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-purple);
+        box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+    }
+
+    .timeline-content:hover::before {
+        border-left-color: var(--primary-purple);
+        border-right-color: var(--primary-purple);
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        background: var(--primary-purple);
+        border: 4px solid var(--pure-black);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .timeline-dot:hover {
+        transform: translate(-50%, -50%) scale(1.3);
+        box-shadow: 0 0 20px var(--primary-purple);
+    }
+
+    .timeline-year {
+        position: absolute;
+        left: 50%;
+        top: -40px;
+        transform: translateX(-50%);
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    .timeline-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--primary-purple);
+        border-radius: 50%;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid rgba(139, 92, 246, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .timeline-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--pure-white);
+    }
+
+    .timeline-description {
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-type {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+    }
+
+    .timeline-type.technical {
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--light-purple);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .timeline-type.business {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .timeline-type.education {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .achievements-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .achievements-list li {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .achievements-list li::before {
+        content: '▸';
+        position: absolute;
+        left: 0;
+        color: var(--primary-purple);
+        font-weight: 600;
+    }
+
+    .timeline-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .stat-item {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        border-color: var(--primary-purple);
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-purple);
+        margin-bottom: 0.5rem;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-label {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .timeline-filter {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 0.6rem 1.5rem;
+        background: transparent;
+        color: var(--text-gray);
+        border: 2px solid var(--border-gray);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        border-radius: 20px;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border-color: var(--primary-purple);
+    }
+
+    @media (max-width: 768px) {
+        .timeline-line {
+            left: 2rem;
+        }
+
+        .timeline-progress {
+            left: 2rem;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content,
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: 4rem;
+            margin-right: 0;
+            text-align: left;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content::before,
+        .timeline-item:nth-child(even) .timeline-content::before {
+            left: -30px;
+            right: auto;
+            border-right-color: var(--border-gray);
+            border-left-color: transparent;
+        }
+
+        .timeline-dot {
+            left: 2rem;
+        }
+
+        .timeline-year {
+            left: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h1 class="section-title">Professional Journey</h1>
+        <p class="section-subtitle">A chronological timeline of my career milestones, achievements, and growth</p>
+    </div>
+
+    <!-- Timeline Stats -->
+    <div class="timeline-stats">
+        <div class="stat-item">
+            <div class="stat-number">5+</div>
+            <div class="stat-label">Years Experience</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">10+</div>
+            <div class="stat-label">Major Milestones</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">3</div>
+            <div class="stat-label">Career Pivots</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">15+</div>
+            <div class="stat-label">Key Achievements</div>
+        </div>
+    </div>
+
+    <!-- Timeline Filter -->
+    <div class="timeline-filter">
+        <button class="filter-btn active" data-filter="all">All Events</button>
+        <button class="filter-btn" data-filter="technical">Technical</button>
+        <button class="filter-btn" data-filter="business">Business</button>
+        <button class="filter-btn" data-filter="education">Education</button>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-container">
+        <div class="timeline-line"></div>
+        <div class="timeline-progress" id="timelineProgress"></div>
+
+        {% for event in timeline_events %}
+        <div class="timeline-item" data-type="{{ event.type }}">
+            <div class="timeline-year">{{ event.year }}</div>
+            <div class="timeline-dot" onclick="showEventDetails('{{ event.title }}', '{{ event.description }}', '{{ event.type }}')"></div>
+            <div class="timeline-content">
+                <span class="timeline-type {{ event.type }}">{{ event.type|title }}</span>
+                <div class="timeline-icon">
+                    <i class="{{ event.icon }}"></i>
+                </div>
+                <h3 class="timeline-title">{{ event.title }}</h3>
+                <p class="timeline-description">{{ event.description }}</p>
+                <ul class="achievements-list">
+                    {% for achievement in event.achievements %}
+                    <li>{{ achievement }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Event Details Modal -->
+<div class="achievement-modal" id="eventModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeEventModal()">&times;</button>
+        <div id="eventModalContent">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Timeline scroll progress
+    function updateTimelineProgress() {
+        const timeline = document.querySelector('.timeline-container');
+        const progress = document.getElementById('timelineProgress');
+        const timelineRect = timeline.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        
+        if (timelineRect.top <= viewportHeight && timelineRect.bottom >= 0) {
+            const scrolled = Math.max(0, viewportHeight - timelineRect.top);
+            const total = timelineRect.height + viewportHeight;
+            const percentage = Math.min(1, scrolled / total);
+            
+            progress.style.height = (percentage * 100) + '%';
+        }
+    }
+
+    // Animate timeline items on scroll
+    function animateTimelineItems() {
+        const items = document.querySelectorAll('.timeline-item');
+        const viewportHeight = window.innerHeight;
+        
+        items.forEach(item => {
+            const rect = item.getBoundingClientRect();
+            if (rect.top <= viewportHeight * 0.8) {
+                item.classList.add('animate');
+                
+                // Add sparkle effect when item comes into view
+                if (!item.hasAttribute('data-animated')) {
+                    item.setAttribute('data-animated', 'true');
+                    createTimelineSparkle(item);
+                }
+            }
+        });
+    }
+
+    function createTimelineSparkle(item) {
+        const dot = item.querySelector('.timeline-dot');
+        const rect = dot.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+                createSparkleParticle(centerX, centerY, i);
+            }, i * 100);
+        }
+    }
+
+    function createSparkleParticle(x, y, index) {
+        const particle = document.createElement('div');
+        const angle = (Math.PI * 2 * index) / 6;
+        const distance = 15 + Math.random() * 10;
+        
+        particle.style.position = 'fixed';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.width = '4px';
+        particle.style.height = '4px';
+        particle.style.background = 'var(--primary-purple)';
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '10000';
+        particle.style.opacity = '1';
+        particle.style.boxShadow = '0 0 8px var(--primary-purple)';
+        particle.style.transition = 'all 0.6s ease-out';
+        
+        document.body.appendChild(particle);
+        
+        requestAnimationFrame(() => {
+            const endX = x + Math.cos(angle) * distance;
+            const endY = y + Math.sin(angle) * distance;
+            
+            particle.style.left = endX + 'px';
+            particle.style.top = endY + 'px';
+            particle.style.opacity = '0';
+            particle.style.transform = 'scale(0)';
+        });
+        
+        setTimeout(() => particle.remove(), 600);
+    }
+
+    // Filter functionality
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const timelineItems = document.querySelectorAll('.timeline-item');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.dataset.filter;
+            
+            // Update active button
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Filter timeline items
+            timelineItems.forEach(item => {
+                const itemType = item.dataset.type;
+                
+                if (filter === 'all' || itemType === filter) {
+                    item.style.display = 'block';
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateY(0)';
+                    }, 100);
+                } else {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(-20px)';
+                    
+                    setTimeout(() => {
+                        item.style.display = 'none';
+                    }, 300);
+                }
+            });
+            
+            // Create filter effect
+            createFilterEffect(btn);
+        });
+    });
+
+    function createFilterEffect(btn) {
+        const rect = btn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                const angle = (Math.PI * 2 * i) / 8;
+                const distance = 20 + Math.random() * 10;
+                
+                particle.style.position = 'fixed';
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                particle.style.width = '3px';
+                particle.style.height = '3px';
+                particle.style.background = 'var(--primary-purple)';
+                particle.style.borderRadius = '50%';
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '10000';
+                particle.style.opacity = '1';
+                particle.style.boxShadow = '0 0 6px var(--primary-purple)';
+                particle.style.transition = 'all 0.5s ease-out';
+                
+                document.body.appendChild(particle);
+                
+                requestAnimationFrame(() => {
+                    const endX = centerX + Math.cos(angle) * distance;
+                    const endY = centerY + Math.sin(angle) * distance;
+                    
+                    particle.style.left = endX + 'px';
+                    particle.style.top = endY + 'px';
+                    particle.style.opacity = '0';
+                    particle.style.transform = 'scale(0)';
+                });
+                
+                setTimeout(() => particle.remove(), 500);
+            }, i * 30);
+        }
+    }
+
+    // Event details modal
+    function showEventDetails(title, description, type) {
+        const modal = document.getElementById('eventModal');
+        const modalContent = document.getElementById('eventModalContent');
+        
+        modalContent.innerHTML = `
+            <div style="text-align: center;">
+                <div class="timeline-type ${type}" style="margin-bottom: 1rem;">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                <h2 style="color: var(--pure-white); margin-bottom: 1rem;">${title}</h2>
+                <p style="color: var(--text-gray); margin-bottom: 2rem; line-height: 1.6;">${description}</p>
+                <div style="background: var(--charcoal); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">📋 Event Details</h3>
+                    <p style="color: var(--text-gray);">
+                        Detailed information about this milestone, including context, 
+                        impact, and lessons learned will be available in the full timeline view.
+                    </p>
+                </div>
+                <div class="btn btn-primary" onclick="closeEventModal()">
+                    <i class="fas fa-check"></i> Close
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
+        modal.style.opacity = '0';
+        
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+        });
+    }
+
+    function closeEventModal() {
+        const modal = document.getElementById('eventModal');
+        modal.style.opacity = '0';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('eventModal').addEventListener('click', (e) => {
+        if (e.target.classList.contains('achievement-modal')) {
+            closeEventModal();
+        }
+    });
+
+    // Scroll event listeners
+    window.addEventListener('scroll', () => {
+        updateTimelineProgress();
+        animateTimelineItems();
+    });
+
+    // Initial load
+    updateTimelineProgress();
+    animateTimelineItems();
+
+    // Add hover effects to timeline content
+    document.querySelectorAll('.timeline-content').forEach(content => {
+        content.addEventListener('mouseenter', () => {
+            const icon = content.querySelector('.timeline-icon');
+            icon.style.transform = 'scale(1.1) rotate(5deg)';
+            icon.style.background = 'var(--primary-purple)';
+            icon.style.color = 'var(--pure-white)';
+        });
+        
+        content.addEventListener('mouseleave', () => {
+            const icon = content.querySelector('.timeline-icon');
+            icon.style.transform = 'scale(1) rotate(0deg)';
+            icon.style.background = 'rgba(139, 92, 246, 0.1)';
+            icon.style.color = 'var(--primary-purple)';
+        });
+    });
+</script>
+{% endblock %} 

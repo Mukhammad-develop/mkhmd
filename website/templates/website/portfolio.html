@@ -1,0 +1,584 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .filter-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 0.8rem 2rem;
+        background: transparent;
+        color: var(--text-gray);
+        border: 2px solid var(--border-gray);
+        cursor: pointer;
+        transition: all 0.4s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        border-radius: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .filter-tab.active {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border-color: var(--primary-purple);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    .filter-tab:hover:not(.active) {
+        border-color: var(--primary-purple);
+        color: var(--primary-purple);
+        transform: translateY(-2px);
+    }
+
+    .project-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .project-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary-purple), var(--light-purple));
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .project-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .project-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary-purple);
+        box-shadow: 0 25px 50px rgba(139, 92, 246, 0.2);
+    }
+
+    .project-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, var(--charcoal), var(--soft-black));
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--primary-purple);
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .project-content {
+        padding: 2rem;
+    }
+
+    .project-status {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        font-size: 0.7rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .project-status.live {
+        background: #10b981;
+    }
+
+    .project-status.production {
+        background: #f59e0b;
+    }
+
+    .project-status.enterprise {
+        background: #8b5cf6;
+    }
+
+    .project-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+        color: var(--pure-white);
+    }
+
+    .project-description {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tech-tag {
+        padding: 0.3rem 0.8rem;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--light-purple);
+        font-size: 0.75rem;
+        border-radius: 12px;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .project-links {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .project-link {
+        padding: 0.5rem 1rem;
+        background: transparent;
+        color: var(--primary-purple);
+        border: 1px solid var(--primary-purple);
+        text-decoration: none;
+        font-size: 0.8rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .project-link:hover {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        transform: translateY(-1px);
+    }
+
+    .metrics-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .portfolio-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .stat-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-purple);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+        border-color: var(--primary-purple);
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-purple);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .project-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .modal-content {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 15px;
+        max-width: 800px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        color: var(--text-gray);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .modal-close:hover {
+        color: var(--primary-purple);
+    }
+
+    @media (max-width: 768px) {
+        .filter-tabs {
+            gap: 0.5rem;
+        }
+
+        .filter-tab {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.8rem;
+        }
+
+        .project-links {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h1 class="section-title">Portfolio Showcase</h1>
+        <p class="section-subtitle">Discover my development projects and business ventures across different domains</p>
+    </div>
+
+    <!-- Portfolio Stats -->
+    <div class="portfolio-stats">
+        <div class="stat-card">
+            <div class="stat-number">50+</div>
+            <div class="stat-label">Projects Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">1M+</div>
+            <div class="stat-label">Users Served</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">$10M+</div>
+            <div class="stat-label">Revenue Generated</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">99.9%</div>
+            <div class="stat-label">Uptime Average</div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">
+            <i class="fas fa-th"></i> All Projects
+        </button>
+        <button class="filter-tab" data-filter="developer">
+            <i class="fas fa-code"></i> Development
+        </button>
+        <button class="filter-tab" data-filter="business">
+            <i class="fas fa-briefcase"></i> Business
+        </button>
+    </div>
+
+    <!-- Developer Projects -->
+    <div id="developer-projects" class="grid-3">
+        {% for project in dev_projects %}
+        <div class="project-card card" data-category="developer" data-project="{{ forloop.counter }}">
+            <div class="project-image">
+                <i class="fas fa-laptop-code"></i>
+            </div>
+            <div class="project-content">
+                <span class="project-status {{ project.status|lower }}">{{ project.status }}</span>
+                <h3 class="project-title">{{ project.title }}</h3>
+                <p class="project-description">{{ project.description }}</p>
+                
+                <div class="tech-stack">
+                    {% for tech in project.tech_stack %}
+                    <span class="tech-tag">{{ tech }}</span>
+                    {% endfor %}
+                </div>
+                
+                <div class="project-links">
+                    <a href="{{ project.github }}" class="project-link" target="_blank">
+                        <i class="fab fa-github"></i> Code
+                    </a>
+                    <a href="{{ project.demo }}" class="project-link" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Demo
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Business Projects -->
+    <div id="business-projects" class="grid-3" style="margin-top: 3rem;">
+        {% for project in business_projects %}
+        <div class="project-card card" data-category="business" data-project="{{ forloop.counter }}">
+            <div class="project-image">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="project-content">
+                <span class="project-status {{ project.status|lower|cut:' ' }}">{{ project.status }}</span>
+                <h3 class="project-title">{{ project.title }}</h3>
+                <p class="project-description">{{ project.description }}</p>
+                
+                <div class="tech-stack">
+                    {% for metric in project.metrics %}
+                    <span class="metrics-badge">
+                        <i class="fas fa-chart-bar"></i> {{ metric }}
+                    </span>
+                    {% endfor %}
+                </div>
+                
+                <div class="project-links">
+                    <a href="#" class="project-link">
+                        <i class="fas fa-file-alt"></i> Case Study
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Project Modal -->
+<div class="project-modal" id="projectModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div id="modalContent">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter functionality
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const projectCards = document.querySelectorAll('.project-card');
+
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const filter = tab.dataset.filter;
+            
+            // Update active tab
+            filterTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Filter projects with animation
+            projectCards.forEach(card => {
+                const category = card.dataset.category;
+                
+                if (filter === 'all' || category === filter) {
+                    card.style.display = 'block';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                } else {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-20px)';
+                    
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+            
+            // Create filter effect particles
+            createFilterEffect(tab);
+        });
+    });
+
+    function createFilterEffect(tab) {
+        const rect = tab.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                createFilterParticle(centerX, centerY, i);
+            }, i * 30);
+        }
+    }
+
+    function createFilterParticle(x, y, index) {
+        const particle = document.createElement('div');
+        const angle = (Math.PI * 2 * index) / 8;
+        const distance = 25 + Math.random() * 15;
+        
+        particle.style.position = 'fixed';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.width = '4px';
+        particle.style.height = '4px';
+        particle.style.background = 'var(--primary-purple)';
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '10000';
+        particle.style.opacity = '1';
+        particle.style.boxShadow = '0 0 8px var(--primary-purple)';
+        particle.style.transition = 'all 0.6s ease-out';
+        
+        document.body.appendChild(particle);
+        
+        requestAnimationFrame(() => {
+            const endX = x + Math.cos(angle) * distance;
+            const endY = y + Math.sin(angle) * distance;
+            
+            particle.style.left = endX + 'px';
+            particle.style.top = endY + 'px';
+            particle.style.opacity = '0';
+            particle.style.transform = 'scale(0)';
+        });
+        
+        setTimeout(() => particle.remove(), 600);
+    }
+
+    // Project card click handlers
+    projectCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('a')) return; // Don't trigger modal on link clicks
+            
+            const projectId = card.dataset.project;
+            const category = card.dataset.category;
+            openProjectModal(projectId, category);
+        });
+    });
+
+    function openProjectModal(projectId, category) {
+        const modal = document.getElementById('projectModal');
+        const modalContent = document.getElementById('modalContent');
+        
+        // Create skeleton content for demo
+        modalContent.innerHTML = `
+            <div style="padding: 2rem;">
+                <h2 style="color: var(--primary-purple); margin-bottom: 1rem;">Project Details</h2>
+                <div style="background: var(--charcoal); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>🚧 Coming Soon</h3>
+                    <p style="color: var(--text-gray); margin-top: 1rem;">
+                        Detailed project information, screenshots, technical deep-dive, 
+                        and case study will be available here soon.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <div class="btn btn-primary">
+                        <i class="fab fa-github"></i> View Code
+                    </div>
+                    <div class="btn btn-secondary">
+                        <i class="fas fa-external-link-alt"></i> Live Demo
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
+        modal.style.opacity = '0';
+        
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+        });
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('projectModal');
+        modal.style.opacity = '0';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('projectModal').addEventListener('click', (e) => {
+        if (e.target.classList.contains('project-modal')) {
+            closeModal();
+        }
+    });
+
+    // Animated counter for stats
+    function animateCounter(element, target) {
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current) + (element.textContent.includes('+') ? '+' : (element.textContent.includes('%') ? '%' : ''));
+        }, 30);
+    }
+
+    // Start counters when stats come into view
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const number = entry.target.querySelector('.stat-number');
+                const text = number.textContent;
+                const value = parseInt(text.replace(/[^\d]/g, ''));
+                
+                animateCounter(number, value);
+                statsObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-card').forEach(card => {
+        statsObserver.observe(card);
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,708 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .blog-header {
+        text-align: center;
+        margin-bottom: 4rem;
+        background: linear-gradient(135deg, var(--charcoal) 0%, var(--soft-black) 100%);
+        padding: 4rem 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--border-gray);
+    }
+
+    .search-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 1rem 1.5rem 1rem 4rem;
+        background: var(--soft-black);
+        border: 2px solid var(--border-gray);
+        border-radius: 50px;
+        color: var(--pure-white);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-gray);
+        font-size: 1.2rem;
+    }
+
+    .categories-filter {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .category-btn {
+        padding: 0.8rem 2rem;
+        background: transparent;
+        color: var(--text-gray);
+        border: 2px solid var(--border-gray);
+        cursor: pointer;
+        transition: all 0.4s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-radius: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .category-btn.active {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border-color: var(--primary-purple);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    .category-btn:hover:not(.active) {
+        border-color: var(--primary-purple);
+        color: var(--primary-purple);
+        transform: translateY(-2px);
+    }
+
+    .category-count {
+        background: rgba(139, 92, 246, 0.2);
+        color: var(--light-purple);
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
+
+    .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+    }
+
+    .post-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .post-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-purple), var(--light-purple));
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .post-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .post-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary-purple);
+        box-shadow: 0 25px 50px rgba(139, 92, 246, 0.2);
+    }
+
+    .post-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, var(--charcoal), var(--soft-black));
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--primary-purple);
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .post-content {
+        padding: 2rem;
+    }
+
+    .post-category {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--light-purple);
+        font-size: 0.75rem;
+        border-radius: 12px;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .post-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--pure-white);
+        line-height: 1.4;
+    }
+
+    .post-excerpt {
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--text-gray);
+        font-size: 0.85rem;
+    }
+
+    .post-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .post-read-time {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .post-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .post-tag {
+        padding: 0.2rem 0.6rem;
+        background: rgba(139, 92, 246, 0.05);
+        color: var(--text-gray);
+        font-size: 0.7rem;
+        border-radius: 8px;
+        border: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    .featured-post {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        margin-bottom: 2rem;
+    }
+
+    .featured-post .post-image {
+        height: 300px;
+        border-radius: 15px 0 0 15px;
+    }
+
+    .featured-post .post-content {
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .featured-post .post-title {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .featured-post .post-excerpt {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .blog-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .stat-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: var(--primary-purple);
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-purple);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .newsletter-signup {
+        background: linear-gradient(135deg, var(--charcoal) 0%, var(--soft-black) 100%);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        margin-top: 4rem;
+    }
+
+    .newsletter-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--pure-white);
+    }
+
+    .newsletter-description {
+        color: var(--text-gray);
+        margin-bottom: 2rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .newsletter-form {
+        display: flex;
+        max-width: 400px;
+        margin: 0 auto;
+        gap: 1rem;
+    }
+
+    .newsletter-input {
+        flex: 1;
+        padding: 1rem;
+        background: var(--soft-black);
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        color: var(--pure-white);
+        transition: all 0.3s ease;
+    }
+
+    .newsletter-input:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+    }
+
+    @media (max-width: 768px) {
+        .posts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .featured-post {
+            grid-template-columns: 1fr;
+        }
+
+        .featured-post .post-image {
+            border-radius: 15px 15px 0 0;
+        }
+
+        .newsletter-form {
+            flex-direction: column;
+        }
+
+        .categories-filter {
+            gap: 0.5rem;
+        }
+
+        .category-btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="blog-header">
+        <h1 class="section-title">Insights & Thoughts</h1>
+        <p class="section-subtitle">Sharing knowledge, experiences, and perspectives on technology and business</p>
+        
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Search articles..." id="searchInput">
+        </div>
+    </div>
+
+    <!-- Blog Stats -->
+    <div class="blog-stats">
+        <div class="stat-card">
+            <div class="stat-number">50+</div>
+            <div class="stat-label">Articles Written</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">25K+</div>
+            <div class="stat-label">Total Reads</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">4</div>
+            <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">95%</div>
+            <div class="stat-label">Reader Rating</div>
+        </div>
+    </div>
+
+    <!-- Categories Filter -->
+    <div class="categories-filter">
+        <button class="category-btn active" data-category="all">
+            <i class="fas fa-th"></i> All Posts
+            <span class="category-count">{{ featured_posts|length|add:25 }}</span>
+        </button>
+        {% for category in categories %}
+        <button class="category-btn" data-category="{{ category.name|lower }}">
+            <i class="{{ category.icon }}"></i> {{ category.name }}
+            <span class="category-count">{{ category.count }}</span>
+        </button>
+        {% endfor %}
+    </div>
+
+    <!-- Posts Grid -->
+    <div class="posts-grid">
+        <!-- Featured Posts -->
+        {% for post in featured_posts %}
+        <div class="post-card card {% if forloop.first %}featured-post{% endif %}" data-category="{{ post.category|lower }}">
+            <div class="post-image">
+                <i class="{% if post.category == 'Technical' %}fas fa-code{% else %}fas fa-chart-line{% endif %}"></i>
+            </div>
+            <div class="post-content">
+                <span class="post-category">{{ post.category }}</span>
+                <h3 class="post-title">{{ post.title }}</h3>
+                <p class="post-excerpt">{{ post.excerpt }}</p>
+                
+                <div class="post-meta">
+                    <div class="post-date">
+                        <i class="fas fa-calendar"></i>
+                        {{ post.date }}
+                    </div>
+                    <div class="post-read-time">
+                        <i class="fas fa-clock"></i>
+                        {{ post.read_time }}
+                    </div>
+                </div>
+                
+                <div class="post-tags">
+                    {% for tag in post.tags %}
+                    <span class="post-tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Skeleton Posts -->
+        <div class="post-card card" data-category="technical">
+            <div class="post-image">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="post-content">
+                <span class="post-category">Technical</span>
+                <h3 class="post-title">Optimizing Database Performance at Scale</h3>
+                <p class="post-excerpt">Deep dive into database optimization techniques, indexing strategies, and query performance tuning for high-traffic applications...</p>
+                
+                <div class="post-meta">
+                    <div class="post-date">
+                        <i class="fas fa-calendar"></i>
+                        2024-01-08
+                    </div>
+                    <div class="post-read-time">
+                        <i class="fas fa-clock"></i>
+                        10 min read
+                    </div>
+                </div>
+                
+                <div class="post-tags">
+                    <span class="post-tag">Database</span>
+                    <span class="post-tag">Performance</span>
+                    <span class="post-tag">PostgreSQL</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="post-card card" data-category="business">
+            <div class="post-image">
+                <i class="fas fa-rocket"></i>
+            </div>
+            <div class="post-content">
+                <span class="post-category">Business</span>
+                <h3 class="post-title">From Idea to IPO: Startup Journey Insights</h3>
+                <p class="post-excerpt">Lessons learned from building and scaling multiple startups, including common pitfalls and success strategies...</p>
+                
+                <div class="post-meta">
+                    <div class="post-date">
+                        <i class="fas fa-calendar"></i>
+                        2024-01-05
+                    </div>
+                    <div class="post-read-time">
+                        <i class="fas fa-clock"></i>
+                        15 min read
+                    </div>
+                </div>
+                
+                <div class="post-tags">
+                    <span class="post-tag">Startups</span>
+                    <span class="post-tag">Scaling</span>
+                    <span class="post-tag">Investment</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="post-card card" data-category="leadership">
+            <div class="post-image">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="post-content">
+                <span class="post-category">Leadership</span>
+                <h3 class="post-title">Building High-Performance Remote Teams</h3>
+                <p class="post-excerpt">Strategies for managing distributed teams, maintaining culture, and driving productivity in remote work environments...</p>
+                
+                <div class="post-meta">
+                    <div class="post-date">
+                        <i class="fas fa-calendar"></i>
+                        2024-01-02
+                    </div>
+                    <div class="post-read-time">
+                        <i class="fas fa-clock"></i>
+                        7 min read
+                    </div>
+                </div>
+                
+                <div class="post-tags">
+                    <span class="post-tag">Leadership</span>
+                    <span class="post-tag">Remote Work</span>
+                    <span class="post-tag">Team Management</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Newsletter Signup -->
+    <div class="newsletter-signup">
+        <h3 class="newsletter-title">📧 Stay Updated</h3>
+        <p class="newsletter-description">Get the latest insights, articles, and exclusive content delivered directly to your inbox.</p>
+        <div class="newsletter-form">
+            <input type="email" class="newsletter-input" placeholder="Enter your email">
+            <button class="btn btn-primary">Subscribe</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Category filtering
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const postCards = document.querySelectorAll('.post-card');
+
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const category = btn.dataset.category;
+            
+            // Update active button
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Filter posts
+            postCards.forEach(card => {
+                const cardCategory = card.dataset.category;
+                
+                if (category === 'all' || cardCategory === category) {
+                    card.style.display = 'block';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                } else {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-20px)';
+                    
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+            
+            createCategoryEffect(btn);
+        });
+    });
+
+    function createCategoryEffect(btn) {
+        const rect = btn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+                createCategoryParticle(centerX, centerY, i);
+            }, i * 40);
+        }
+    }
+
+    function createCategoryParticle(x, y, index) {
+        const particle = document.createElement('div');
+        const angle = (Math.PI * 2 * index) / 6;
+        const distance = 20 + Math.random() * 10;
+        
+        particle.style.position = 'fixed';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.width = '4px';
+        particle.style.height = '4px';
+        particle.style.background = 'var(--primary-purple)';
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '10000';
+        particle.style.opacity = '1';
+        particle.style.boxShadow = '0 0 8px var(--primary-purple)';
+        particle.style.transition = 'all 0.6s ease-out';
+        
+        document.body.appendChild(particle);
+        
+        requestAnimationFrame(() => {
+            const endX = x + Math.cos(angle) * distance;
+            const endY = y + Math.sin(angle) * distance;
+            
+            particle.style.left = endX + 'px';
+            particle.style.top = endY + 'px';
+            particle.style.opacity = '0';
+            particle.style.transform = 'scale(0)';
+        });
+        
+        setTimeout(() => particle.remove(), 600);
+    }
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        postCards.forEach(card => {
+            const title = card.querySelector('.post-title').textContent.toLowerCase();
+            const excerpt = card.querySelector('.post-excerpt').textContent.toLowerCase();
+            const category = card.querySelector('.post-category').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || excerpt.includes(searchTerm) || category.includes(searchTerm)) {
+                card.style.display = 'block';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            } else {
+                card.style.opacity = '0.3';
+                card.style.transform = 'translateY(10px)';
+            }
+        });
+    });
+
+    // Post card click handlers
+    postCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const title = card.querySelector('.post-title').textContent;
+            showPostPreview(title);
+        });
+    });
+
+    function showPostPreview(title) {
+        // Create a simple modal for post preview
+        const modal = document.createElement('div');
+        modal.className = 'achievement-modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;">
+                <button class="modal-close" onclick="this.closest('.achievement-modal').remove()">&times;</button>
+                <div style="padding: 2rem;">
+                    <h2 style="color: var(--primary-purple); margin-bottom: 1rem;">${title}</h2>
+                    <div style="background: var(--charcoal); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">📖 Coming Soon</h3>
+                        <p style="color: var(--text-gray); line-height: 1.6;">
+                            Full article content will be available soon. This will include detailed 
+                            technical insights, code examples, and practical implementation guides.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <div class="btn btn-primary">
+                            <i class="fas fa-bookmark"></i> Save for Later
+                        </div>
+                        <div class="btn btn-secondary" onclick="this.closest('.achievement-modal').remove()">
+                            <i class="fas fa-times"></i> Close
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        setTimeout(() => {
+            modal.style.opacity = '1';
+        }, 100);
+    }
+
+    // Newsletter signup
+    document.querySelector('.newsletter-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.querySelector('.newsletter-input').value;
+        
+        if (email) {
+            // Show success message
+            const btn = document.querySelector('.newsletter-form .btn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-check"></i> Subscribed!';
+            btn.style.background = '#10b981';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+                document.querySelector('.newsletter-input').value = '';
+            }, 2000);
+        }
+    });
+
+    // Add reading progress for featured posts
+    document.querySelectorAll('.featured-post').forEach(post => {
+        post.addEventListener('mouseenter', () => {
+            post.style.background = 'linear-gradient(135deg, var(--charcoal) 0%, rgba(139, 92, 246, 0.05) 100%)';
+        });
+        
+        post.addEventListener('mouseleave', () => {
+            post.style.background = '';
+        });
+    });
+</script>
+{% endblock %} 

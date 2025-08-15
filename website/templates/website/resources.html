@@ -1,0 +1,651 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .resources-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .resource-tab {
+        padding: 0.8rem 2rem;
+        background: transparent;
+        color: var(--text-gray);
+        border: 2px solid var(--border-gray);
+        cursor: pointer;
+        transition: all 0.4s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        border-radius: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .resource-tab.active {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border-color: var(--primary-purple);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    .resource-tab:hover:not(.active) {
+        border-color: var(--primary-purple);
+        color: var(--primary-purple);
+        transform: translateY(-2px);
+    }
+
+    .tool-card {
+        background: linear-gradient(135deg, var(--soft-black) 0%, var(--charcoal) 100%);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .tool-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-purple), var(--light-purple));
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .tool-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .tool-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-purple);
+        box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+    }
+
+    .tool-icon {
+        font-size: 3rem;
+        color: var(--primary-purple);
+        margin-bottom: 2rem;
+        background: rgba(139, 92, 246, 0.1);
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .tool-name {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--pure-white);
+    }
+
+    .tool-type {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--light-purple);
+        font-size: 0.75rem;
+        border-radius: 12px;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .tool-description {
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .tool-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .tool-btn {
+        padding: 0.8rem 1.5rem;
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tool-btn:hover {
+        background: var(--deep-purple);
+        transform: translateY(-2px);
+    }
+
+    .tool-btn.secondary {
+        background: transparent;
+        border: 2px solid var(--border-gray);
+        color: var(--pure-white);
+    }
+
+    .tool-btn.secondary:hover {
+        border-color: var(--primary-purple);
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .download-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 15px;
+        padding: 2.5rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .download-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #10b981, #3b82f6);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .download-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .download-card:hover {
+        transform: translateY(-5px);
+        border-color: #10b981;
+        box-shadow: 0 15px 30px rgba(16, 185, 129, 0.2);
+    }
+
+    .download-icon {
+        font-size: 2.5rem;
+        color: #10b981;
+        margin-bottom: 1.5rem;
+    }
+
+    .download-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--pure-white);
+    }
+
+    .download-meta {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .download-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-gray);
+        font-size: 0.85rem;
+    }
+
+    .download-stats {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #10b981;
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .download-btn {
+        background: #10b981;
+        color: var(--pure-white);
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .download-btn:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+
+    .calculator-widget {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .calculator-widget.active {
+        display: block;
+        animation: slideIn 0.6s ease-out;
+    }
+
+    .calc-input-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .calc-label {
+        display: block;
+        color: var(--pure-white);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .calc-input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        background: var(--charcoal);
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        color: var(--pure-white);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .calc-input:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+    }
+
+    .calc-result {
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+
+    .calc-result-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-purple);
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .calc-result-label {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h1 class="section-title">Free Resources & Tools</h1>
+        <p class="section-subtitle">Comprehensive collection of business calculators, development tools, and downloadable guides</p>
+    </div>
+
+    <!-- Resource Tabs -->
+    <div class="resources-tabs">
+        <button class="resource-tab active" data-section="tools">
+            <i class="fas fa-tools"></i> Interactive Tools
+        </button>
+        <button class="resource-tab" data-section="downloads">
+            <i class="fas fa-download"></i> Downloads
+        </button>
+    </div>
+
+    <!-- Tools Section -->
+    <div id="tools-section" class="resource-section">
+        <div class="grid-2">
+            {% for tool in tools %}
+            <div class="tool-card" data-tool="{{ forloop.counter0 }}">
+                <div class="tool-icon">
+                    <i class="{{ tool.icon }}"></i>
+                </div>
+                <span class="tool-type">{{ tool.type }}</span>
+                <h3 class="tool-name">{{ tool.name }}</h3>
+                <p class="tool-description">{{ tool.description }}</p>
+                
+                <div class="tool-actions">
+                    <button class="tool-btn" onclick="openTool('{{ tool.name|lower|cut:' ' }}')">
+                        <i class="fas fa-play"></i> Launch Tool
+                    </button>
+                    <button class="tool-btn secondary">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Calculator Widget -->
+        <div class="calculator-widget" id="calculatorWidget">
+            <h3 style="color: var(--pure-white); margin-bottom: 2rem; text-align: center;">Startup Valuation Calculator</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <div class="calc-input-group">
+                    <label class="calc-label">Annual Revenue ($)</label>
+                    <input type="number" class="calc-input" id="revenue" placeholder="1000000">
+                </div>
+                <div class="calc-input-group">
+                    <label class="calc-label">Growth Rate (%)</label>
+                    <input type="number" class="calc-input" id="growth" placeholder="25">
+                </div>
+                <div class="calc-input-group">
+                    <label class="calc-label">Industry Multiple</label>
+                    <input type="number" step="0.1" class="calc-input" id="multiple" placeholder="5.0">
+                </div>
+                <div class="calc-input-group">
+                    <label class="calc-label">Market Size ($B)</label>
+                    <input type="number" class="calc-input" id="market" placeholder="10">
+                </div>
+            </div>
+            
+            <div class="calc-result">
+                <div class="calc-result-value" id="valuationResult">$0</div>
+                <div class="calc-result-label">Estimated Valuation</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Downloads Section -->
+    <div id="downloads-section" class="resource-section" style="display: none;">
+        <div class="grid-2">
+            {% for download in downloads %}
+            <div class="download-card">
+                <div class="download-icon">
+                    <i class="{{ download.icon }}"></i>
+                </div>
+                <h3 class="download-title">{{ download.title }}</h3>
+                
+                <div class="download-meta">
+                    <div class="download-meta-item">
+                        <i class="fas fa-file"></i>
+                        {{ download.type }}
+                    </div>
+                    <div class="download-meta-item">
+                        <i class="fas fa-file-alt"></i>
+                        {{ download.pages }}
+                    </div>
+                </div>
+                
+                <div class="download-stats">
+                    <i class="fas fa-download"></i>
+                    {{ download.downloads }} downloads
+                </div>
+                
+                <a href="#" class="download-btn" onclick="downloadResource('{{ download.title }}')">
+                    <i class="fas fa-download"></i> Download Free
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab switching
+    const resourceTabs = document.querySelectorAll('.resource-tab');
+    const resourceSections = document.querySelectorAll('.resource-section');
+
+    resourceTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetSection = tab.dataset.section;
+            
+            // Update active tab
+            resourceTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Show/hide sections
+            resourceSections.forEach(section => {
+                if (section.id === targetSection + '-section') {
+                    section.style.display = 'block';
+                    section.style.opacity = '0';
+                    section.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        section.style.opacity = '1';
+                        section.style.transform = 'translateY(0)';
+                    }, 100);
+                } else {
+                    section.style.opacity = '0';
+                    section.style.transform = 'translateY(-20px)';
+                    
+                    setTimeout(() => {
+                        section.style.display = 'none';
+                    }, 300);
+                }
+            });
+            
+            createTabEffect(tab);
+        });
+    });
+
+    function createTabEffect(tab) {
+        const rect = tab.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+                createTabParticle(centerX, centerY, i);
+            }, i * 50);
+        }
+    }
+
+    function createTabParticle(x, y, index) {
+        const particle = document.createElement('div');
+        const angle = (Math.PI * 2 * index) / 6;
+        const distance = 20 + Math.random() * 10;
+        
+        particle.style.position = 'fixed';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.width = '4px';
+        particle.style.height = '4px';
+        particle.style.background = 'var(--primary-purple)';
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '10000';
+        particle.style.opacity = '1';
+        particle.style.boxShadow = '0 0 8px var(--primary-purple)';
+        particle.style.transition = 'all 0.6s ease-out';
+        
+        document.body.appendChild(particle);
+        
+        requestAnimationFrame(() => {
+            const endX = x + Math.cos(angle) * distance;
+            const endY = y + Math.sin(angle) * distance;
+            
+            particle.style.left = endX + 'px';
+            particle.style.top = endY + 'px';
+            particle.style.opacity = '0';
+            particle.style.transform = 'scale(0)';
+        });
+        
+        setTimeout(() => particle.remove(), 600);
+    }
+
+    // Tool interactions
+    function openTool(toolName) {
+        if (toolName.includes('valuation')) {
+            const widget = document.getElementById('calculatorWidget');
+            widget.classList.add('active');
+            widget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            // Show coming soon message
+            showComingSoon(toolName);
+        }
+    }
+
+    function showComingSoon(toolName) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        `;
+        modal.innerHTML = `
+            <div style="background: var(--soft-black); border: 1px solid var(--border-gray); border-radius: 15px; padding: 3rem; text-align: center; max-width: 500px;">
+                <i class="fas fa-rocket" style="font-size: 3rem; color: var(--primary-purple); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--pure-white); margin-bottom: 1rem;">Coming Soon!</h3>
+                <p style="color: var(--text-gray); margin-bottom: 2rem;">
+                    The ${toolName} tool is currently under development and will be available soon.
+                </p>
+                <button class="btn btn-primary" onclick="this.closest('div').parentElement.remove()">
+                    <i class="fas fa-check"></i> Got it
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        setTimeout(() => {
+            modal.style.opacity = '1';
+        }, 100);
+    }
+
+    // Calculator functionality
+    const calcInputs = ['revenue', 'growth', 'multiple', 'market'];
+    
+    calcInputs.forEach(inputId => {
+        document.getElementById(inputId).addEventListener('input', calculateValuation);
+    });
+
+    function calculateValuation() {
+        const revenue = parseFloat(document.getElementById('revenue').value) || 0;
+        const growth = parseFloat(document.getElementById('growth').value) || 0;
+        const multiple = parseFloat(document.getElementById('multiple').value) || 0;
+        const market = parseFloat(document.getElementById('market').value) || 0;
+        
+        // Simple valuation calculation
+        const growthMultiplier = 1 + (growth / 100);
+        const marketFactor = Math.min(market / 100, 1.5); // Cap market factor
+        const valuation = revenue * multiple * growthMultiplier * marketFactor;
+        
+        const resultElement = document.getElementById('valuationResult');
+        const formattedValue = valuation.toLocaleString('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+        
+        resultElement.textContent = formattedValue;
+        
+        // Add animation
+        resultElement.style.transform = 'scale(1.1)';
+        resultElement.style.color = 'var(--primary-purple)';
+        
+        setTimeout(() => {
+            resultElement.style.transform = 'scale(1)';
+        }, 300);
+    }
+
+    // Download functionality
+    function downloadResource(title) {
+        // Simulate download
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+        btn.style.pointerEvents = 'none';
+        
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+            btn.style.background = '#10b981';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+                btn.style.pointerEvents = '';
+            }, 2000);
+        }, 1500);
+    }
+
+    // Add hover effects to tool cards
+    document.querySelectorAll('.tool-card, .download-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            createHoverSparkle(card);
+        });
+    });
+
+    function createHoverSparkle(card) {
+        const rect = card.getBoundingClientRect();
+        
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+                const sparkle = document.createElement('div');
+                sparkle.style.position = 'fixed';
+                sparkle.style.left = (rect.left + Math.random() * rect.width) + 'px';
+                sparkle.style.top = (rect.top + Math.random() * rect.height) + 'px';
+                sparkle.style.width = '3px';
+                sparkle.style.height = '3px';
+                sparkle.style.background = 'var(--primary-purple)';
+                sparkle.style.borderRadius = '50%';
+                sparkle.style.pointerEvents = 'none';
+                sparkle.style.zIndex = '9999';
+                sparkle.style.opacity = '1';
+                sparkle.style.boxShadow = '0 0 6px var(--primary-purple)';
+                sparkle.style.transition = 'all 0.6s ease-out';
+                
+                document.body.appendChild(sparkle);
+                
+                requestAnimationFrame(() => {
+                    sparkle.style.opacity = '0';
+                    sparkle.style.transform = 'scale(0) translateY(-15px)';
+                });
+                
+                setTimeout(() => sparkle.remove(), 600);
+            }, i * 100);
+        }
+    }
+</script>
+{% endblock %} 

@@ -1,0 +1,600 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .booking-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .service-card {
+        background: linear-gradient(135deg, var(--soft-black) 0%, var(--charcoal) 100%);
+        border: 2px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .service-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-purple), var(--light-purple));
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .service-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary-purple);
+        box-shadow: 0 25px 50px rgba(139, 92, 246, 0.3);
+    }
+
+    .service-card.selected {
+        border-color: var(--primary-purple);
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, var(--charcoal) 100%);
+    }
+
+    .service-icon {
+        font-size: 3rem;
+        color: var(--primary-purple);
+        margin-bottom: 2rem;
+        background: rgba(139, 92, 246, 0.1);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        border: 2px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .service-name {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--pure-white);
+    }
+
+    .service-duration {
+        color: var(--text-gray);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .service-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-purple);
+        margin-bottom: 1.5rem;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .service-description {
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .select-service-btn {
+        background: transparent;
+        color: var(--primary-purple);
+        border: 2px solid var(--primary-purple);
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .select-service-btn:hover,
+    .service-card.selected .select-service-btn {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+    }
+
+    .booking-form {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+        margin-top: 3rem;
+        display: none;
+    }
+
+    .booking-form.active {
+        display: block;
+        animation: slideIn 0.6s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--pure-white);
+        font-weight: 500;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        background: var(--charcoal);
+        border: 2px solid var(--border-gray);
+        border-radius: 10px;
+        color: var(--pure-white);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+    }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .calendar-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .date-option {
+        background: var(--charcoal);
+        border: 2px solid var(--border-gray);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .date-option:hover {
+        border-color: var(--primary-purple);
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .date-option.selected {
+        border-color: var(--primary-purple);
+        background: var(--primary-purple);
+        color: var(--pure-white);
+    }
+
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .time-slot {
+        background: var(--charcoal);
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        padding: 0.8rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .time-slot:hover {
+        border-color: var(--primary-purple);
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .time-slot.selected {
+        border-color: var(--primary-purple);
+        background: var(--primary-purple);
+        color: var(--pure-white);
+    }
+
+    .time-slot.unavailable {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: var(--soft-black);
+    }
+
+    .booking-summary {
+        background: rgba(139, 92, 246, 0.05);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    .summary-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--primary-purple);
+    }
+
+    .book-now-btn {
+        width: 100%;
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border: none;
+        padding: 1.2rem 2rem;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .book-now-btn:hover {
+        background: var(--deep-purple);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+    }
+
+    .book-now-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="booking-container">
+        <div class="section-header">
+            <h1 class="section-title">Book Consultation</h1>
+            <p class="section-subtitle">Choose the perfect consultation package for your needs and schedule your session</p>
+        </div>
+
+        <!-- Service Selection -->
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card" data-service="{{ forloop.counter0 }}">
+                <div class="service-icon">
+                    <i class="{{ service.icon }}"></i>
+                </div>
+                <h3 class="service-name">{{ service.name }}</h3>
+                <p class="service-duration">{{ service.duration }}</p>
+                <div class="service-price">{{ service.price }}</div>
+                <p class="service-description">{{ service.description }}</p>
+                <button class="select-service-btn">Select Service</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Booking Form -->
+        <div class="booking-form" id="bookingForm">
+            <h2 style="color: var(--pure-white); margin-bottom: 2rem; text-align: center;">Complete Your Booking</h2>
+            
+            <form id="consultationForm">
+                <!-- Personal Information -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-input" required placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" class="form-input" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-input" placeholder="+1 (555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Company/Organization</label>
+                        <input type="text" class="form-input" placeholder="Your company name">
+                    </div>
+                </div>
+
+                <!-- Date Selection -->
+                <div class="form-group">
+                    <label class="form-label">Select Date *</label>
+                    <div class="calendar-container">
+                        <div class="date-option" data-date="2024-01-25">
+                            <div style="font-weight: 600;">Thu</div>
+                            <div style="font-size: 1.2rem; margin: 0.5rem 0;">25</div>
+                            <div style="font-size: 0.8rem; color: var(--text-gray);">Jan</div>
+                        </div>
+                        <div class="date-option" data-date="2024-01-26">
+                            <div style="font-weight: 600;">Fri</div>
+                            <div style="font-size: 1.2rem; margin: 0.5rem 0;">26</div>
+                            <div style="font-size: 0.8rem; color: var(--text-gray);">Jan</div>
+                        </div>
+                        <div class="date-option" data-date="2024-01-29">
+                            <div style="font-weight: 600;">Mon</div>
+                            <div style="font-size: 1.2rem; margin: 0.5rem 0;">29</div>
+                            <div style="font-size: 0.8rem; color: var(--text-gray);">Jan</div>
+                        </div>
+                        <div class="date-option" data-date="2024-01-30">
+                            <div style="font-weight: 600;">Tue</div>
+                            <div style="font-size: 1.2rem; margin: 0.5rem 0;">30</div>
+                            <div style="font-size: 0.8rem; color: var(--text-gray);">Jan</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Selection -->
+                <div class="form-group">
+                    <label class="form-label">Select Time *</label>
+                    <div class="time-slots">
+                        <div class="time-slot" data-time="09:00">09:00</div>
+                        <div class="time-slot" data-time="10:00">10:00</div>
+                        <div class="time-slot unavailable" data-time="11:00">11:00</div>
+                        <div class="time-slot" data-time="14:00">14:00</div>
+                        <div class="time-slot" data-time="15:00">15:00</div>
+                        <div class="time-slot" data-time="16:00">16:00</div>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="form-group">
+                    <label class="form-label">Project Description</label>
+                    <textarea class="form-textarea" placeholder="Please describe your project, goals, and what you'd like to discuss during the consultation..."></textarea>
+                </div>
+
+                <!-- Booking Summary -->
+                <div class="booking-summary" id="bookingSummary" style="display: none;">
+                    <h3 style="color: var(--pure-white); margin-bottom: 1.5rem;">Booking Summary</h3>
+                    <div class="summary-item">
+                        <span>Service:</span>
+                        <span id="summaryService">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Date:</span>
+                        <span id="summaryDate">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Time:</span>
+                        <span id="summaryTime">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Duration:</span>
+                        <span id="summaryDuration">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Total:</span>
+                        <span id="summaryPrice">-</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="book-now-btn" disabled>
+                    <i class="fas fa-calendar-check"></i> Confirm Booking
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const services = {{ services|safe }};
+    let selectedService = null;
+    let selectedDate = null;
+    let selectedTime = null;
+
+    // Service selection
+    document.querySelectorAll('.service-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const serviceIndex = parseInt(card.dataset.service);
+            
+            // Update selected service
+            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            
+            selectedService = services[serviceIndex];
+            
+            // Show booking form
+            const bookingForm = document.getElementById('bookingForm');
+            bookingForm.classList.add('active');
+            
+            // Scroll to form
+            bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            updateBookingSummary();
+            createServiceSelectEffect(card);
+        });
+    });
+
+    // Date selection
+    document.querySelectorAll('.date-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.date-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            
+            selectedDate = option.dataset.date;
+            updateBookingSummary();
+            createSelectionEffect(option);
+        });
+    });
+
+    // Time selection
+    document.querySelectorAll('.time-slot:not(.unavailable)').forEach(slot => {
+        slot.addEventListener('click', () => {
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            slot.classList.add('selected');
+            
+            selectedTime = slot.dataset.time;
+            updateBookingSummary();
+            createSelectionEffect(slot);
+        });
+    });
+
+    function updateBookingSummary() {
+        const summary = document.getElementById('bookingSummary');
+        const bookBtn = document.querySelector('.book-now-btn');
+        
+        if (selectedService && selectedDate && selectedTime) {
+            // Update summary content
+            document.getElementById('summaryService').textContent = selectedService.name;
+            document.getElementById('summaryDate').textContent = new Date(selectedDate).toLocaleDateString();
+            document.getElementById('summaryTime').textContent = selectedTime;
+            document.getElementById('summaryDuration').textContent = selectedService.duration;
+            document.getElementById('summaryPrice').textContent = selectedService.price;
+            
+            summary.style.display = 'block';
+            bookBtn.disabled = false;
+        } else {
+            summary.style.display = 'none';
+            bookBtn.disabled = true;
+        }
+    }
+
+    function createServiceSelectEffect(card) {
+        const rect = card.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                createParticle(centerX, centerY, i);
+            }, i * 50);
+        }
+    }
+
+    function createSelectionEffect(element) {
+        const rect = element.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 4; i++) {
+            setTimeout(() => {
+                createParticle(centerX, centerY, i);
+            }, i * 30);
+        }
+    }
+
+    function createParticle(x, y, index) {
+        const particle = document.createElement('div');
+        const angle = (Math.PI * 2 * index) / 8;
+        const distance = 25 + Math.random() * 15;
+        
+        particle.style.position = 'fixed';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.width = '4px';
+        particle.style.height = '4px';
+        particle.style.background = 'var(--primary-purple)';
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '10000';
+        particle.style.opacity = '1';
+        particle.style.boxShadow = '0 0 8px var(--primary-purple)';
+        particle.style.transition = 'all 0.6s ease-out';
+        
+        document.body.appendChild(particle);
+        
+        requestAnimationFrame(() => {
+            const endX = x + Math.cos(angle) * distance;
+            const endY = y + Math.sin(angle) * distance;
+            
+            particle.style.left = endX + 'px';
+            particle.style.top = endY + 'px';
+            particle.style.opacity = '0';
+            particle.style.transform = 'scale(0)';
+        });
+        
+        setTimeout(() => particle.remove(), 600);
+    }
+
+    // Form submission
+    document.getElementById('consultationForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const btn = document.querySelector('.book-now-btn');
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-check"></i> Booking Confirmed!';
+            btn.style.background = '#10b981';
+            
+            // Show success message
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--soft-black);
+                border: 2px solid var(--primary-purple);
+                border-radius: 15px;
+                padding: 2rem;
+                text-align: center;
+                z-index: 10000;
+                color: var(--pure-white);
+            `;
+            successMsg.innerHTML = `
+                <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
+                <h3 style="margin-bottom: 1rem;">Booking Confirmed!</h3>
+                <p style="color: var(--text-gray);">You'll receive a confirmation email shortly with meeting details.</p>
+            `;
+            
+            document.body.appendChild(successMsg);
+            
+            setTimeout(() => {
+                successMsg.remove();
+                // Reset form
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 3000);
+        }, 2000);
+    });
+</script>
+{% endblock %} 

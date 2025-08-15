@@ -54,6 +54,109 @@
             border-radius: 3px;
         }
 
+        /* Custom text selection */
+        ::selection {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+            text-shadow: none;
+        }
+
+        ::-moz-selection {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+            text-shadow: none;
+        }
+
+        /* Enhanced selection for different elements */
+        h1::selection,
+        h2::selection,
+        h3::selection {
+            background: linear-gradient(135deg, var(--primary-purple), var(--deep-purple));
+            color: var(--pure-white);
+        }
+
+        h1::-moz-selection,
+        h2::-moz-selection,
+        h3::-moz-selection {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+        }
+
+        .hero h1::selection {
+            background: var(--light-purple);
+            color: var(--pure-black);
+        }
+
+        .hero h1::-moz-selection {
+            background: var(--light-purple);
+            color: var(--pure-black);
+        }
+
+        .hero-tagline::selection {
+            background: var(--pure-white);
+            color: var(--primary-purple);
+        }
+
+        .hero-tagline::-moz-selection {
+            background: var(--pure-white);
+            color: var(--primary-purple);
+        }
+
+        code::selection,
+        pre::selection {
+            background: var(--deep-purple);
+            color: var(--light-purple);
+        }
+
+        code::-moz-selection,
+        pre::-moz-selection {
+            background: var(--deep-purple);
+            color: var(--light-purple);
+        }
+
+        .skill-name::selection,
+        .service-title::selection {
+            background: rgba(139, 92, 246, 0.3);
+            color: var(--pure-white);
+            backdrop-filter: blur(4px);
+        }
+
+        .skill-name::-moz-selection,
+        .service-title::-moz-selection {
+            background: rgba(139, 92, 246, 0.3);
+            color: var(--pure-white);
+        }
+
+        /* Highlight animation on selection */
+        .selectable-highlight {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .selectable-highlight::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -4px;
+            right: -4px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                transparent 0%, 
+                rgba(139, 92, 246, 0.1) 25%, 
+                rgba(139, 92, 246, 0.2) 50%, 
+                rgba(139, 92, 246, 0.1) 75%, 
+                transparent 100%);
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .selectable-highlight:hover::before {
+            opacity: 1;
+        }
+
         .navbar {
             position: fixed;
             top: 0;
@@ -177,6 +280,78 @@
             gap: 1.5rem;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        /* Identity Toggle Section */
+        .identity-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .identity-btn {
+            padding: 0.8rem 2rem;
+            background: transparent;
+            color: var(--text-gray);
+            border: 2px solid var(--border-gray);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .identity-btn.active {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+            border-color: var(--primary-purple);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .identity-btn:hover:not(.active) {
+            border-color: var(--primary-purple);
+            color: var(--primary-purple);
+            transform: translateY(-2px);
+        }
+
+        .identity-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .identity-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Content Sections */
+        .identity-content {
+            display: none;
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        .identity-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .btn {
@@ -307,30 +482,10 @@
         .skill-name {
             font-size: 1.1rem;
             font-weight: 400;
-            margin-bottom: 1.5rem;
             letter-spacing: 0.5px;
         }
 
-        .skill-progress {
-            width: 100%;
-            height: 2px;
-            background: var(--border-gray);
-            margin-bottom: 1rem;
-            overflow: hidden;
-        }
 
-        .skill-progress-bar {
-            height: 100%;
-            background: var(--primary-purple);
-            transition: width 1.5s ease-in-out;
-            width: 0;
-        }
-
-        .skill-percentage {
-            font-size: 0.85rem;
-            color: var(--text-gray);
-            font-weight: 300;
-        }
 
         .services-grid {
             display: grid;
@@ -666,10 +821,14 @@
         <div class="nav-container">
             <div class="logo">&lt;{{ name|lower }}/&gt;</div>
             <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#services">Services</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="{% url 'website:home' %}">Home</a></li>
+                <li><a href="{% url 'website:portfolio' %}">Portfolio</a></li>
+                <li><a href="{% url 'website:achievements' %}">Awards</a></li>
+                <li><a href="{% url 'website:timeline' %}">Journey</a></li>
+                <li><a href="{% url 'website:blog' %}">Blog</a></li>
+                <li><a href="{% url 'website:metrics' %}">Metrics</a></li>
+                <li><a href="{% url 'website:booking' %}">Book</a></li>
+                <li><a href="{% url 'website:resources' %}">Resources</a></li>
             </ul>
         </div>
     </nav>
@@ -682,13 +841,13 @@
         </div>
         
         <div class="hero-content">
-            <div class="hero-greeting" id="dynamic-greeting">Hello, I'm</div>
-            <h1>{{ name }}</h1>
-            <div class="hero-tagline typing-animation" id="typing-tagline">{{ tagline }}</div>
-            <p class="hero-description">{{ description }}</p>
+            <div class="hero-greeting selectable-highlight" id="dynamic-greeting">Hello, I'm</div>
+            <h1 class="selectable-highlight">{{ name }}</h1>
+            <div class="hero-tagline typing-animation selectable-highlight" id="typing-tagline">{{ tagline }}</div>
+            <p class="hero-description selectable-highlight">{{ description }}</p>
             <div class="hero-buttons">
-                <a href="#services" class="btn btn-primary">
-                    <i class="fas fa-code"></i> View My Work
+                <a href="#identity" class="btn btn-primary">
+                    <i class="fas fa-user"></i> Explore My Identity
                 </a>
                 <a href="#contact" class="btn btn-secondary">
                     <i class="fas fa-envelope"></i> Get In Touch
@@ -697,42 +856,87 @@
         </div>
     </section>
 
-    <section id="skills" class="section">
+    <section id="identity" class="section">
         <div class="section-header">
-            <h2 class="section-title">Technical Expertise</h2>
-            <p class="section-subtitle">Technologies I use to create exceptional digital experiences</p>
+            <h2 class="section-title">Explore My Dual Identity</h2>
+            <p class="section-subtitle">Discover my expertise across technology and business domains</p>
         </div>
-        <div class="skills-grid">
-            {% for skill in skills %}
-            <div class="skill-card">
-                <div class="skill-icon">
-                    <i class="{{ skill.icon }}"></i>
-                </div>
-                <div class="skill-name">{{ skill.name }}</div>
-                <div class="skill-progress">
-                    <div class="skill-progress-bar" data-width="{{ skill.level }}"></div>
-                </div>
-                <div class="skill-percentage">{{ skill.level }}%</div>
-            </div>
-            {% endfor %}
+        
+        <div class="identity-toggle">
+            <button class="identity-btn active" data-identity="developer">
+                <i class="fas fa-code"></i> Software Developer
+            </button>
+            <button class="identity-btn" data-identity="businessman">
+                <i class="fas fa-briefcase"></i> Businessman
+            </button>
         </div>
-    </section>
 
-    <section id="services" class="section">
-        <div class="section-header">
-            <h2 class="section-title">What I Create</h2>
-            <p class="section-subtitle">Specialized services to transform your vision into reality</p>
-        </div>
-        <div class="services-grid">
-            {% for service in services %}
-            <div class="service-card">
-                <div class="service-icon">
-                    <i class="{{ service.icon }}"></i>
-                </div>
-                <h3 class="service-title">{{ service.title }}</h3>
-                <p class="service-description">{{ service.description }}</p>
+        <!-- Developer Identity -->
+        <div id="developer-content" class="identity-content active">
+            <div class="section-header">
+                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Technical Expertise</h3>
+                <p class="section-subtitle">Technologies I use to build exceptional software solutions</p>
             </div>
-            {% endfor %}
+            <div class="skills-grid">
+                {% for skill in dev_skills %}
+                <div class="skill-card">
+                    <div class="skill-icon">
+                        <i class="{{ skill.icon }}"></i>
+                    </div>
+                    <div class="skill-name selectable-highlight">{{ skill.name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="section-header" style="margin-top: 5rem;">
+                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Development Services</h3>
+                <p class="section-subtitle">Specialized software development services I provide</p>
+            </div>
+            <div class="services-grid">
+                {% for service in dev_services %}
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="{{ service.icon }}"></i>
+                    </div>
+                    <h3 class="service-title selectable-highlight">{{ service.title }}</h3>
+                    <p class="service-description selectable-highlight">{{ service.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Businessman Identity -->
+        <div id="businessman-content" class="identity-content">
+            <div class="section-header">
+                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Business Expertise</h3>
+                <p class="section-subtitle">Strategic business skills for driving growth and innovation</p>
+            </div>
+            <div class="skills-grid">
+                {% for skill in business_skills %}
+                <div class="skill-card">
+                    <div class="skill-icon">
+                        <i class="{{ skill.icon }}"></i>
+                    </div>
+                    <div class="skill-name selectable-highlight">{{ skill.name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="section-header" style="margin-top: 5rem;">
+                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Business Services</h3>
+                <p class="section-subtitle">Strategic consulting services for business growth and success</p>
+            </div>
+            <div class="services-grid">
+                {% for service in business_services %}
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="{{ service.icon }}"></i>
+                    </div>
+                    <h3 class="service-title selectable-highlight">{{ service.title }}</h3>
+                    <p class="service-description selectable-highlight">{{ service.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </section>
 
@@ -812,30 +1016,7 @@
             }
         });
 
-        // Skill bar animation
-        const observerOptions = {
-            threshold: 0.3,
-            rootMargin: '0px 0px -50px 0px'
-        };
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const progressBars = entry.target.querySelectorAll('.skill-progress-bar');
-                    progressBars.forEach(bar => {
-                        const width = bar.dataset.width + '%';
-                        setTimeout(() => {
-                            bar.style.width = width;
-                        }, 200);
-                    });
-                }
-            });
-        }, observerOptions);
-
-        const skillsSection = document.querySelector('#skills');
-        if (skillsSection) {
-            observer.observe(skillsSection);
-        }
 
         // Parallax effect for orbs
         window.addEventListener('scroll', () => {
@@ -908,37 +1089,12 @@
             });
         });
 
-        // Animated counter for skill percentages
-        function animateCounter(element, target) {
-            let current = 0;
-            const increment = target / 50;
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    current = target;
-                    clearInterval(timer);
-                }
-                element.textContent = Math.floor(current) + '%';
-            }, 30);
-        }
-
         // Add entrance animations
         const animateOnScroll = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateY(0)';
-                    
-                    // Animate skill percentage counters
-                    if (entry.target.classList.contains('skill-card')) {
-                        const percentage = entry.target.querySelector('.skill-percentage');
-                        const progressBar = entry.target.querySelector('.skill-progress-bar');
-                        const target = parseInt(progressBar.dataset.width);
-                        
-                        setTimeout(() => {
-                            animateCounter(percentage, target);
-                        }, 500);
-                    }
                 }
             });
         }, { threshold: 0.1 });
@@ -1125,6 +1281,205 @@
         
         document.addEventListener('mouseleave', () => {
             cursorGlow.style.opacity = '0';
+        });
+
+        // Enhanced selection effects
+        let isSelecting = false;
+        
+        document.addEventListener('mousedown', () => {
+            isSelecting = true;
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isSelecting) {
+                const selection = window.getSelection();
+                if (selection.toString().length > 0) {
+                    // Create selection highlight effect
+                    createSelectionParticles();
+                }
+            }
+            isSelecting = false;
+        });
+        
+        function createSelectionParticles() {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                
+                // Create particles around the selection
+                for (let i = 0; i < 8; i++) {
+                    createSelectionParticle(
+                        rect.left + rect.width * Math.random(),
+                        rect.top + rect.height * Math.random()
+                    );
+                }
+            }
+        }
+        
+        function createSelectionParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.style.position = 'fixed';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.width = '4px';
+            particle.style.height = '4px';
+            particle.style.background = 'var(--primary-purple)';
+            particle.style.borderRadius = '50%';
+            particle.style.pointerEvents = 'none';
+            particle.style.zIndex = '10000';
+            particle.style.opacity = '1';
+            particle.style.boxShadow = '0 0 8px var(--primary-purple)';
+            particle.style.transition = 'all 0.8s ease-out';
+            
+            document.body.appendChild(particle);
+            
+            // Animate particle
+            requestAnimationFrame(() => {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 20 + Math.random() * 30;
+                const endX = x + Math.cos(angle) * distance;
+                const endY = y + Math.sin(angle) * distance;
+                
+                particle.style.left = endX + 'px';
+                particle.style.top = endY + 'px';
+                particle.style.opacity = '0';
+                particle.style.transform = 'scale(0)';
+            });
+            
+            setTimeout(() => particle.remove(), 800);
+        }
+        
+        // Add selection sound effect (visual feedback)
+        document.addEventListener('selectstart', (e) => {
+            if (e.target.classList.contains('selectable-highlight')) {
+                e.target.style.boxShadow = '0 0 20px rgba(139, 92, 246, 0.5)';
+                setTimeout(() => {
+                    e.target.style.boxShadow = '';
+                }, 300);
+            }
+        });
+        
+        // Double-click selection enhancement
+        document.addEventListener('dblclick', (e) => {
+            if (e.target.classList.contains('selectable-highlight')) {
+                // Create a ring effect
+                const ring = document.createElement('div');
+                ring.style.position = 'absolute';
+                ring.style.left = '50%';
+                ring.style.top = '50%';
+                ring.style.width = '0px';
+                ring.style.height = '0px';
+                ring.style.border = '2px solid var(--primary-purple)';
+                ring.style.borderRadius = '50%';
+                ring.style.transform = 'translate(-50%, -50%)';
+                ring.style.pointerEvents = 'none';
+                ring.style.opacity = '0.8';
+                ring.style.transition = 'all 0.6s ease-out';
+                
+                e.target.style.position = 'relative';
+                e.target.appendChild(ring);
+                
+                requestAnimationFrame(() => {
+                    ring.style.width = '100px';
+                    ring.style.height = '100px';
+                    ring.style.opacity = '0';
+                });
+                
+                                 setTimeout(() => ring.remove(), 600);
+             }
+         });
+
+        // Identity Toggle Functionality
+        const identityButtons = document.querySelectorAll('.identity-btn');
+        const identityContents = document.querySelectorAll('.identity-content');
+
+        identityButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetIdentity = button.dataset.identity;
+                
+                // Remove active class from all buttons and contents
+                identityButtons.forEach(btn => btn.classList.remove('active'));
+                identityContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button
+                button.classList.add('active');
+                
+                // Show corresponding content with animation
+                const targetContent = document.getElementById(targetIdentity + '-content');
+                if (targetContent) {
+                    setTimeout(() => {
+                        targetContent.classList.add('active');
+                    }, 100);
+                }
+                
+                // Create toggle effect particles
+                createToggleEffect(button);
+                
+                // Update page title dynamically
+                const isBusinessman = targetIdentity === 'businessman';
+                const newTitle = isBusinessman ? 'Strategic Businessman' : 'Software Developer';
+                const taglineElement = document.getElementById('typing-tagline');
+                if (taglineElement) {
+                    taglineElement.textContent = newTitle + ' & ' + (isBusinessman ? 'Tech Innovator' : 'Strategic Thinker');
+                }
+            });
+        });
+
+        function createToggleEffect(button) {
+            const rect = button.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Create burst effect
+            for (let i = 0; i < 12; i++) {
+                setTimeout(() => {
+                    createToggleParticle(centerX, centerY, i);
+                }, i * 20);
+            }
+        }
+
+        function createToggleParticle(x, y, index) {
+            const particle = document.createElement('div');
+            const angle = (Math.PI * 2 * index) / 12;
+            const distance = 30 + Math.random() * 20;
+            
+            particle.style.position = 'fixed';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.width = '6px';
+            particle.style.height = '6px';
+            particle.style.background = 'var(--primary-purple)';
+            particle.style.borderRadius = '50%';
+            particle.style.pointerEvents = 'none';
+            particle.style.zIndex = '10000';
+            particle.style.opacity = '1';
+            particle.style.boxShadow = '0 0 12px var(--primary-purple)';
+            particle.style.transition = 'all 0.8s ease-out';
+            
+            document.body.appendChild(particle);
+            
+            // Animate particle
+            requestAnimationFrame(() => {
+                const endX = x + Math.cos(angle) * distance;
+                const endY = y + Math.sin(angle) * distance;
+                
+                particle.style.left = endX + 'px';
+                particle.style.top = endY + 'px';
+                particle.style.opacity = '0';
+                particle.style.transform = 'scale(0)';
+            });
+            
+            setTimeout(() => particle.remove(), 800);
+        }
+
+        // Add keyboard shortcuts for identity switching
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '1') {
+                document.querySelector('[data-identity="developer"]').click();
+            } else if (e.key === '2') {
+                document.querySelector('[data-identity="businessman"]').click();
+            }
         });
     </script>
 </body>
