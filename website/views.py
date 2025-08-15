@@ -3,35 +3,45 @@ from django.shortcuts import render
 # Create your views here.
 
 def home(request):
-    """Software Developer Landing page view"""
+    """Backend Developer Landing page view"""
     context = {
-        'title': 'Software Developer',
+        'title': 'Backend Developer',
         'name': 'Abdurakhmon',
-        'tagline': 'Full-Stack Developer & Problem Solver',
-        'description': 'Crafting elegant solutions through clean code and innovative thinking',
+        'tagline': 'Backend Developer & API Architect',
+        'description': 'Building robust server-side solutions and scalable architectures',
+        'email': 'abdurakhmon@mkhmd.uk',
+        'github': 'https://github.com/abdurakhmon',
+        'linkedin': 'https://linkedin.com/in/abdurakhmon',
         'skills': [
-            {'name': 'Python', 'icon': 'fab fa-python', 'level': 90},
-            {'name': 'Django', 'icon': 'fas fa-server', 'level': 85},
-            {'name': 'JavaScript', 'icon': 'fab fa-js-square', 'level': 80},
-            {'name': 'React', 'icon': 'fab fa-react', 'level': 75},
-            {'name': 'PostgreSQL', 'icon': 'fas fa-database', 'level': 80},
-            {'name': 'Docker', 'icon': 'fab fa-docker', 'level': 70},
+            {'name': 'Python', 'icon': 'fab fa-python', 'level': 95},
+            {'name': 'Django', 'icon': 'fas fa-server', 'level': 90},
+            {'name': 'FastAPI', 'icon': 'fas fa-bolt', 'level': 85},
+            {'name': 'PostgreSQL', 'icon': 'fas fa-database', 'level': 88},
+            {'name': 'Redis', 'icon': 'fas fa-memory', 'level': 80},
+            {'name': 'Docker', 'icon': 'fab fa-docker', 'level': 85},
+            {'name': 'AWS', 'icon': 'fab fa-aws', 'level': 75},
+            {'name': 'MongoDB', 'icon': 'fas fa-leaf', 'level': 70},
         ],
         'services': [
             {
-                'title': 'Web Development',
-                'description': 'Building responsive, scalable web applications using modern frameworks and best practices.',
-                'icon': 'fas fa-globe'
+                'title': 'API Development',
+                'description': 'Creating robust RESTful APIs and GraphQL services with comprehensive documentation and authentication.',
+                'icon': 'fas fa-code-branch'
             },
             {
-                'title': 'Backend Development',
-                'description': 'Creating robust APIs and server-side solutions with Django, FastAPI, and microservices.',
-                'icon': 'fas fa-server'
-            },
-            {
-                'title': 'Database Design',
-                'description': 'Designing efficient database schemas and optimizing query performance.',
+                'title': 'Database Architecture',
+                'description': 'Designing efficient database schemas, query optimization, and implementing caching strategies.',
                 'icon': 'fas fa-database'
+            },
+            {
+                'title': 'Microservices',
+                'description': 'Building scalable microservice architectures with Docker, message queues, and service discovery.',
+                'icon': 'fas fa-cubes'
+            },
+            {
+                'title': 'Cloud Infrastructure',
+                'description': 'Deploying and managing applications on AWS, implementing CI/CD pipelines and monitoring.',
+                'icon': 'fas fa-cloud'
             },
         ]
     }
