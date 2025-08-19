@@ -407,6 +407,7 @@
                 <li><a href="{% url 'website:metrics' %}" {% if request.resolver_match.url_name == 'metrics' %}class="active"{% endif %}>Metrics</a></li>
                 <li><a href="{% url 'website:booking' %}" {% if request.resolver_match.url_name == 'booking' %}class="active"{% endif %}>Book</a></li>
                 <li><a href="{% url 'website:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>Resources</a></li>
+                <li><a href="{% url 'website:turnitin' %}" {% if request.resolver_match.url_name == 'turnitin' %}class="active"{% endif %}>Turnitin</a></li>
             </ul>
         </div>
     </nav>

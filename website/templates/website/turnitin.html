@@ -1,0 +1,586 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .turnitin-hero {
+        background: linear-gradient(135deg, var(--charcoal) 0%, var(--soft-black) 100%);
+        padding: 4rem 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--border-gray);
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .upload-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: var(--soft-black);
+        border: 2px dashed var(--border-gray);
+        border-radius: 15px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-container.dragover {
+        border-color: var(--primary-purple);
+        background: rgba(139, 92, 246, 0.05);
+        transform: scale(1.02);
+    }
+
+    .upload-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-purple);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .upload-container:hover::before {
+        transform: scaleX(1);
+    }
+
+    .upload-icon {
+        font-size: 4rem;
+        color: var(--primary-purple);
+        margin-bottom: 2rem;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .upload-text {
+        font-size: 1.2rem;
+        color: var(--pure-white);
+        margin-bottom: 1rem;
+        font-weight: 300;
+    }
+
+    .upload-subtext {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .upload-btn {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .upload-btn:hover {
+        background: var(--deep-purple);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+    }
+
+    .file-preview {
+        display: none;
+        background: var(--charcoal);
+        border: 1px solid var(--border-gray);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        text-align: left;
+    }
+
+    .file-preview.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .file-icon {
+        font-size: 2rem;
+        color: var(--primary-purple);
+    }
+
+    .file-details h4 {
+        color: var(--pure-white);
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-details p {
+        color: var(--text-gray);
+        font-size: 0.85rem;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, var(--primary-purple), var(--deep-purple));
+        color: var(--pure-white);
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
+    }
+
+    .submit-btn:disabled {
+        background: var(--border-gray);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .progress-container {
+        display: none;
+        margin-top: 2rem;
+    }
+
+    .progress-container.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--border-gray);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-purple), var(--light-purple));
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 4px;
+    }
+
+    .progress-text {
+        text-align: center;
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .result-container {
+        display: none;
+        margin-top: 2rem;
+        padding: 2rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .result-container.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #10b981;
+    }
+
+    .result-container.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+    }
+
+    .result-container.show {
+        display: block;
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .supported-formats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .format-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.2rem;
+        background: var(--charcoal);
+        border: 1px solid var(--border-gray);
+        border-radius: 8px;
+        color: var(--text-gray);
+        font-size: 0.85rem;
+    }
+
+    .format-icon {
+        color: var(--primary-purple);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .turnitin-hero {
+            padding: 3rem 1.5rem;
+        }
+
+        .upload-container {
+            padding: 2rem;
+            margin: 0 1rem;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+        }
+
+        .supported-formats {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .format-item {
+            width: 100%;
+            max-width: 200px;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .upload-container {
+            padding: 1.5rem;
+        }
+
+        .upload-btn,
+        .submit-btn {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .file-info {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="turnitin-hero">
+        <h1 class="section-title">Turnitin Submission</h1>
+        <p class="section-subtitle">Upload your document for plagiarism checking. We'll handle the submission process automatically.</p>
+    </div>
+
+    <div class="upload-container" id="uploadContainer">
+        <div class="upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <h3 class="upload-text">Drag & Drop your file here</h3>
+        <p class="upload-subtext">or click to browse files</p>
+        
+        <input type="file" id="fileInput" class="file-input" accept=".docx,.pdf,.pptx">
+        <button type="button" class="upload-btn" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-folder-open"></i>
+            Choose File
+        </button>
+
+        <div class="file-preview" id="filePreview">
+            <div class="file-info">
+                <div class="file-icon">
+                    <i class="fas fa-file" id="fileIcon"></i>
+                </div>
+                <div class="file-details">
+                    <h4 id="fileName">Document.pdf</h4>
+                    <p id="fileSize">2.5 MB</p>
+                </div>
+            </div>
+            <button type="button" class="submit-btn" id="submitBtn">
+                <i class="fas fa-paper-plane"></i>
+                Submit to Turnitin
+            </button>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Uploading and processing...</div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-icon" id="resultIcon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 id="resultTitle">Success!</h3>
+            <p id="resultMessage">Your document has been successfully submitted to Turnitin.</p>
+        </div>
+    </div>
+
+    <div class="supported-formats">
+        <div class="format-item">
+            <i class="fas fa-file-word format-icon"></i>
+            <span>Word Documents (.docx)</span>
+        </div>
+        <div class="format-item">
+            <i class="fas fa-file-pdf format-icon"></i>
+            <span>PDF Files (.pdf)</span>
+        </div>
+        <div class="format-item">
+            <i class="fas fa-file-powerpoint format-icon"></i>
+            <span>PowerPoint (.pptx)</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedFile = null;
+
+    // File input change handler
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+    // Drag and drop handlers
+    const uploadContainer = document.getElementById('uploadContainer');
+    
+    uploadContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadContainer.classList.add('dragover');
+    });
+
+    uploadContainer.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadContainer.classList.remove('dragover');
+    });
+
+    uploadContainer.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadContainer.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleFile(file);
+        }
+    }
+
+    function handleFile(file) {
+        // Validate file type
+        const allowedTypes = ['.docx', '.pdf', '.pptx'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            showError('Invalid file type. Please select a .docx, .pdf, or .pptx file.');
+            return;
+        }
+
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showError('File size too large. Please select a file smaller than 10MB.');
+            return;
+        }
+
+        selectedFile = file;
+        showFilePreview(file);
+    }
+
+    function showFilePreview(file) {
+        const preview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileIcon = document.getElementById('fileIcon');
+
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+
+        // Set appropriate icon
+        const extension = file.name.split('.').pop().toLowerCase();
+        switch (extension) {
+            case 'docx':
+                fileIcon.className = 'fas fa-file-word';
+                break;
+            case 'pdf':
+                fileIcon.className = 'fas fa-file-pdf';
+                break;
+            case 'pptx':
+                fileIcon.className = 'fas fa-file-powerpoint';
+                break;
+            default:
+                fileIcon.className = 'fas fa-file';
+        }
+
+        preview.classList.add('show');
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Submit button handler
+    document.getElementById('submitBtn').addEventListener('click', submitToTurnitin);
+
+    async function submitToTurnitin() {
+        if (!selectedFile) {
+            showError('Please select a file first.');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        // Disable submit button and show progress
+        submitBtn.disabled = true;
+        progressContainer.classList.add('show');
+
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            progressFill.style.width = progress + '%';
+        }, 200);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const response = await fetch('{% url "website:turnitin" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            const result = await response.json();
+
+            // Complete progress
+            clearInterval(progressInterval);
+            progressFill.style.width = '100%';
+
+            setTimeout(() => {
+                progressContainer.classList.remove('show');
+                
+                if (result.success) {
+                    showResult('success', 'Success!', result.message);
+                } else {
+                    showResult('error', 'Error!', result.error || 'Failed to submit file.');
+                }
+                
+                submitBtn.disabled = false;
+            }, 500);
+
+        } catch (error) {
+            clearInterval(progressInterval);
+            progressContainer.classList.remove('show');
+            showResult('error', 'Error!', 'Network error. Please try again.');
+            submitBtn.disabled = false;
+        }
+    }
+
+    function showResult(type, title, message) {
+        const resultContainer = document.getElementById('resultContainer');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultMessage = document.getElementById('resultMessage');
+
+        resultContainer.className = `result-container ${type} show`;
+        resultTitle.textContent = title;
+        resultMessage.textContent = message;
+
+        if (type === 'success') {
+            resultIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+        } else {
+            resultIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+        }
+
+        // Hide result after 5 seconds
+        setTimeout(() => {
+            resultContainer.classList.remove('show');
+        }, 5000);
+    }
+
+    function showError(message) {
+        showResult('error', 'Error!', message);
+    }
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %} 
