@@ -505,21 +505,30 @@ def submit_to_turnitin(file_path, filename):
                 print("✅ Using local macOS Chrome setup")
             else:
                 # Server environment (PythonAnywhere, Linux, etc.)
-                # Try webdriver-manager first for server environments
+                # Try Chromium first (commonly available on Linux servers)
                 try:
+                    chrome_options.binary_location = "/usr/bin/chromium"
                     service = Service(ChromeDriverManager().install())
                     driver = webdriver.Chrome(service=service, options=chrome_options)
-                    print("✅ Using webdriver-manager for Chrome setup")
-                except Exception as wdm_error:
-                    initialization_errors.append(f"WebDriver Manager: {str(wdm_error)}")
+                    print("✅ Using Chromium with webdriver-manager")
+                except Exception as chromium_error:
+                    initialization_errors.append(f"Chromium: {str(chromium_error)}")
                     
-                    # Fallback to system Chrome
+                    # Fallback to webdriver-manager with default Chrome
                     try:
-                        driver = webdriver.Chrome(options=chrome_options)
-                        print("✅ Using system Chrome")
-                    except Exception as system_error:
-                        initialization_errors.append(f"System Chrome: {str(system_error)}")
-                        raise Exception("All Chrome initialization methods failed")
+                        service = Service(ChromeDriverManager().install())
+                        driver = webdriver.Chrome(service=service, options=chrome_options)
+                        print("✅ Using webdriver-manager for Chrome setup")
+                    except Exception as wdm_error:
+                        initialization_errors.append(f"WebDriver Manager: {str(wdm_error)}")
+                        
+                        # Final fallback to system Chrome
+                        try:
+                            driver = webdriver.Chrome(options=chrome_options)
+                            print("✅ Using system Chrome")
+                        except Exception as system_error:
+                            initialization_errors.append(f"System Chrome: {str(system_error)}")
+                            raise Exception("All Chrome initialization methods failed")
             
             # Anti-detection script
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
