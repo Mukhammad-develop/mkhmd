@@ -459,66 +459,80 @@ def turnitin(request):
 def submit_to_turnitin(file_path, filename):
     """Automate submission to Turnitin using Selenium"""
     try:
-        # Check if Chrome is installed (macOS specific check)
-        chrome_installed = False
-        if platform.system() == "Darwin":  # macOS
-            chrome_installed = os.path.exists("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-        else:
-            # For Linux/Windows, try to find chrome executable
-            try:
-                subprocess.run(['which', 'google-chrome-stable'], check=True, capture_output=True)
-                chrome_installed = True
-            except subprocess.CalledProcessError:
-                try:
-                    subprocess.run(['which', 'google-chrome'], check=True, capture_output=True)
-                    chrome_installed = True
-                except subprocess.CalledProcessError:
-                    chrome_installed = False
+        # Detect environment
+        is_pythonanywhere = 'pythonanywhere' in os.environ.get('DOMAIN', '').lower() or os.path.exists('/home')
+        is_local_mac = platform.system() == "Darwin"
         
-        if not chrome_installed:
-            return {
-                'success': False,
-                'error': 'Google Chrome browser is not installed. Please install Chrome to use this feature.'
-            }
-        
-        # Set up Chrome options for headless browsing
+        # Set up Chrome options for headless browsing (server-optimized)
         chrome_options = Options()
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-plugins')
+        chrome_options.add_argument('--disable-images')  # Optimize loading speed
         chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         chrome_options.add_argument('--disable-web-security')
         chrome_options.add_argument('--allow-running-insecure-content')
+        chrome_options.add_argument('--remote-debugging-port=9222')
+        chrome_options.add_argument('--disable-background-timer-throttling')
+        chrome_options.add_argument('--disable-backgrounding-occluded-windows')
+        chrome_options.add_argument('--disable-renderer-backgrounding')
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        # Initialize webdriver with system ChromeDriver (bypasses security issues)
+        # PythonAnywhere specific options
+        if is_pythonanywhere:
+            chrome_options.add_argument('--single-process')
+            chrome_options.add_argument('--disable-background-networking')
+            chrome_options.add_argument('--disable-default-apps')
+            chrome_options.add_argument('--disable-sync')
+            chrome_options.add_argument('--memory-pressure-off')
+            chrome_options.add_argument('--max_old_space_size=4096')
+        
+        # Initialize webdriver with environment-specific configuration
         driver = None
+        initialization_errors = []
+        
         try:
-            # Try system ChromeDriver first (installed via Homebrew)
-            if platform.system() == "Darwin":  # macOS
+            if is_local_mac:
+                # Local macOS development
                 chrome_options.binary_location = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-                # Use system ChromeDriver installed via Homebrew
                 service = Service("/opt/homebrew/bin/chromedriver")
                 driver = webdriver.Chrome(service=service, options=chrome_options)
+                print("✅ Using local macOS Chrome setup")
             else:
-                # For non-macOS systems, try system chrome
-                driver = webdriver.Chrome(options=chrome_options)
+                # Server environment (PythonAnywhere, Linux, etc.)
+                # Try webdriver-manager first for server environments
+                try:
+                    service = Service(ChromeDriverManager().install())
+                    driver = webdriver.Chrome(service=service, options=chrome_options)
+                    print("✅ Using webdriver-manager for Chrome setup")
+                except Exception as wdm_error:
+                    initialization_errors.append(f"WebDriver Manager: {str(wdm_error)}")
+                    
+                    # Fallback to system Chrome
+                    try:
+                        driver = webdriver.Chrome(options=chrome_options)
+                        print("✅ Using system Chrome")
+                    except Exception as system_error:
+                        initialization_errors.append(f"System Chrome: {str(system_error)}")
+                        raise Exception("All Chrome initialization methods failed")
             
+            # Anti-detection script
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        except Exception as system_error:
-            # Fallback to webdriver-manager
-            try:
-                service = Service(ChromeDriverManager().install())
-                driver = webdriver.Chrome(service=service, options=chrome_options)
-                driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            except Exception as manager_error:
-                return {
-                    'success': False,
-                    'error': f'Failed to initialize Chrome driver. System ChromeDriver error: {str(system_error)}. WebDriver Manager error: {str(manager_error)}'
-                }
+            
+        except Exception as init_error:
+            error_details = f"Chrome initialization failed: {str(init_error)}"
+            if initialization_errors:
+                error_details += f" | Attempted methods: {' | '.join(initialization_errors)}"
+            
+            return {
+                'success': False,
+                'error': f'{error_details}. This feature requires Chrome browser support on the server.'
+            }
         
         wait = WebDriverWait(driver, 30)
         
@@ -532,9 +546,13 @@ def submit_to_turnitin(file_path, filename):
             wait.until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
             
             # Take screenshot for debugging
-            screenshot_path = '/Users/abdurakhmon/Desktop/mkhmd/turnitin_initial.png'
-            driver.save_screenshot(screenshot_path)
-            print(f"Screenshot saved: {screenshot_path}")
+            screenshot_dir = '/tmp' if is_pythonanywhere else '/Users/abdurakhmon/Desktop/mkhmd'
+            screenshot_path = f'{screenshot_dir}/turnitin_initial.png'
+            try:
+                driver.save_screenshot(screenshot_path)
+                print(f"Screenshot saved: {screenshot_path}")
+            except Exception as screenshot_error:
+                print(f"Could not save screenshot: {screenshot_error}")
             
             # Try to find and click any "Start" or "Submit" button first
             start_buttons = [
@@ -600,7 +618,12 @@ def submit_to_turnitin(file_path, filename):
             
             if not file_input:
                 # Save screenshot for debugging
-                driver.save_screenshot('/Users/abdurakhmon/Desktop/mkhmd/turnitin_no_file_input.png')
+                screenshot_path = f'{screenshot_dir}/turnitin_no_file_input.png'
+                try:
+                    driver.save_screenshot(screenshot_path)
+                    print(f"No file input screenshot saved: {screenshot_path}")
+                except:
+                    pass
                 return {
                     'success': False,
                     'error': 'Could not find file upload input on the page. Screenshot saved for debugging.'
@@ -702,8 +725,12 @@ def submit_to_turnitin(file_path, filename):
                     print(f"Could not find field for value: {field['value']}")
             
             # Take screenshot after filling fields
-            driver.save_screenshot('/Users/abdurakhmon/Desktop/mkhmd/turnitin_after_fields.png')
-            print("Screenshot saved after filling fields")
+            try:
+                screenshot_path = f'{screenshot_dir}/turnitin_after_fields.png'
+                driver.save_screenshot(screenshot_path)
+                print(f"Screenshot saved after filling fields: {screenshot_path}")
+            except:
+                print("Could not save after-fields screenshot")
             
             # Look for and click submit/next button
             submit_selectors = [
@@ -803,8 +830,12 @@ def submit_to_turnitin(file_path, filename):
             time.sleep(8)
             
             # Take screenshot after potential navigation
-            driver.save_screenshot('/Users/abdurakhmon/Desktop/mkhmd/turnitin_after_submit.png')
-            print("Screenshot saved after submit attempt")
+            try:
+                screenshot_path = f'{screenshot_dir}/turnitin_after_submit.png'
+                driver.save_screenshot(screenshot_path)
+                print(f"Screenshot saved after submit attempt: {screenshot_path}")
+            except:
+                print("Could not save after-submit screenshot")
             
             # Look for access code field (订单编号 - Order Number)
             access_code_selectors = [
@@ -917,8 +948,12 @@ def submit_to_turnitin(file_path, filename):
                 time.sleep(10)
             
             # Take final screenshot
-            driver.save_screenshot('/Users/abdurakhmon/Desktop/mkhmd/turnitin_final.png')
-            print("Final screenshot saved")
+            try:
+                screenshot_path = f'{screenshot_dir}/turnitin_final.png'
+                driver.save_screenshot(screenshot_path)
+                print(f"Final screenshot saved: {screenshot_path}")
+            except:
+                print("Could not save final screenshot")
             
             # Get current URL and check for success indicators
             current_url = driver.current_url
