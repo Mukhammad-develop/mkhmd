@@ -16,6 +16,9 @@ class User(AbstractUser):
     website = models.URLField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     
+    # Turnitin balance
+    turnitin_balance = models.IntegerField(default=0, help_text="Number of Turnitin checks available")
+    
     # Account metadata
     date_joined = models.DateTimeField(default=timezone.now)
     last_login = models.DateTimeField(blank=True, null=True)
@@ -87,3 +90,30 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"{self.user.email}'s Profile"
+
+
+class TurnitinResult(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='turnitin_results')
+    access_code = models.CharField(max_length=50, unique=True, help_text="Turnitin access code")
+    title = models.CharField(max_length=200, help_text="Document title")
+    submission_date = models.DateTimeField()
+    
+    # Results data
+    plagiarism_percentage = models.FloatField(null=True, blank=True)
+    ai_percentage = models.FloatField(null=True, blank=True)
+    status = models.CharField(max_length=50, default='检测完成')
+    turnitin_type = models.CharField(max_length=50, default='Turnitin UK')
+    
+    # Download links (parsed from the response)
+    ai_report_available = models.BooleanField(default=False)
+    plagiarism_report_available = models.BooleanField(default=False)
+    english_guide_available = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-submission_date']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.title} ({self.access_code})"

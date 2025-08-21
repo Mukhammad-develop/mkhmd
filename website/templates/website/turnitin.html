@@ -319,6 +319,24 @@
 
 {% block content %}
 <div class="section">
+    <!-- Balance and Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; background: var(--soft-black); padding: 1rem 2rem; border-radius: 12px; border: 1px solid var(--border-gray);">
+        <div>
+            <span style="color: var(--text-gray);">Remaining Checks:</span>
+            <span style="color: var(--primary-purple); font-size: 1.5rem; font-weight: 700; margin-left: 0.5rem;">{{ user_balance }}</span>
+        </div>
+        <a href="{% url 'website:turnitin_results' %}" style="color: var(--primary-purple); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-history"></i> View Results
+        </a>
+    </div>
+
+    {% if user_balance <= 0 %}
+    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Insufficient Balance:</strong> You have no remaining checks. Please contact admin to add credits.
+    </div>
+    {% endif %}
+
     <div class="turnitin-hero">
         <h1 class="section-title">Turnitin Submission</h1>
         <p class="section-subtitle">Upload your document for plagiarism checking. We'll handle the submission process automatically.</p>

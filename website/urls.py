@@ -6,14 +6,14 @@ app_name = 'website'
 urlpatterns = [
     path('', views.home, name='home'),
     path('portfolio/', views.portfolio, name='portfolio'),
+    path('achievements/', views.achievements, name='achievements'),
+    path('blog/', views.blog, name='blog'),
     path('timeline/', views.timeline, name='timeline'),
+    path('metrics/', views.metrics, name='metrics'),
+    path('booking/', views.booking, name='booking'),
     path('projects/', views.projects, name='projects'),
+    path('resources/', views.resources, name='resources'),
     path('turnitin/', views.turnitin, name='turnitin'),
-    
-    # Legacy routes (redirect to combined pages)
-    path('achievements/', views.portfolio, name='achievements'),
-    path('blog/', views.portfolio, name='blog'),
-    path('metrics/', views.timeline, name='metrics'),
-    path('booking/', views.timeline, name='booking'),
-    path('resources/', views.projects, name='resources'),
+    path('turnitin/results/', views.turnitin_results, name='turnitin_results'),
+    path('turnitin/check/', views.check_turnitin_result, name='check_turnitin_result'),
 ] 

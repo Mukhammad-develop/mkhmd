@@ -1,0 +1,299 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .turnitin-results {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .balance-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .balance-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary-purple);
+        margin-bottom: 0.5rem;
+    }
+
+    .check-result-form {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .result-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .result-card:hover {
+        border-color: var(--primary-purple);
+        transform: translateY(-2px);
+    }
+
+    .result-stats {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .plagiarism-stat {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .ai-stat {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--pure-white);
+        font-weight: 500;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 1rem;
+        background: var(--charcoal);
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        color: var(--pure-white);
+        font-size: 1rem;
+    }
+
+    .form-input:focus {
+        border-color: var(--primary-purple);
+        outline: none;
+    }
+
+    .check-btn {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .check-btn:hover {
+        background: var(--deep-purple);
+        transform: translateY(-2px);
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid #10b981;
+        color: #10b981;
+    }
+
+    .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid #ef4444;
+        color: #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section turnitin-results">
+    <div class="section-header">
+        <h1 class="section-title">My Turnitin Results</h1>
+        <p class="section-subtitle">Manage your plagiarism check results and balance</p>
+    </div>
+
+    <!-- Balance Card -->
+    <div class="balance-card">
+        <div class="balance-number">{{ user_balance }}</div>
+        <p>Remaining Checks</p>
+        {% if user_balance <= 0 %}
+        <p style="color: #ef4444; margin-top: 1rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+            No checks remaining. Contact admin to add credits.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Check Result Form -->
+    <div class="check-result-form">
+        <h3 style="margin-bottom: 1rem;">Check Result by Access Code</h3>
+        <div id="alertContainer"></div>
+        <form id="checkResultForm">
+            <div class="form-group">
+                <label for="accessCode">Access Code (订单编号)</label>
+                <input type="text" id="accessCode" class="form-input" placeholder="Enter your Turnitin access code" required>
+            </div>
+            <button type="submit" class="check-btn">
+                <i class="fas fa-search"></i> Check Results
+            </button>
+        </form>
+    </div>
+
+    <!-- Results History -->
+    <div class="results-history">
+        <h3 style="margin-bottom: 2rem;">Your Results History</h3>
+        
+        {% if results %}
+            {% for result in results %}
+            <div class="result-card">
+                <div class="result-stats">
+                    <div class="stat-circle plagiarism-stat">
+                        {{ result.plagiarism_percentage|default:"N/A" }}%
+                    </div>
+                    <div class="stat-circle ai-stat">
+                        {{ result.ai_percentage|default:"N/A" }}%
+                    </div>
+                    <div style="flex: 1;">
+                        <h4>{{ result.title }}</h4>
+                        <p style="color: var(--text-gray);">
+                            <i class="fas fa-calendar"></i>
+                            {{ result.submission_date|date:"Y-m-d H:i" }}
+                        </p>
+                        <p style="color: var(--text-gray);">
+                            <i class="fas fa-code"></i>
+                            Access Code: {{ result.access_code }}
+                        </p>
+                        <p style="color: #10b981;">
+                            <i class="fas fa-check-circle"></i>
+                            {{ result.status }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1rem;">
+                    <span style="color: var(--text-gray);">Reports Available:</span>
+                    {% if result.plagiarism_report_available %}
+                        <span style="color: #10b981; margin-left: 1rem;">
+                            <i class="fas fa-file-pdf"></i> Plagiarism Report
+                        </span>
+                    {% endif %}
+                    {% if result.ai_report_available %}
+                        <span style="color: #10b981; margin-left: 1rem;">
+                            <i class="fas fa-robot"></i> AI Report
+                        </span>
+                    {% endif %}
+                    {% if result.english_guide_available %}
+                        <span style="color: #10b981; margin-left: 1rem;">
+                            <i class="fas fa-book"></i> English Guide
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="result-card" style="text-align: center; color: var(--text-gray);">
+                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h4>No Results Yet</h4>
+                <p>Submit documents through the Turnitin system and check results here.</p>
+                <a href="{% url 'website:turnitin' %}" class="check-btn" style="display: inline-block; margin-top: 1rem; text-decoration: none;">
+                    <i class="fas fa-upload"></i> Submit Document
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('checkResultForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const accessCode = document.getElementById('accessCode').value.trim();
+    const alertContainer = document.getElementById('alertContainer');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    if (!accessCode) {
+        showAlert('Please enter an access code', 'error');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    submitBtn.disabled = true;
+    
+    fetch('{% url "website:check_turnitin_result" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({ access_code: accessCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            // Reload page to show new results
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showAlert(data.message || 'Failed to check results', 'error');
+        }
+    })
+    .catch(error => {
+        showAlert('Network error. Please try again.', 'error');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        submitBtn.innerHTML = '<i class="fas fa-search"></i> Check Results';
+        submitBtn.disabled = false;
+    });
+});
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    
+    alertContainer.innerHTML = `
+        <div class="alert ${alertClass}">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+            ${message}
+        </div>
+    `;
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        alertContainer.innerHTML = '';
+    }, 5000);
+}
+</script>
+{% endblock %} 
