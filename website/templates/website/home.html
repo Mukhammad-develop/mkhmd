@@ -734,23 +734,9 @@
             }
         }
 
-        @keyframes typewriter {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-
         @keyframes blink {
             0%, 50% { border-color: transparent; }
             51%, 100% { border-color: var(--primary-purple); }
-        }
-
-        .typing-animation {
-            overflow: hidden;
-            border-right: 2px solid var(--primary-purple);
-            white-space: nowrap;
-            margin: 0 auto;
-            letter-spacing: 0.1em;
-            animation: typewriter 2s steps(40, end), blink 0.75s step-end infinite;
         }
 
         .skill-card:nth-child(odd) {
@@ -850,7 +836,7 @@
         <div class="hero-content">
             <div class="hero-greeting selectable-highlight" id="dynamic-greeting">Hello, I'm</div>
             <h1 class="selectable-highlight">{{ name }}</h1>
-            <div class="hero-tagline typing-animation selectable-highlight" id="typing-tagline">{{ tagline|safe }}</div>
+            <div class="hero-tagline selectable-highlight" id="typing-tagline">{{ tagline|safe }}</div>
             <p class="hero-description selectable-highlight">{{ description }}</p>
             <div class="hero-buttons">
                 <a href="#identity" class="btn btn-primary">
