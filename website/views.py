@@ -24,7 +24,7 @@ import tempfile
 from accounts.models import User, TurnitinResult
 
 # Turnitin Settings
-TURNITIN_TEST_MODE = True  # Set to True for testing, False for real submissions
+TURNITIN_TEST_MODE = False  # Set to True for testing, False for real submissions
 
 def parse_turnitin_results(html_content, access_code):
     """Parse Turnitin results from the HTML response"""
