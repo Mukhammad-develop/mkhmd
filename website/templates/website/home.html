@@ -284,6 +284,12 @@
             margin-bottom: 2rem;
             font-weight: 300;
             letter-spacing: 1px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hero-tagline.ready {
+            opacity: 1;
         }
 
         .hero-description {
@@ -836,7 +842,7 @@
         <div class="hero-content">
             <div class="hero-greeting selectable-highlight" id="dynamic-greeting">Hello, I'm</div>
             <h1 class="selectable-highlight">{{ name }}</h1>
-            <div class="hero-tagline selectable-highlight" id="typing-tagline">{{ tagline|safe }}</div>
+            <div class="hero-tagline selectable-highlight" id="typing-tagline"></div>
             <p class="hero-description selectable-highlight">{{ description }}</p>
             <div class="hero-buttons">
                 <a href="#identity" class="btn btn-primary">
@@ -1023,7 +1029,6 @@
 
         // Typing animation for tagline
         function typeText(element, text, speed = 100) {
-            element.textContent = '';
             element.style.borderRight = '2px solid var(--primary-purple)';
             let i = 0;
             
@@ -1045,6 +1050,7 @@
         // Start typing animation after page loads
         setTimeout(() => {
             const taglineElement = document.getElementById('typing-tagline');
+            taglineElement.classList.add('ready'); // Make element visible
             typeText(taglineElement, '{{ tagline|safe }}', 80);
         }, 1500);
 
