@@ -20,7 +20,7 @@ import time
 import tempfile
 
 # Import models
-from accounts.models import User, TurnitinResult
+from accounts.models import User, TurnitinSubmission
 
 # Turnitin Settings
 TURNITIN_TEST_MODE = getattr(settings, 'TURNITIN_TEST_MODE', True)
@@ -142,14 +142,37 @@ def parse_turnitin_results(html_content, access_code):
                         print(f"Could not parse date: {text}")
                         pass
             
-            # Check for status in green colored spans
+            # Check for status in colored spans - both green (completed) and red (ongoing)
+            status = None
+            
+            # Check for completed status (green color)
             status_spans = section.find_all('span', style=lambda x: x and 'color: green' in x)
             for span in status_spans:
                 text = span.get_text(strip=True)
-                if text:
+                if text == '检测完成':
                     status = text
-                    print(f"Found status: {status}")
+                    print(f"Found completed status: {status}")
                     break
+            
+            # Check for ongoing status (red color or specific text)
+            if not status:
+                red_status_spans = section.find_all('span', style=lambda x: x and 'color: red' in x)
+                for span in red_status_spans:
+                    text = span.get_text(strip=True)
+                    if 'AI检测中' in text or '检测中' in text:
+                        status = 'AI检测中...'
+                        print(f"Found ongoing status: {status}")
+                        break
+            
+            # If no status found in colored spans, check all spans for status text
+            if not status:
+                all_spans = section.find_all('span')
+                for span in all_spans:
+                    text = span.get_text(strip=True)
+                    if text == '检测完成' or 'AI检测中' in text or '检测中' in text:
+                        status = text
+                        print(f"Found status in regular span: {status}")
+                        break
             
             # Extract Turnitin type
             turnitin_type = 'Turnitin UK'  # Default
@@ -161,12 +184,12 @@ def parse_turnitin_results(html_content, access_code):
                     print(f"Found Turnitin type: {turnitin_type}")
                     break
             
-            # Check for download availability
+            # Check for download availability based on the HTML structure you provided
             ai_report_available = bool(section.find(attrs={'title': 'AI检测报告'})) or bool(section.find(string=re.compile('下载AI报告')))
             plagiarism_report_available = bool(section.find(attrs={'title': '下载查重报告'})) or bool(section.find(string=re.compile('下载查重报告')))
             english_guide_available = bool(section.find(attrs={'title': '下载英文秘籍'})) or bool(section.find(string=re.compile('下载英文秘籍')))
             
-            print(f"Download availability - AI: {ai_report_available}, Plagiarism: {plagiarism_report_available}, English: {english_guide_available}")
+            print(f"Download availability - AI: {ai_report_available}, Similarity: {plagiarism_report_available}, English: {english_guide_available}")
             
             # Build result data
             if title or plagiarism_percentage is not None or ai_percentage is not None:
@@ -832,12 +855,20 @@ def turnitin(request):
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
             
-            # Deduct balance before submission
+            # Create new TurnitinSubmission record with next submission ID
             with transaction.atomic():
+                # Deduct balance before submission
                 request.user.turnitin_balance -= 1
                 request.user.save()
+                
+                # Create new submission record
+                submission = TurnitinSubmission.objects.create(
+                    submission_id=TurnitinSubmission.get_next_submission_id(),
+                    owner=request.user,
+                    submission_status=False  # Default to ongoing
+                )
             
-            # Automate Turnitin submission
+            # Automate Turnitin submission using submission_id as title
             if TURNITIN_TEST_MODE:
                 # Test mode - simulate successful submission
                 import random
@@ -846,13 +877,15 @@ def turnitin(request):
                 
                 result = {
                     'success': True, 
-                    'message': f'Test mode: File uploaded successfully! Access code: {test_access_code}', 
+                    'message': f'Test mode: File uploaded successfully! Submission ID: {submission.submission_id}, Access code: {test_access_code}', 
                     'filename': uploaded_file.name,
                     'access_code': test_access_code,
+                    'submission_id': submission.submission_id,
                     'remaining_balance': request.user.turnitin_balance
                 }
             else:
-                result = submit_to_turnitin(request.user.id, temp_file_path, uploaded_file.name)
+                result = submit_to_turnitin(submission.submission_id, temp_file_path, uploaded_file.name)
+                result['submission_id'] = submission.submission_id
                 result['remaining_balance'] = request.user.turnitin_balance
             
             # Clean up temporary file
@@ -879,101 +912,62 @@ def turnitin(request):
 
 @login_required
 def turnitin_results(request):
-    """Show user's Turnitin results - automatically fetch from Turnitin website"""
+    """Show user's Turnitin submissions - automatically check for updates from Turnitin website"""
     
-    # Fixed test access code for all users
-    FIXED_ACCESS_CODE = "2884078633760879499"
-    user_id_str = str(request.user.id)
+    print(f"Fetching Turnitin submissions for user {request.user.id}")
     
-    print(f"Fetching Turnitin results for user {user_id_str}")
+    # Get all user's submissions
+    user_submissions = TurnitinSubmission.objects.filter(
+        owner=request.user
+    ).order_by('-created_at')
     
-    # First, try to get existing results from database
-    existing_results = TurnitinResult.objects.filter(
-        user=request.user, 
-        title=user_id_str
-    ).order_by('-submission_date')
+    # Check for ongoing submissions that need status updates
+    ongoing_submissions = user_submissions.filter(submission_status=False)
     
-    # Always try to fetch fresh results from Turnitin
-    fresh_results = []
-    error_message = None
-    
-    try:
-        # Scrape latest results from Turnitin website
-        print(f"Scraping fresh results from Turnitin with access code: {FIXED_ACCESS_CODE}")
-        scraped_results = scrape_turnitin_results(FIXED_ACCESS_CODE)
+    if ongoing_submissions.exists():
+        print(f"Found {ongoing_submissions.count()} ongoing submissions to check")
         
-        if scraped_results:
-            # Filter results to only include those with user's ID as title
-            user_results = [r for r in scraped_results if r.get('title') == user_id_str]
-            print(f"Found {len(user_results)} results for user ID {user_id_str} out of {len(scraped_results)} total results")
-            
-            # Save/update results in database
-            for result_data in user_results:
+        # For each ongoing submission, check if it has an access_code to query
+        for submission in ongoing_submissions:
+            if submission.access_code:
                 try:
-                    # Check if this specific result already exists
-                    existing = TurnitinResult.objects.filter(
-                        user=request.user,
-                        access_code=FIXED_ACCESS_CODE,
-                        title=user_id_str,
-                        submission_date=result_data.get('submission_date')
-                    ).first()
+                    # Try to get updated results from Turnitin
+                    scraped_results = scrape_turnitin_results(submission.access_code)
                     
-                    if existing:
-                        # Update existing result with latest data
-                        existing.plagiarism_percentage = result_data.get('plagiarism_percentage')
-                        existing.ai_percentage = result_data.get('ai_percentage')
-                        existing.status = result_data.get('status', '检测完成')
-                        existing.ai_report_available = result_data.get('ai_report_available', False)
-                        existing.plagiarism_report_available = result_data.get('plagiarism_report_available', False)
-                        existing.english_guide_available = result_data.get('english_guide_available', False)
-                        existing.save()
-                        fresh_results.append(existing)
-                        print(f"Updated existing result for {existing.submission_date}")
-                    else:
-                        # Create new result
-                        new_result = TurnitinResult.objects.create(
-                            user=request.user,
-                            access_code=FIXED_ACCESS_CODE,
-                            title=user_id_str,
-                            submission_date=result_data.get('submission_date'),
-                            plagiarism_percentage=result_data.get('plagiarism_percentage'),
-                            ai_percentage=result_data.get('ai_percentage'),
-                            status=result_data.get('status', '检测完成'),
-                            turnitin_type=result_data.get('turnitin_type', 'Turnitin UK'),
-                            ai_report_available=result_data.get('ai_report_available', False),
-                            plagiarism_report_available=result_data.get('plagiarism_report_available', False),
-                            english_guide_available=result_data.get('english_guide_available', False)
-                        )
-                        fresh_results.append(new_result)
-                        print(f"Created new result for {new_result.submission_date}")
+                    if scraped_results:
+                        # Look for this specific submission_id in the results
+                        submission_id_str = str(submission.submission_id)
+                        matching_results = [r for r in scraped_results if r.get('title') == submission_id_str]
                         
+                        if matching_results:
+                            result_data = matching_results[0]  # Take the first match
+                            
+                            # Update submission with new data
+                            if result_data.get('plagiarism_percentage') is not None:
+                                submission.similarity_percentage = str(result_data.get('plagiarism_percentage'))
+                            if result_data.get('ai_percentage') is not None:
+                                submission.ai_percentage = str(result_data.get('ai_percentage'))
+                            
+                            # Check if status changed to completed
+                            if result_data.get('status') == '检测完成':
+                                submission.submission_status = True
+                                print(f"Submission {submission.submission_id} marked as completed")
+                            
+                            submission.submission_date = result_data.get('submission_date') or submission.submission_date
+                            submission.save()
+                            
                 except Exception as e:
-                    print(f"Error saving result: {e}")
+                    print(f"Error checking submission {submission.submission_id}: {e}")
                     continue
-        else:
-            print("No results found from Turnitin scraping")
-            error_message = "No results found from Turnitin. Your documents may still be processing."
-            
-    except Exception as e:
-        print(f"Error fetching results from Turnitin: {e}")
-        error_message = f"Error fetching latest results: {str(e)}"
-    
-    # Get final results from database (including any newly saved ones)
-    final_results = TurnitinResult.objects.filter(
-        user=request.user,
-        title=user_id_str
-    ).order_by('-submission_date')
     
     context = {
-        'title': 'My Turnitin Results',
+        'title': 'My Turnitin Submissions',
         'name': 'Abdurakhmon',
-        'results': final_results,
+        'submissions': user_submissions,
         'user_balance': request.user.turnitin_balance,
-        'user_id': user_id_str,
-        'access_code': FIXED_ACCESS_CODE,
-        'fresh_results_count': len(fresh_results),
-        'error_message': error_message,
-        'total_results': final_results.count()
+        'ongoing_count': ongoing_submissions.count(),
+        'completed_count': user_submissions.filter(submission_status=True).count(),
+        'total_submissions': user_submissions.count()
     }
     return render(request, 'website/turnitin_results.html', context)
 
@@ -990,8 +984,8 @@ def check_turnitin_result(request):
                 return JsonResponse({'error': 'Access code is required'}, status=400)
             
             # Check if result already exists
-            existing_result = TurnitinResult.objects.filter(
-                user=request.user, 
+            existing_result = TurnitinSubmission.objects.filter(
+                owner=request.user, 
                 access_code=access_code
             ).first()
             
@@ -1000,11 +994,11 @@ def check_turnitin_result(request):
                     'success': True,
                     'message': 'Results already in your history',
                     'result': {
-                        'title': existing_result.title,
-                        'plagiarism_percentage': existing_result.plagiarism_percentage,
+                        'submission_id': existing_result.submission_id,
+                        'similarity_percentage': existing_result.similarity_percentage,
                         'ai_percentage': existing_result.ai_percentage,
-                        'submission_date': existing_result.submission_date.isoformat(),
-                        'status': existing_result.status
+                        'submission_date': existing_result.submission_date.isoformat() if existing_result.submission_date else None,
+                        'status': 'completed' if existing_result.submission_status else 'ongoing'
                     }
                 })
             
@@ -1017,40 +1011,50 @@ def check_turnitin_result(request):
                 saved_results = []
                 for result_data in results:
                     try:
-                        # Check if this specific result already exists
-                        existing = TurnitinResult.objects.filter(
-                            user=request.user,
-                            access_code=access_code,
-                            title=result_data.get('title', 'Unknown')
+                        # Get submission_id from title (assuming title contains submission_id)
+                        title = result_data.get('title', '')
+                        try:
+                            submission_id = int(title) if title.isdigit() else None
+                        except (ValueError, TypeError):
+                            submission_id = None
+                        
+                        if not submission_id:
+                            print(f"Skipping result with invalid submission_id: {title}")
+                            continue
+                        
+                        # Check if this specific submission already exists
+                        existing = TurnitinSubmission.objects.filter(
+                            owner=request.user,
+                            submission_id=submission_id
                         ).first()
                         
                         if not existing:
-                            turnitin_result = TurnitinResult.objects.create(
-                                user=request.user,
+                            # Create new submission if it doesn't exist
+                            turnitin_submission = TurnitinSubmission.objects.create(
+                                submission_id=submission_id,
+                                owner=request.user,
                                 access_code=access_code,
-                                title=result_data.get('title', 'Unknown Document'),
                                 submission_date=result_data.get('submission_date'),
-                                plagiarism_percentage=result_data.get('plagiarism_percentage'),
-                                ai_percentage=result_data.get('ai_percentage'),
-                                status=result_data.get('status', '检测完成'),
-                                turnitin_type=result_data.get('turnitin_type', 'Turnitin UK'),
-                                ai_report_available=result_data.get('ai_report_available', False),
-                                plagiarism_report_available=result_data.get('plagiarism_report_available', False),
-                                english_guide_available=result_data.get('english_guide_available', False)
+                                similarity_percentage=str(result_data.get('plagiarism_percentage', '')) if result_data.get('plagiarism_percentage') is not None else '',
+                                ai_percentage=str(result_data.get('ai_percentage', '')) if result_data.get('ai_percentage') is not None else '',
+                                submission_status=result_data.get('status') == '检测完成',  # True if completed
+                                turnitin_type=result_data.get('turnitin_type', 'Turnitin UK')
                             )
-                            saved_results.append(turnitin_result)
-                            print(f"Saved new result: {turnitin_result.title}")
+                            saved_results.append(turnitin_submission)
+                            print(f"Saved new submission: {turnitin_submission.submission_id}")
                         else:
-                            # Update existing result with latest data
-                            existing.plagiarism_percentage = result_data.get('plagiarism_percentage')
-                            existing.ai_percentage = result_data.get('ai_percentage')
-                            existing.status = result_data.get('status', '检测完成')
-                            existing.ai_report_available = result_data.get('ai_report_available', False)
-                            existing.plagiarism_report_available = result_data.get('plagiarism_report_available', False)
-                            existing.english_guide_available = result_data.get('english_guide_available', False)
+                            # Update existing submission with latest data
+                            existing.access_code = access_code
+                            existing.submission_date = result_data.get('submission_date') or existing.submission_date
+                            if result_data.get('plagiarism_percentage') is not None:
+                                existing.similarity_percentage = str(result_data.get('plagiarism_percentage'))
+                            if result_data.get('ai_percentage') is not None:
+                                existing.ai_percentage = str(result_data.get('ai_percentage'))
+                            existing.submission_status = result_data.get('status') == '检测完成'
+                            existing.turnitin_type = result_data.get('turnitin_type', 'Turnitin UK')
                             existing.save()
                             saved_results.append(existing)
-                            print(f"Updated existing result: {existing.title}")
+                            print(f"Updated existing submission: {existing.submission_id}")
                             
                     except Exception as e:
                         print(f"Error saving result: {e}")
@@ -1059,19 +1063,18 @@ def check_turnitin_result(request):
                 if saved_results:
                     return JsonResponse({
                         'success': True,
-                        'message': f'✅ Found and saved {len(saved_results)} result(s) for access code {access_code}',
+                        'message': f'✅ Found and saved {len(saved_results)} submission(s) for access code {access_code}',
                         'results': [{
                             'id': r.id,
-                            'title': r.title,
-                            'plagiarism_percentage': r.plagiarism_percentage,
+                            'submission_id': r.submission_id,
+                            'similarity_percentage': r.similarity_percentage,
                             'ai_percentage': r.ai_percentage,
                             'submission_date': r.submission_date.isoformat() if r.submission_date else None,
-                            'status': r.status,
+                            'status': 'completed' if r.submission_status else 'ongoing',
                             'turnitin_type': r.turnitin_type,
-                            'ai_report_available': r.ai_report_available,
-                            'plagiarism_report_available': r.plagiarism_report_available,
-                            'english_guide_available': r.english_guide_available,
-                            'access_code': r.access_code
+                            'access_code': r.access_code,
+                            'similarity_file_available': bool(r.similarity_file),
+                            'ai_file_available': bool(r.ai_file)
                         } for r in saved_results]
                     })
                 else:
@@ -1087,6 +1090,109 @@ def check_turnitin_result(request):
                 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+def check_ongoing_submissions():
+    """
+    Check all ongoing submissions every 3 minutes to see if they're completed.
+    This function should be called by a scheduled task (like celery or cron).
+    """
+    ongoing_submissions = TurnitinSubmission.objects.filter(submission_status=False)
+    
+    if not ongoing_submissions.exists():
+        print("No ongoing submissions to check")
+        return
+    
+    print(f"Checking {ongoing_submissions.count()} ongoing submissions...")
+    
+    # Group submissions by access_code to minimize website scraping
+    access_code_groups = {}
+    for submission in ongoing_submissions:
+        if submission.access_code:
+            if submission.access_code not in access_code_groups:
+                access_code_groups[submission.access_code] = []
+            access_code_groups[submission.access_code].append(submission)
+    
+    for access_code, submissions in access_code_groups.items():
+        try:
+            print(f"Checking access code: {access_code} for {len(submissions)} submissions")
+            results = scrape_turnitin_results(access_code)
+            
+            if results:
+                for submission in submissions:
+                    submission_id_str = str(submission.submission_id)
+                    
+                    # Find matching result for this submission
+                    matching_results = [r for r in results if r.get('title') == submission_id_str]
+                    
+                    if matching_results:
+                        result_data = matching_results[0]
+                        
+                        # Check if status is still ongoing (AI检测中...)
+                        status = result_data.get('status', '')
+                        if status == 'AI检测中...':
+                            print(f"Submission {submission.submission_id} still ongoing")
+                            continue
+                        
+                        # Check if status is completed (检测完成)
+                        if status == '检测完成':
+                            print(f"Submission {submission.submission_id} completed! Updating...")
+                            
+                            # Update submission with results
+                            if result_data.get('plagiarism_percentage') is not None:
+                                submission.similarity_percentage = str(result_data.get('plagiarism_percentage'))
+                            if result_data.get('ai_percentage') is not None:
+                                submission.ai_percentage = str(result_data.get('ai_percentage'))
+                            
+                            submission.submission_status = True  # Mark as completed
+                            submission.submission_date = result_data.get('submission_date') or submission.submission_date
+                            submission.save()
+                            
+                            # Download similarity and AI files if available
+                            try:
+                                download_results = download_turnitin_files(submission.submission_id, access_code)
+                                if download_results.get('success'):
+                                    save_downloaded_files_to_submission(submission, download_results)
+                                    print(f"Successfully downloaded files for submission {submission.submission_id}")
+                                else:
+                                    print(f"Could not download files for submission {submission.submission_id}: {download_results.get('error', 'Unknown error')}")
+                            except Exception as e:
+                                print(f"Error downloading files for submission {submission.submission_id}: {e}")
+                            
+                        else:
+                            print(f"Submission {submission.submission_id} has unknown status: {status}")
+                    else:
+                        print(f"No matching result found for submission {submission.submission_id}")
+            else:
+                print(f"No results found for access code: {access_code}")
+                
+        except Exception as e:
+            print(f"Error checking access code {access_code}: {e}")
+            continue
+    
+    print("Finished checking ongoing submissions")
+
+
+@csrf_exempt
+def check_submissions_status(request):
+    """
+    Manual endpoint to trigger checking of ongoing submissions.
+    This can be called by a cron job or scheduled task.
+    """
+    if request.method == 'POST':
+        try:
+            check_ongoing_submissions()
+            return JsonResponse({
+                'success': True,
+                'message': 'Submission status check completed'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
@@ -1244,7 +1350,7 @@ def scrape_turnitin_results(access_code):
         print(f"Error scraping Turnitin results: {e}")
         return []
 
-def submit_to_turnitin(user_id, file_path, filename):
+def submit_to_turnitin(submission_id, file_path, filename):
     """Automate submission to Turnitin using Selenium"""
     try:
         # Set up Chrome options for PythonAnywhere
@@ -1337,10 +1443,10 @@ def submit_to_turnitin(user_id, file_path, filename):
             driver.save_screenshot(screenshot_path)
             print(f"After processing screenshot: {screenshot_path}")
             
-            # Fill form fields - use user_id as title
+            # Fill form fields - use submission_id as title
             form_fields = [
                 {
-                    'value': str(user_id),
+                    'value': str(submission_id),
                     'selectors': ['input[placeholder="请输入文章标题"]'],
                     'name': 'title'
                 },
@@ -1350,7 +1456,7 @@ def submit_to_turnitin(user_id, file_path, filename):
                     'name': 'lastname'
                 },
                 {
-                    'value': str(user_id),
+                    'value': str(submission_id),
                     'selectors': ['input[placeholder="请输入作者名字"]'],
                     'name': 'firstname'
                 }
@@ -1658,3 +1764,157 @@ def submit_to_turnitin(user_id, file_path, filename):
             'success': False,
             'error': f'Failed to submit to Turnitin: {str(e)}'
         }
+
+def download_turnitin_files(submission_id, access_code):
+    """
+    Download similarity and AI files for a completed submission
+    Returns dict with download results
+    """
+    try:
+        # Set up Chrome options for file downloads
+        chrome_options = Options()
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--window-size=1920,1080')
+        
+        # Set download directory
+        download_dir = tempfile.mkdtemp()
+        prefs = {
+            "download.default_directory": download_dir,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": True
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
+        
+        driver = webdriver.Chrome(options=chrome_options)
+        print(f"Downloading files for submission {submission_id} with access code {access_code}")
+        
+        try:
+            # Navigate to Turnitin results page
+            driver.get('https://www.byturnitin.com/buk/#/chakanbaogao')
+            time.sleep(3)
+            
+            # Find and fill access code
+            wait = WebDriverWait(driver, 15)
+            access_input = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[placeholder="请输入订单编号查询检测结果"]')))
+            access_input.clear()
+            access_input.send_keys(access_code)
+            
+            # Click search
+            search_button = driver.find_element(By.XPATH, "//span[contains(text(), '查询结果')]/..")
+            driver.execute_script("arguments[0].click();", search_button)
+            time.sleep(5)
+            
+            # Find the submission section by looking for the submission_id in titles
+            submission_found = False
+            sections = driver.find_elements(By.CSS_SELECTOR, '.flex-row.items-center.section_7')
+            
+            for section in sections:
+                try:
+                    # Look for title spans
+                    title_spans = section.find_elements(By.CSS_SELECTOR, 'span.font_8')
+                    for span in title_spans:
+                        if span.text.strip() == str(submission_id):
+                            submission_found = True
+                            print(f"Found submission {submission_id} section")
+                            
+                            # Look for download buttons in this section
+                            download_results = {
+                                'similarity_file': None,
+                                'ai_file': None,
+                                'success': False
+                            }
+                            
+                            # Try to download similarity report (下载查重报告)
+                            try:
+                                similarity_btn = section.find_element(By.XPATH, ".//span[contains(text(), '下载查重报告')]/..")
+                                if similarity_btn:
+                                    print("Clicking similarity report download...")
+                                    driver.execute_script("arguments[0].click();", similarity_btn)
+                                    time.sleep(3)
+                                    
+                                    # Check if file was downloaded
+                                    downloaded_files = os.listdir(download_dir)
+                                    if downloaded_files:
+                                        similarity_file = downloaded_files[-1]  # Get latest file
+                                        download_results['similarity_file'] = os.path.join(download_dir, similarity_file)
+                                        print(f"Downloaded similarity report: {similarity_file}")
+                            except Exception as e:
+                                print(f"Could not download similarity report: {e}")
+                            
+                            # Try to download AI report (下载AI报告)
+                            try:
+                                ai_btn = section.find_element(By.XPATH, ".//span[contains(text(), '下载AI报告')]/..")
+                                if ai_btn:
+                                    print("Clicking AI report download...")
+                                    driver.execute_script("arguments[0].click();", ai_btn)
+                                    time.sleep(3)
+                                    
+                                    # Check if file was downloaded
+                                    downloaded_files = os.listdir(download_dir)
+                                    new_files = [f for f in downloaded_files if f not in (download_results.get('similarity_file', '').split('/')[-1:] or [])]
+                                    if new_files:
+                                        ai_file = new_files[-1]  # Get latest new file
+                                        download_results['ai_file'] = os.path.join(download_dir, ai_file)
+                                        print(f"Downloaded AI report: {ai_file}")
+                            except Exception as e:
+                                print(f"Could not download AI report: {e}")
+                            
+                            download_results['success'] = bool(download_results['similarity_file'] or download_results['ai_file'])
+                            return download_results
+                            
+                except Exception as e:
+                    continue
+            
+            if not submission_found:
+                print(f"Submission {submission_id} not found in results")
+                return {'success': False, 'error': 'Submission not found'}
+                
+        finally:
+            driver.quit()
+            
+    except Exception as e:
+        print(f"Error downloading files for submission {submission_id}: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def save_downloaded_files_to_submission(submission, download_results):
+    """
+    Save downloaded files to the TurnitinSubmission model
+    """
+    try:
+        from django.core.files import File
+        from django.core.files.storage import default_storage
+        
+        if download_results.get('similarity_file'):
+            similarity_path = download_results['similarity_file']
+            if os.path.exists(similarity_path):
+                with open(similarity_path, 'rb') as f:
+                    file_name = f"similarity_{submission.submission_id}_{os.path.basename(similarity_path)}"
+                    submission.similarity_file.save(file_name, File(f), save=False)
+                print(f"Saved similarity file for submission {submission.submission_id}")
+        
+        if download_results.get('ai_file'):
+            ai_path = download_results['ai_file']
+            if os.path.exists(ai_path):
+                with open(ai_path, 'rb') as f:
+                    file_name = f"ai_{submission.submission_id}_{os.path.basename(ai_path)}"
+                    submission.ai_file.save(file_name, File(f), save=False)
+                print(f"Saved AI file for submission {submission.submission_id}")
+        
+        submission.save()
+        
+        # Clean up temporary files
+        if download_results.get('similarity_file') and os.path.exists(download_results['similarity_file']):
+            os.remove(download_results['similarity_file'])
+        if download_results.get('ai_file') and os.path.exists(download_results['ai_file']):
+            os.remove(download_results['ai_file'])
+            
+        return True
+        
+    except Exception as e:
+        print(f"Error saving files for submission {submission.submission_id}: {e}")
+        return False

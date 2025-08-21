@@ -92,28 +92,50 @@ class UserProfile(models.Model):
         return f"{self.user.email}'s Profile"
 
 
-class TurnitinResult(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='turnitin_results')
-    access_code = models.CharField(max_length=50, unique=True, help_text="Turnitin access code")
-    title = models.CharField(max_length=200, help_text="Document title")
-    submission_date = models.DateTimeField()
+class TurnitinSubmission(models.Model):
+    # Submission ID starts from 3432 and increments
+    submission_id = models.IntegerField(unique=True, help_text="Submission ID starting from 3432")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='turnitin_submissions')
     
-    # Results data
-    plagiarism_percentage = models.FloatField(null=True, blank=True)
-    ai_percentage = models.FloatField(null=True, blank=True)
-    status = models.CharField(max_length=50, default='检测完成')
+    # Submission status: False = ongoing (AI检测中...), True = completed (检测完成)
+    submission_status = models.BooleanField(default=False, help_text="False = ongoing, True = completed")
+    
+    # Results - retrieved when available
+    similarity_percentage = models.CharField(max_length=10, blank=True, null=True, help_text="Similarity percentage as string")
+    ai_percentage = models.CharField(max_length=10, blank=True, null=True, help_text="AI percentage as string")
+    
+    # Files - downloaded when available
+    similarity_file = models.FileField(upload_to='turnitin/similarity/', blank=True, null=True, help_text="Similarity report file")
+    ai_file = models.FileField(upload_to='turnitin/ai/', blank=True, null=True, help_text="AI report file")
+    
+    # Additional fields from old TurnitinResult for compatibility
+    access_code = models.CharField(max_length=50, blank=True, null=True, help_text="Turnitin access code")
+    submission_date = models.DateTimeField(blank=True, null=True, help_text="Original submission date from Turnitin")
     turnitin_type = models.CharField(max_length=50, default='Turnitin UK')
     
-    # Download links (parsed from the response)
-    ai_report_available = models.BooleanField(default=False)
-    plagiarism_report_available = models.BooleanField(default=False)
-    english_guide_available = models.BooleanField(default=False)
-    
+    # Metadata
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['-submission_date']
+        ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.user.email} - {self.title} ({self.access_code})"
+        status = "completed" if self.submission_status else "ongoing"
+        return f"Submission {self.submission_id} - {self.owner.email} ({status})"
+    
+    @classmethod
+    def get_next_submission_id(cls):
+        """Get the next available submission ID starting from 3432"""
+        last_submission = cls.objects.order_by('-submission_id').first()
+        if last_submission:
+            return last_submission.submission_id + 1
+        return 3432
+    
+    def is_ongoing(self):
+        """Check if submission is still ongoing"""
+        return not self.submission_status
+    
+    def is_completed(self):
+        """Check if submission is completed"""
+        return self.submission_status

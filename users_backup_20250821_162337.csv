@@ -1,0 +1,6 @@
+id,email,username,first_name,last_name,is_email_verified,turnitin_balance,bio,location,website,is_staff,is_active,is_superuser,date_joined,last_login
+1,admin@mkhmd.uk,admin,,,False,998,,,,True,True,True,2025-08-21T05:10:51+00:00,2025-08-21T07:07:04+00:00
+2,abdurakhmon70@gmail.com,abdurakhmon70,,,False,0,,,,False,False,False,2025-08-21T05:15:19.666938+00:00,
+5,onlinemaktab20@gmail.com,onlinemaktab20,,,True,0,,,,False,True,False,2025-08-21T05:43:01.573825+00:00,2025-08-21T05:52:46.772955+00:00
+6,moarest.openai.chatgpt@gmail.com,moarest.openai.chatgpt,Moarest,kalamush,True,0,,,,False,True,False,2025-08-21T05:54:03.287079+00:00,2025-08-21T05:54:26.057282+00:00
+7,yt.alixan.pubgm@gmail.com,yt.alixan.pubgm,,,False,0,,,,False,False,False,2025-08-21T05:56:52.296787+00:00,

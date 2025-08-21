@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
-from .models import User, EmailVerification, UserProfile, TurnitinResult
+from .models import User, EmailVerification, UserProfile, TurnitinSubmission
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -67,22 +67,28 @@ class UserProfileAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at')
 
-@admin.register(TurnitinResult)
-class TurnitinResultAdmin(admin.ModelAdmin):
-    list_display = ('user', 'title', 'access_code', 'plagiarism_percentage', 'ai_percentage', 'submission_date', 'status')
-    list_filter = ('status', 'turnitin_type', 'submission_date', 'created_at')
-    search_fields = ('user__email', 'user__username', 'title', 'access_code')
+@admin.register(TurnitinSubmission)
+class TurnitinSubmissionAdmin(admin.ModelAdmin):
+    list_display = ('submission_id', 'owner', 'submission_status', 'similarity_percentage', 'ai_percentage', 'submission_date', 'created_at')
+    list_filter = ('submission_status', 'turnitin_type', 'submission_date', 'created_at')
+    search_fields = ('owner__email', 'owner__username', 'submission_id', 'access_code')
     readonly_fields = ('created_at', 'updated_at')
+    
+    def get_status_display(self, obj):
+        if obj.submission_status:
+            return format_html('<span style="color: green;">✅ Completed</span>')
+        return format_html('<span style="color: orange;">⏳ Ongoing</span>')
+    get_status_display.short_description = 'Status'
     
     fieldsets = (
         ('Basic Info', {
-            'fields': ('user', 'access_code', 'title', 'submission_date', 'status', 'turnitin_type')
+            'fields': ('submission_id', 'owner', 'access_code', 'submission_date', 'submission_status', 'turnitin_type')
         }),
         ('Results', {
-            'fields': ('plagiarism_percentage', 'ai_percentage')
+            'fields': ('similarity_percentage', 'ai_percentage')
         }),
-        ('Reports Available', {
-            'fields': ('ai_report_available', 'plagiarism_report_available', 'english_guide_available')
+        ('Files', {
+            'fields': ('similarity_file', 'ai_file')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
