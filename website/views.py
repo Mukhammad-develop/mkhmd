@@ -507,24 +507,40 @@ def submit_to_turnitin(file_path, filename):
                 # Server environment (PythonAnywhere, Linux, etc.)
                 # Try Chromium first (commonly available on Linux servers)
                 try:
+                    # Configure for Chromium
                     chrome_options.binary_location = "/usr/bin/chromium"
-                    service = Service(ChromeDriverManager().install())
+                    
+                    # Get ChromeDriver without Chrome detection
+                    import os
+                    chromedriver_path = ChromeDriverManager().install()
+                    print(f"ChromeDriver installed at: {chromedriver_path}")
+                    
+                    service = Service(chromedriver_path)
                     driver = webdriver.Chrome(service=service, options=chrome_options)
                     print("✅ Using Chromium with webdriver-manager")
                 except Exception as chromium_error:
                     initialization_errors.append(f"Chromium: {str(chromium_error)}")
+                    print(f"Chromium failed: {chromium_error}")
                     
-                    # Fallback to webdriver-manager with default Chrome
+                    # Try without binary location (let webdriver-manager handle it)
                     try:
+                        # Remove binary location to let webdriver-manager find Chrome
+                        chrome_options_fallback = Options()
+                        for arg in chrome_options.arguments:
+                            chrome_options_fallback.add_argument(arg)
+                        for key, value in chrome_options.experimental_options.items():
+                            chrome_options_fallback.add_experimental_option(key, value)
+                        
                         service = Service(ChromeDriverManager().install())
-                        driver = webdriver.Chrome(service=service, options=chrome_options)
+                        driver = webdriver.Chrome(service=service, options=chrome_options_fallback)
                         print("✅ Using webdriver-manager for Chrome setup")
                     except Exception as wdm_error:
                         initialization_errors.append(f"WebDriver Manager: {str(wdm_error)}")
+                        print(f"WebDriver Manager failed: {wdm_error}")
                         
-                        # Final fallback to system Chrome
+                        # Final fallback - try system Chrome without binary location
                         try:
-                            driver = webdriver.Chrome(options=chrome_options)
+                            driver = webdriver.Chrome(options=chrome_options_fallback)
                             print("✅ Using system Chrome")
                         except Exception as system_error:
                             initialization_errors.append(f"System Chrome: {str(system_error)}")
@@ -544,6 +560,7 @@ def submit_to_turnitin(file_path, filename):
             }
         
         wait = WebDriverWait(driver, 30)
+        print(f"🚀 WebDriver initialized successfully, starting automation...")
         
         try:
             # Navigate to Turnitin
