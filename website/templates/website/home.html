@@ -850,7 +850,7 @@
         <div class="hero-content">
             <div class="hero-greeting selectable-highlight" id="dynamic-greeting">Hello, I'm</div>
             <h1 class="selectable-highlight">{{ name }}</h1>
-            <div class="hero-tagline typing-animation selectable-highlight" id="typing-tagline">{{ tagline }}</div>
+            <div class="hero-tagline typing-animation selectable-highlight" id="typing-tagline">{{ tagline|safe }}</div>
             <p class="hero-description selectable-highlight">{{ description }}</p>
             <div class="hero-buttons">
                 <a href="#identity" class="btn btn-primary">
@@ -1059,7 +1059,7 @@
         // Start typing animation after page loads
         setTimeout(() => {
             const taglineElement = document.getElementById('typing-tagline');
-            typeText(taglineElement, '{{ tagline }}', 80);
+            typeText(taglineElement, '{{ tagline|safe }}', 80);
         }, 1500);
 
         // Interactive skill cards
