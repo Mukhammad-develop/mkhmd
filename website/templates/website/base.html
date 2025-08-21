@@ -140,6 +140,21 @@
             color: var(--pure-white);
         }
 
+        .nav-links .signup-btn {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 500;
+        }
+
+        .nav-links .signup-btn:hover {
+            background: var(--deep-purple);
+            color: var(--pure-white);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
 
 
         /* Page specific content */
@@ -405,6 +420,15 @@
                 <li><a href="{% url 'website:portfolio' %}" {% if request.resolver_match.url_name in 'portfolio,achievements,blog' %}class="active"{% endif %}>Portfolio</a></li>
                 <li><a href="{% url 'website:timeline' %}" {% if request.resolver_match.url_name in 'timeline,metrics,booking' %}class="active"{% endif %}>Timeline</a></li>
                 <li><a href="{% url 'website:projects' %}" {% if request.resolver_match.url_name in 'projects,resources,turnitin' %}class="active"{% endif %}>Projects</a></li>
+                
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'accounts:profile' %}" {% if 'accounts' in request.resolver_match.namespace %}class="active"{% endif %}>
+                        <i class="fas fa-user"></i> {{ user.get_short_name }}
+                    </a></li>
+                {% else %}
+                    <li><a href="{% url 'accounts:login' %}">Login</a></li>
+                    <li><a href="{% url 'accounts:signup' %}" class="signup-btn">Sign Up</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>
