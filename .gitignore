@@ -2,3 +2,7 @@
 turnitin_*.png
 test_document.*
 db.sqlite3
+*.pyc
+__pycache__/
+media/
+.env
