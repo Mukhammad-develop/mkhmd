@@ -37,8 +37,7 @@ def signup_view(request):
                 is_active=False  # User inactive until email verified
             )
             
-            # Create profile
-            UserProfile.objects.create(user=user)
+            # Profile is automatically created by signal
             
             # Send verification email
             verification = EmailVerification.objects.create(
@@ -96,6 +95,7 @@ def verify_email_view(request):
                     verification.save()
                 
                 # Auto-login user
+                user.backend = 'accounts.backends.EmailBackend'
                 login(request, user)
                 
                 # Clear session

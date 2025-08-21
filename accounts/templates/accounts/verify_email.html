@@ -55,11 +55,72 @@
         margin-bottom: 2rem;
         background: var(--charcoal) !important;
         border: 2px solid var(--border-gray) !important;
+        padding: 1rem !important;
+        border-radius: 12px !important;
+        transition: all 0.3s ease !important;
     }
 
     .verification-input:focus {
         border-color: var(--primary-purple) !important;
         box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+        background: var(--soft-black) !important;
+    }
+
+    .verification-input::placeholder {
+        color: var(--text-gray);
+        opacity: 0.6;
+    }
+
+    .auth-btn {
+        background: linear-gradient(135deg, var(--primary-purple), var(--deep-purple));
+        color: var(--pure-white);
+        border: none;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .auth-btn:hover::before {
+        left: 100%;
+    }
+
+    .auth-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        background: linear-gradient(135deg, var(--deep-purple), var(--dark-purple));
+    }
+
+    .auth-btn:disabled {
+        opacity: 0.7;
+        transform: none;
+        cursor: not-allowed;
+    }
+
+    .auth-btn:disabled:hover {
+        transform: none;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
     }
 
     .resend-section {
@@ -193,23 +254,53 @@
     document.addEventListener('DOMContentLoaded', function() {
         const codeInput = document.getElementById('id_code');
         codeInput.focus();
+        codeInput.setAttribute('placeholder', '000000');
+        codeInput.setAttribute('maxlength', '6');
 
-        // Auto-submit when 6 digits entered
-        codeInput.addEventListener('input', function(e) {
-            const value = e.target.value.replace(/\D/g, ''); // Only digits
-            e.target.value = value;
+        // Allow pasting and format input
+        codeInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            const cleanPaste = paste.replace(/\D/g, '').substring(0, 6);
+            e.target.value = cleanPaste;
             
-            if (value.length === 6) {
+            if (cleanPaste.length === 6) {
                 setTimeout(() => {
                     document.getElementById('verificationForm').submit();
                 }, 500);
             }
         });
 
-        // Only allow digits
+        // Auto-submit when 6 digits entered
+        codeInput.addEventListener('input', function(e) {
+            const value = e.target.value.replace(/\D/g, ''); // Only digits
+            e.target.value = value;
+            
+            // Add visual feedback for complete code
+            if (value.length === 6) {
+                e.target.style.borderColor = 'var(--primary-purple)';
+                e.target.style.background = 'rgba(139, 92, 246, 0.1)';
+                setTimeout(() => {
+                    document.getElementById('verificationForm').submit();
+                }, 500);
+            } else {
+                e.target.style.borderColor = 'var(--border-gray)';
+                e.target.style.background = 'var(--charcoal)';
+            }
+        });
+
+        // Only allow digits and navigation keys
         codeInput.addEventListener('keypress', function(e) {
-            if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+            if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
                 e.preventDefault();
+            }
+        });
+
+        // Allow Ctrl+V for pasting
+        codeInput.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'v') {
+                // Allow paste operation
+                return true;
             }
         });
     });

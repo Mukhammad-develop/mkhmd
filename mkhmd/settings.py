@@ -139,12 +139,12 @@ AUTHENTICATION_BACKENDS = [
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Change this to your email provider
+EMAIL_HOST = 'smtp.livemail.co.uk'  # Your Livemail SMTP server
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@mkhmd.uk'  # Change to your actual email
-EMAIL_HOST_PASSWORD = 'your-app-password'  # Use app password for Gmail
-DEFAULT_FROM_EMAIL = 'MKHMD <noreply@mkhmd.uk>'
+EMAIL_HOST_USER = 'no-reply@mkhmd.uk'  # Your Livemail email
+EMAIL_HOST_PASSWORD = 'idontwanttoreply'  # Your Livemail password
+DEFAULT_FROM_EMAIL = 'MKHMD <no-reply@mkhmd.uk>'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

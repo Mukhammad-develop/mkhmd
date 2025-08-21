@@ -195,10 +195,12 @@
             text-decoration: none;
             color: var(--pure-white);
             font-weight: 300;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             letter-spacing: 0.5px;
             transition: all 0.3s ease;
             position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
         }
 
         .nav-links a::after {
@@ -218,6 +220,26 @@
 
         .nav-links a:hover {
             color: var(--primary-purple);
+        }
+
+        .nav-links a.active {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+        }
+
+        .nav-links .signup-btn {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 500;
+        }
+
+        .nav-links .signup-btn:hover {
+            background: var(--deep-purple);
+            color: var(--pure-white);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
         }
 
         .hero {
@@ -759,26 +781,6 @@
             animation: fadeInUp 1.2s ease-out, bounceIn 1.5s ease-out 0.5s both;
         }
 
-        .nav-links a {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-links a::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .nav-links a:hover::before {
-            left: 100%;
-        }
-
         @media (max-width: 768px) {
             .nav-container {
                 padding: 1rem 1.5rem;
@@ -819,12 +821,21 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">&lt;{{ name|lower }}/&gt;</div>
+            <a href="{% url 'website:home' %}" class="logo">&lt;{{ name|lower }}/&gt;</a>
             <ul class="nav-links">
-                <li><a href="{% url 'website:home' %}">Home</a></li>
-                <li><a href="{% url 'website:portfolio' %}">Portfolio</a></li>
-                <li><a href="{% url 'website:timeline' %}">Timeline</a></li>
-                <li><a href="{% url 'website:projects' %}">Projects</a></li>
+                <li><a href="{% url 'website:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
+                <li><a href="{% url 'website:portfolio' %}" {% if request.resolver_match.url_name in 'portfolio,achievements,blog' %}class="active"{% endif %}>Portfolio</a></li>
+                <li><a href="{% url 'website:timeline' %}" {% if request.resolver_match.url_name in 'timeline,metrics,booking' %}class="active"{% endif %}>Timeline</a></li>
+                <li><a href="{% url 'website:projects' %}" {% if request.resolver_match.url_name in 'projects,resources,turnitin' %}class="active"{% endif %}>Projects</a></li>
+                
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'accounts:profile' %}" {% if 'accounts' in request.resolver_match.namespace %}class="active"{% endif %}>
+                        <i class="fas fa-user"></i> {{ user.get_short_name }}
+                    </a></li>
+                {% else %}
+                    <li><a href="{% url 'accounts:login' %}">Login</a></li>
+                    <li><a href="{% url 'accounts:signup' %}" class="signup-btn">Sign Up</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>
@@ -961,7 +972,7 @@
     </section>
 
     <footer>
-        <p>&copy; 2024 {{ name }}. Crafted with precision and passion.</p>
+        <p>&copy; 2025 {{ name }}. Crafted with precision and passion.</p>
     </footer>
 
     <script>
@@ -1417,7 +1428,7 @@
                 const newTitle = isBusinessman ? 'Strategic Businessman' : 'Software Developer';
                 const taglineElement = document.getElementById('typing-tagline');
                 if (taglineElement) {
-                    taglineElement.textContent = newTitle + ' & ' + (isBusinessman ? 'Tech Innovator' : 'Strategic Thinker');
+                    taglineElement.innerHTML = newTitle + ' & ' + (isBusinessman ? 'Tech Innovator' : 'Strategic Thinker');
                 }
             });
         });
