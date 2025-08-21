@@ -937,6 +937,7 @@ def submit_to_turnitin(user_id, file_path, filename):
         try:
             # Create screenshots directory
             screenshot_dir = tempfile.mkdtemp()
+            print(f"Screenshots will be saved to: {screenshot_dir}")
             
             # Navigate to Turnitin
             print(f"Navigating to Turnitin...")
@@ -946,7 +947,7 @@ def submit_to_turnitin(user_id, file_path, filename):
             time.sleep(5)
             
             # Take initial screenshot
-            screenshot_path = f'{screenshot_dir}/turnitin_initial.png'
+            screenshot_path = f'{screenshot_dir}/01_turnitin_initial.png'
             driver.save_screenshot(screenshot_path)
             print(f"Initial screenshot saved: {screenshot_path}")
             
@@ -980,38 +981,58 @@ def submit_to_turnitin(user_id, file_path, filename):
                     print("Found file input with XPath")
                 except:
                     print("No file input found with any selector")
+                    screenshot_path = f'{screenshot_dir}/02_no_file_input_error.png'
+                    driver.save_screenshot(screenshot_path)
+                    print(f"Error screenshot saved: {screenshot_path}")
                     return {
                         'success': False,
-                        'error': 'Could not find file upload input on Turnitin website'
+                        'error': 'Could not find file upload input on Turnitin website',
+                        'screenshot': screenshot_path,
+                        'debug_info': f'Screenshots available at: {screenshot_dir}'
                     }
             
             # Upload the file
             print(f"Uploading file: {file_path}")
             file_input.send_keys(file_path)
-            time.sleep(5)
+            time.sleep(3)
+            
+            # Screenshot after file upload
+            screenshot_path = f'{screenshot_dir}/03_after_file_upload.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"After file upload screenshot: {screenshot_path}")
             
             # Wait for file upload to process
             print("Waiting for file upload to process...")
             time.sleep(8)
             
+            # Screenshot after processing wait
+            screenshot_path = f'{screenshot_dir}/04_after_upload_processing.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"After processing screenshot: {screenshot_path}")
+            
             # Fill form fields - use user_id as title
             form_fields = [
                 {
                     'value': str(user_id),
-                    'selectors': ['input[placeholder="请输入文章标题"]']
+                    'selectors': ['input[placeholder="请输入文章标题"]'],
+                    'name': 'title'
                 },
                 {
                     'value': 'User',
-                    'selectors': ['input[placeholder="请输入作者姓氏"]']
+                    'selectors': ['input[placeholder="请输入作者姓氏"]'],
+                    'name': 'lastname'
                 },
                 {
                     'value': str(user_id),
-                    'selectors': ['input[placeholder="请输入作者名字"]']
+                    'selectors': ['input[placeholder="请输入作者名字"]'],
+                    'name': 'firstname'
                 }
             ]
             
             # Fill each form field
+            fields_filled = 0
             for field in form_fields:
+                field_filled = False
                 for selector in field['selectors']:
                     try:
                         element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
@@ -1019,53 +1040,142 @@ def submit_to_turnitin(user_id, file_path, filename):
                             element.clear()
                             time.sleep(0.5)
                             element.send_keys(field['value'])
-                            print(f"Filled field '{field['value']}'")
+                            print(f"Filled {field['name']} field with '{field['value']}'")
+                            field_filled = True
+                            fields_filled += 1
                             break
-                    except:
+                    except Exception as e:
+                        print(f"Could not fill {field['name']} field: {e}")
                         continue
+                
+                if not field_filled:
+                    print(f"WARNING: Could not fill {field['name']} field")
+            
+            # Screenshot after filling fields
+            screenshot_path = f'{screenshot_dir}/05_after_filling_fields.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"After filling fields screenshot: {screenshot_path}")
+            print(f"Successfully filled {fields_filled}/3 form fields")
             
             # Look for submit button and click
             print("Looking for submit button...")
+            submit_clicked = False
             try:
                 submit_button = driver.find_element(By.XPATH, "//button[contains(text(), '提交')]")
-                driver.execute_script("arguments[0].click();", submit_button)
-                print("Clicked submit button")
+                if submit_button.is_displayed() and submit_button.is_enabled():
+                    driver.execute_script("arguments[0].click();", submit_button)
+                    print("Clicked submit button successfully")
+                    submit_clicked = True
+                    time.sleep(5)
+                else:
+                    print("Submit button found but not clickable")
+            except Exception as e:
+                print(f"Could not find or click submit button: {e}")
+            
+            # Screenshot after submit attempt
+            screenshot_path = f'{screenshot_dir}/06_after_submit_attempt.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"After submit attempt screenshot: {screenshot_path}")
+            
+            # Wait for processing
+            if submit_clicked:
+                print("Waiting for submission processing...")
                 time.sleep(10)
-            except:
-                print("Could not find or click submit button")
+                
+                # Screenshot after processing
+                screenshot_path = f'{screenshot_dir}/07_after_processing.png'
+                driver.save_screenshot(screenshot_path)
+                print(f"After processing screenshot: {screenshot_path}")
             
             # Look for access code
+            access_code = None
             try:
                 page_text = driver.page_source
                 import re
-                code_patterns = [r'订单编号[：:]\s*([A-Za-z0-9]{10,})', r'([0-9]{15,})']
+                code_patterns = [
+                    r'订单编号[：:]\s*([A-Za-z0-9]{10,})',
+                    r'([0-9]{15,})',
+                    r'Access Code[：:]\s*([A-Za-z0-9]{10,})',
+                    r'Code[：:]\s*([A-Za-z0-9]{10,})'
+                ]
                 
-                access_code = None
                 for pattern in code_patterns:
                     matches = re.findall(pattern, page_text)
                     if matches:
                         access_code = matches[0]
+                        print(f"Found access code with pattern '{pattern}': {access_code}")
                         break
                 
-                if access_code:
-                    return {
-                        'success': True,
-                        'message': f'🎉 File successfully submitted! Access code: {access_code}',
-                        'access_code': access_code,
-                        'filename': filename
-                    }
-                else:
-                    return {
-                        'success': True,
-                        'message': f'✅ File submitted successfully! Check Turnitin website for access code.',
-                        'filename': filename
-                    }
+                # Also try to find access code in visible elements
+                if not access_code:
+                    try:
+                        code_elements = driver.find_elements(By.CSS_SELECTOR, '.access-code, .order-number, .result-code')
+                        for element in code_elements:
+                            text = element.text.strip()
+                            if text and len(text) >= 10:
+                                access_code = text
+                                print(f"Found access code in element: {access_code}")
+                                break
+                    except:
+                        pass
+                        
             except Exception as code_error:
-                print(f"Error finding access code: {code_error}")
+                print(f"Error searching for access code: {code_error}")
+            
+            # Final screenshot
+            screenshot_path = f'{screenshot_dir}/08_final_result.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"Final screenshot saved: {screenshot_path}")
+            
+            # Get current URL for debugging
+            current_url = driver.current_url
+            page_title = driver.title
+            print(f"Final URL: {current_url}")
+            print(f"Final page title: {page_title}")
+            
+            # Determine success and prepare response
+            if access_code:
                 return {
                     'success': True,
-                    'message': f'✅ File submitted! Could not extract access code automatically.',
-                    'filename': filename
+                    'message': f'🎉 File successfully submitted! Access code: {access_code}',
+                    'access_code': access_code,
+                    'filename': filename,
+                    'screenshots': screenshot_dir,
+                    'debug_info': {
+                        'fields_filled': f'{fields_filled}/3',
+                        'submit_clicked': submit_clicked,
+                        'final_url': current_url,
+                        'page_title': page_title
+                    }
+                }
+            elif submit_clicked and current_url != 'https://www.byturnitin.com/buk/#/':
+                # URL changed, likely successful but no code extracted
+                return {
+                    'success': True,
+                    'message': f'✅ File submitted successfully! URL changed indicating success. Check Turnitin website for access code.',
+                    'filename': filename,
+                    'screenshots': screenshot_dir,
+                    'debug_info': {
+                        'fields_filled': f'{fields_filled}/3',
+                        'submit_clicked': submit_clicked,
+                        'final_url': current_url,
+                        'page_title': page_title,
+                        'note': 'Access code not automatically extracted'
+                    }
+                }
+            else:
+                # Unclear result
+                return {
+                    'success': False,
+                    'error': 'Submission status unclear. Please check screenshots and try manually.',
+                    'filename': filename,
+                    'screenshots': screenshot_dir,
+                    'debug_info': {
+                        'fields_filled': f'{fields_filled}/3',
+                        'submit_clicked': submit_clicked,
+                        'final_url': current_url,
+                        'page_title': page_title
+                    }
                 }
         
         finally:
