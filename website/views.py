@@ -511,7 +511,6 @@ def submit_to_turnitin(file_path, filename):
                     chrome_options.binary_location = "/usr/bin/chromium"
                     
                     # Get ChromeDriver without Chrome detection
-                    import os
                     chromedriver_path = ChromeDriverManager().install()
                     print(f"ChromeDriver installed at: {chromedriver_path}")
                     
