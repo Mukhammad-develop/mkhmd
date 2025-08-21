@@ -152,7 +152,7 @@ DEFAULT_FROM_EMAIL = 'MKHMD <no-reply@mkhmd.uk>'
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Turnitin Configuration
-TURNITIN_TEST_MODE = True  # Set to False for production with real browser automation
+TURNITIN_TEST_MODE = False  # Set to False for production with real browser automation
 TURNITIN_CHROME_PATH = None  # Auto-detect, or set specific path like '/usr/bin/chromium'
 
 # default static files settings for PythonAnywhere.
