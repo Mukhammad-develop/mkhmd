@@ -981,8 +981,48 @@ def submit_to_turnitin(user_id, file_path, filename):
         
         # Initialize WebDriver with error handling
         try:
-            # Use ChromeDriverManager to get the right driver version
-            service = Service(ChromeDriverManager().install())
+            # Get browser version to download compatible ChromeDriver
+            browser_version = None
+            try:
+                import subprocess
+                result = subprocess.run([chrome_path, '--version'], capture_output=True, text=True, timeout=10)
+                if result.returncode == 0:
+                    version_output = result.stdout.strip()
+                    print(f"Browser version output: {version_output}")
+                    
+                    # Extract version number (e.g., "Chromium 90.0.4430.212" -> "90")
+                    import re
+                    version_match = re.search(r'(\d+)\.', version_output)
+                    if version_match:
+                        browser_version = version_match.group(1)
+                        print(f"Detected browser version: {browser_version}")
+            except Exception as version_error:
+                print(f"Could not detect browser version: {version_error}")
+            
+            # Download compatible ChromeDriver
+            if browser_version:
+                try:
+                    # Use specific version for older browsers
+                    if int(browser_version) <= 90:
+                        # For Chromium 90, use ChromeDriver 90
+                        service = Service(ChromeDriverManager(version="90.0.4430.24").install())
+                        print(f"Using ChromeDriver 90 for Chromium {browser_version}")
+                    elif int(browser_version) <= 100:
+                        # For browsers 91-100, use ChromeDriver 100
+                        service = Service(ChromeDriverManager(version="100.0.4896.60").install())
+                        print(f"Using ChromeDriver 100 for Chromium {browser_version}")
+                    else:
+                        # For newer browsers, use latest
+                        service = Service(ChromeDriverManager().install())
+                        print(f"Using latest ChromeDriver for Chromium {browser_version}")
+                except:
+                    # Fallback to default
+                    service = Service(ChromeDriverManager().install())
+                    print("Using default ChromeDriver version")
+            else:
+                service = Service(ChromeDriverManager().install())
+                print("Could not detect version, using default ChromeDriver")
+            
             print(f"ChromeDriver path: {service.path}")
             print(f"Chrome binary path: {chrome_path}")
             
@@ -992,23 +1032,12 @@ def submit_to_turnitin(user_id, file_path, filename):
             print(f"Driver initialization error: {driver_error}")
             print(f"Attempted binary path: {chrome_path}")
             
-            # Try with a different approach - let ChromeDriver find the binary
-            try:
-                chrome_options_fallback = Options()
-                chrome_options_fallback.add_argument('--no-sandbox')
-                chrome_options_fallback.add_argument('--disable-dev-shm-usage')
-                chrome_options_fallback.add_argument('--headless')
-                
-                service = Service(ChromeDriverManager().install())
-                driver = webdriver.Chrome(service=service, options=chrome_options_fallback)
-                print("Fallback WebDriver initialization successful")
-            except Exception as fallback_error:
-                print(f"Fallback initialization also failed: {fallback_error}")
-                return {
-                    'success': False,
-                    'error': f'Browser automation failed. Primary error: {str(driver_error)}, Fallback error: {str(fallback_error)}',
-                    'filename': filename
-                }
+            return {
+                'success': False,
+                'error': f'Browser automation failed: {str(driver_error)}',
+                'filename': filename,
+                'debug_info': f'Browser path: {chrome_path}, Browser version: {browser_version}'
+            }
         
         wait = WebDriverWait(driver, 30)
         
