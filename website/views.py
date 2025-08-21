@@ -24,7 +24,8 @@ import tempfile
 from accounts.models import User, TurnitinResult
 
 # Turnitin Settings
-TURNITIN_TEST_MODE = False  # Set to True for testing, False for real submissions
+TURNITIN_TEST_MODE = getattr(settings, 'TURNITIN_TEST_MODE', True)
+TURNITIN_CHROME_PATH = getattr(settings, 'TURNITIN_CHROME_PATH', None)
 
 def parse_turnitin_results(html_content, access_code):
     """Parse Turnitin results from the HTML response"""
@@ -922,75 +923,92 @@ def submit_to_turnitin(user_id, file_path, filename):
     try:
         # Detect available browser (Chrome or Chromium)
         import shutil
-        chrome_path = None
+        import os
         
-        # Check for Chrome first (local development)
-        possible_chrome_paths = [
-            'google-chrome',
-            'google-chrome-stable', 
-            'google-chrome-beta',
-            'google-chrome-dev',
-            'chrome',
-            'chromium',
-            'chromium-browser',
-            '/usr/bin/chromium',
-            '/usr/bin/chromium-browser',
-            '/usr/bin/google-chrome',
-            '/usr/bin/google-chrome-stable'
-        ]
+        # Use configured path if available
+        chrome_path = TURNITIN_CHROME_PATH
         
-        for path in possible_chrome_paths:
-            if shutil.which(path):
-                chrome_path = path
-                print(f"Found browser at: {chrome_path}")
-                break
+        if not chrome_path:
+            # Auto-detect browser
+            possible_chrome_paths = [
+                '/usr/bin/google-chrome',
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/chromium',
+                '/usr/bin/chromium-browser',
+                '/snap/bin/chromium',
+                'google-chrome',
+                'google-chrome-stable', 
+                'chromium',
+                'chromium-browser'
+            ]
+            
+            for path in possible_chrome_paths:
+                if os.path.exists(path) or shutil.which(path):
+                    chrome_path = path
+                    print(f"Auto-detected browser at: {chrome_path}")
+                    break
+        else:
+            print(f"Using configured browser path: {chrome_path}")
         
         if not chrome_path:
             return {
                 'success': False,
-                'error': 'No compatible browser found. Please contact administrator.',
-                'filename': filename
+                'error': 'No compatible browser found. Please install Chrome or Chromium, or contact administrator.',
+                'filename': filename,
+                'debug_info': f'Searched paths: {possible_chrome_paths}'
             }
         
         # Set up Chrome/Chromium driver with appropriate options
         chrome_options = Options()
         
-        # Configure Chrome options for better stability
+        # Set browser binary path FIRST
+        chrome_options.binary_location = chrome_path
+        
+        # Configure Chrome options for PythonAnywhere
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--headless')
         chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument('--disable-extensions')
         chrome_options.add_argument('--disable-plugins')
-        chrome_options.add_argument('--disable-images')
-        chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-        chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-web-security')
         chrome_options.add_argument('--allow-running-insecure-content')
+        chrome_options.add_argument('--disable-features=VizDisplayCompositor')
+        chrome_options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36')
         
-        # Set browser binary path
-        chrome_options.binary_location = chrome_path
+        print(f"Chrome options configured with binary: {chrome_path}")
         
         # Initialize WebDriver with error handling
         try:
-            # Try to use system chromedriver first, then download if needed
-            try:
-                # For PythonAnywhere, try system chromedriver
-                service = Service('/usr/bin/chromedriver')
-                driver = webdriver.Chrome(service=service, options=chrome_options)
-                print(f"Using system chromedriver with {chrome_path}")
-            except:
-                # Fallback to ChromeDriverManager
-                service = Service(ChromeDriverManager().install())
-                driver = webdriver.Chrome(service=service, options=chrome_options)
-                print(f"Using downloaded chromedriver with {chrome_path}")
+            # Use ChromeDriverManager to get the right driver version
+            service = Service(ChromeDriverManager().install())
+            print(f"ChromeDriver path: {service.path}")
+            print(f"Chrome binary path: {chrome_path}")
+            
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            print(f"Successfully initialized WebDriver with {chrome_path}")
         except Exception as driver_error:
             print(f"Driver initialization error: {driver_error}")
-            return {
-                'success': False,
-                'error': f'Failed to initialize browser driver: {str(driver_error)}',
-                'filename': filename
-            }
+            print(f"Attempted binary path: {chrome_path}")
+            
+            # Try with a different approach - let ChromeDriver find the binary
+            try:
+                chrome_options_fallback = Options()
+                chrome_options_fallback.add_argument('--no-sandbox')
+                chrome_options_fallback.add_argument('--disable-dev-shm-usage')
+                chrome_options_fallback.add_argument('--headless')
+                
+                service = Service(ChromeDriverManager().install())
+                driver = webdriver.Chrome(service=service, options=chrome_options_fallback)
+                print("Fallback WebDriver initialization successful")
+            except Exception as fallback_error:
+                print(f"Fallback initialization also failed: {fallback_error}")
+                return {
+                    'success': False,
+                    'error': f'Browser automation failed. Primary error: {str(driver_error)}, Fallback error: {str(fallback_error)}',
+                    'filename': filename
+                }
         
         wait = WebDriverWait(driver, 30)
         
