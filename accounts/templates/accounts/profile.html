@@ -1,0 +1,376 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        min-height: 100vh;
+        padding-top: 120px;
+    }
+
+    .profile-header {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--primary-purple);
+        margin: 0 auto 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--pure-white);
+        overflow: hidden;
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-name {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--pure-white);
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-email {
+        color: var(--text-gray);
+        margin-bottom: 1rem;
+    }
+
+    .profile-bio {
+        color: var(--pure-white);
+        line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.4s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-purple);
+        box-shadow: 0 15px 30px rgba(139, 92, 246, 0.2);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-purple);
+        margin-bottom: 0.5rem;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-label {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .profile-btn {
+        padding: 0.8rem 2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: var(--deep-purple);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: var(--text-gray);
+        border: 1px solid var(--border-gray);
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--primary-purple);
+        color: var(--primary-purple);
+    }
+
+    .profile-info {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+    }
+
+    .info-section {
+        margin-bottom: 3rem;
+    }
+
+    .info-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--pure-white);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .info-label {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        color: var(--pure-white);
+        font-weight: 500;
+    }
+
+    .info-value a {
+        color: var(--primary-purple);
+        text-decoration: none;
+    }
+
+    .info-value a:hover {
+        text-decoration: underline;
+    }
+
+    .empty-value {
+        color: var(--text-gray);
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .profile-container {
+            padding: 1rem;
+            padding-top: 100px;
+        }
+
+        .profile-header {
+            padding: 2rem;
+        }
+
+        .profile-actions {
+            flex-direction: column;
+        }
+
+        .profile-info {
+            padding: 2rem;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="{{ user.get_full_name }}">
+            {% else %}
+                <i class="fas fa-user"></i>
+            {% endif %}
+        </div>
+        
+        <h1 class="profile-name">{{ user.get_full_name|default:user.username }}</h1>
+        <p class="profile-email">{{ user.email }}</p>
+        
+        {% if user.bio %}
+            <p class="profile-bio">{{ user.bio }}</p>
+        {% endif %}
+        
+        <div class="profile-actions">
+            <a href="{% url 'accounts:edit_profile' %}" class="profile-btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Edit Profile
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="profile-btn btn-secondary">
+                <i class="fas fa-sign-out-alt"></i>
+                Sign Out
+            </a>
+        </div>
+    </div>
+
+    <div class="profile-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ user.id }}</div>
+            <div class="stat-label">User ID</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ user.date_joined|date:"M Y" }}</div>
+            <div class="stat-label">Member Since</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {% if user.is_email_verified %}
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                {% else %}
+                    <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                {% endif %}
+            </div>
+            <div class="stat-label">Email Status</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ profile.profile_visibility|title }}</div>
+            <div class="stat-label">Profile Visibility</div>
+        </div>
+    </div>
+
+    <div class="profile-info">
+        <div class="info-section">
+            <h2 class="info-title">
+                <i class="fas fa-user"></i>
+                Personal Information
+            </h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">First Name</span>
+                    <span class="info-value">{{ user.first_name|default:"<span class='empty-value'>Not provided</span>" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Last Name</span>
+                    <span class="info-value">{{ user.last_name|default:"<span class='empty-value'>Not provided</span>" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Phone</span>
+                    <span class="info-value">{{ profile.phone|default:"<span class='empty-value'>Not provided</span>" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Location</span>
+                    <span class="info-value">{{ user.location|default:"<span class='empty-value'>Not provided</span>" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2 class="info-title">
+                <i class="fas fa-briefcase"></i>
+                Professional Information
+            </h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Company</span>
+                    <span class="info-value">{{ profile.company|default:"<span class='empty-value'>Not provided</span>" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Job Title</span>
+                    <span class="info-value">{{ profile.job_title|default:"<span class='empty-value'>Not provided</span>" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Website</span>
+                    <span class="info-value">
+                        {% if user.website %}
+                            <a href="{{ user.website }}" target="_blank">{{ user.website }}</a>
+                        {% else %}
+                            <span class="empty-value">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date of Birth</span>
+                    <span class="info-value">{{ profile.date_of_birth|default:"<span class='empty-value'>Not provided</span>" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2 class="info-title">
+                <i class="fas fa-share-alt"></i>
+                Social Links
+            </h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">GitHub</span>
+                    <span class="info-value">
+                        {% if profile.github %}
+                            <a href="{{ profile.github }}" target="_blank">{{ profile.github }}</a>
+                        {% else %}
+                            <span class="empty-value">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">LinkedIn</span>
+                    <span class="info-value">
+                        {% if profile.linkedin %}
+                            <a href="{{ profile.linkedin }}" target="_blank">{{ profile.linkedin }}</a>
+                        {% else %}
+                            <span class="empty-value">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Twitter</span>
+                    <span class="info-value">
+                        {% if profile.twitter %}
+                            <a href="{{ profile.twitter }}" target="_blank">{{ profile.twitter }}</a>
+                        {% else %}
+                            <span class="empty-value">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

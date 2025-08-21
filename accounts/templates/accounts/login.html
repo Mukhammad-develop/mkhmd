@@ -1,0 +1,228 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--pure-black) 0%, var(--charcoal) 100%);
+    }
+
+    .auth-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .auth-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--pure-white);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-subtitle {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--pure-white);
+        font-weight: 500;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        background: var(--charcoal);
+        border: 1px solid var(--border-gray);
+        border-radius: 10px;
+        padding: 1rem;
+        color: var(--pure-white);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .auth-btn {
+        width: 100%;
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border: none;
+        padding: 1.2rem 2rem;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .auth-btn:hover:not(:disabled) {
+        background: var(--deep-purple);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    .auth-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .auth-link {
+        text-align: center;
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .auth-link a {
+        color: var(--primary-purple);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .auth-link a:hover {
+        text-decoration: underline;
+    }
+
+    .error-message {
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .forgot-password {
+        text-align: right;
+        margin-bottom: 2rem;
+    }
+
+    .forgot-password a {
+        color: var(--text-gray);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+
+    .forgot-password a:hover {
+        color: var(--primary-purple);
+    }
+
+    @media (max-width: 768px) {
+        .auth-card {
+            padding: 2rem;
+            margin: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to your MKHMD account</p>
+        </div>
+
+        <form method="post" id="loginForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" name="username" class="form-input" placeholder="Enter your email address" required autofocus>
+                {% if form.username.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ form.username.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-input" placeholder="Enter your password" required>
+                {% if form.password.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ form.password.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="error-message" style="margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ form.non_field_errors.0 }}
+                </div>
+            {% endif %}
+
+            <div class="forgot-password">
+                <a href="#" onclick="showForgotPassword()">Forgot your password?</a>
+            </div>
+
+            <button type="submit" class="auth-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In
+            </button>
+        </form>
+
+        <div class="auth-link">
+            Don't have an account? <a href="{% url 'accounts:signup' %}">Create Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form submission
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
+    });
+
+    // Temporary forgot password handler
+    function showForgotPassword() {
+        alert('Password reset functionality will be implemented soon. Please contact support if you need assistance.');
+    }
+
+    // Auto-focus on email input if empty
+    document.addEventListener('DOMContentLoaded', function() {
+        const emailInput = document.querySelector('input[name="username"]');
+        if (!emailInput.value) {
+            emailInput.focus();
+        }
+    });
+</script>
+{% endblock %} 

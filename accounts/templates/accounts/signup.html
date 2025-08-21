@@ -1,0 +1,362 @@
+{% extends 'website/base.html' %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--pure-black) 0%, var(--charcoal) 100%);
+    }
+
+    .auth-card {
+        background: var(--soft-black);
+        border: 1px solid var(--border-gray);
+        border-radius: 20px;
+        padding: 3rem;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .auth-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--pure-white);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-subtitle {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--pure-white);
+        font-weight: 500;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        background: var(--charcoal);
+        border: 1px solid var(--border-gray);
+        border-radius: 10px;
+        padding: 1rem;
+        color: var(--pure-white);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .form-input.error {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .error-message {
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .success-message {
+        color: #10b981;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .auth-btn {
+        width: 100%;
+        background: var(--primary-purple);
+        color: var(--pure-white);
+        border: none;
+        padding: 1.2rem 2rem;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .auth-btn:hover:not(:disabled) {
+        background: var(--deep-purple);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    .auth-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .auth-link {
+        text-align: center;
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    .auth-link a {
+        color: var(--primary-purple);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .auth-link a:hover {
+        text-decoration: underline;
+    }
+
+    .password-strength {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .strength-bar {
+        height: 3px;
+        border-radius: 2px;
+        margin-top: 0.3rem;
+        background: var(--border-gray);
+        overflow: hidden;
+    }
+
+    .strength-fill {
+        height: 100%;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+
+    .strength-weak { background: #ef4444; width: 25%; }
+    .strength-fair { background: #f59e0b; width: 50%; }
+    .strength-good { background: #10b981; width: 75%; }
+    .strength-strong { background: #10b981; width: 100%; }
+
+    .email-check {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1rem;
+    }
+
+    .check-available { color: #10b981; }
+    .check-unavailable { color: #ef4444; }
+
+    @media (max-width: 768px) {
+        .auth-card {
+            padding: 2rem;
+            margin: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Create Account</h1>
+            <p class="auth-subtitle">Join MKHMD to access exclusive content and features</p>
+        </div>
+
+        <form method="post" id="signupForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <div style="position: relative;">
+                    {{ form.email }}
+                    <div id="emailCheck" class="email-check" style="display: none;"></div>
+                </div>
+                {% if form.email.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ form.email.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ form.password1.errors.0 }}
+                    </div>
+                {% endif %}
+                <div class="password-strength" id="passwordStrength" style="display: none;">
+                    <div class="strength-text">Password strength: <span id="strengthText">Weak</span></div>
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ form.password2.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="auth-btn" id="signupBtn">
+                <i class="fas fa-user-plus"></i>
+                Create Account
+            </button>
+        </form>
+
+        <div class="auth-link">
+            Already have an account? <a href="{% url 'accounts:login' %}">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Email availability check
+    const emailInput = document.getElementById('id_email');
+    const emailCheck = document.getElementById('emailCheck');
+    let emailTimeout;
+
+    emailInput.addEventListener('input', () => {
+        clearTimeout(emailTimeout);
+        const email = emailInput.value;
+        
+        if (email.length > 0 && email.includes('@')) {
+            emailTimeout = setTimeout(() => {
+                checkEmailAvailability(email);
+            }, 500);
+        } else {
+            emailCheck.style.display = 'none';
+        }
+    });
+
+    function checkEmailAvailability(email) {
+        fetch('{% url "accounts:check_email" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            emailCheck.style.display = 'block';
+            if (data.available) {
+                emailCheck.innerHTML = '<i class="fas fa-check check-available"></i>';
+                emailCheck.className = 'email-check check-available';
+            } else {
+                emailCheck.innerHTML = '<i class="fas fa-times check-unavailable"></i>';
+                emailCheck.className = 'email-check check-unavailable';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            emailCheck.style.display = 'none';
+        });
+    }
+
+    // Password strength checker
+    const password1Input = document.getElementById('id_password1');
+    const passwordStrength = document.getElementById('passwordStrength');
+    const strengthText = document.getElementById('strengthText');
+    const strengthFill = document.getElementById('strengthFill');
+
+    password1Input.addEventListener('input', () => {
+        const password = password1Input.value;
+        if (password.length > 0) {
+            passwordStrength.style.display = 'block';
+            const strength = calculatePasswordStrength(password);
+            updatePasswordStrength(strength);
+        } else {
+            passwordStrength.style.display = 'none';
+        }
+    });
+
+    function calculatePasswordStrength(password) {
+        let score = 0;
+        
+        // Length check
+        if (password.length >= 8) score += 1;
+        if (password.length >= 12) score += 1;
+        
+        // Character variety
+        if (/[a-z]/.test(password)) score += 1;
+        if (/[A-Z]/.test(password)) score += 1;
+        if (/[0-9]/.test(password)) score += 1;
+        if (/[^A-Za-z0-9]/.test(password)) score += 1;
+        
+        return Math.min(score, 4);
+    }
+
+    function updatePasswordStrength(strength) {
+        strengthFill.className = 'strength-fill';
+        
+        switch(strength) {
+            case 0:
+            case 1:
+                strengthFill.classList.add('strength-weak');
+                strengthText.textContent = 'Weak';
+                strengthText.style.color = '#ef4444';
+                break;
+            case 2:
+                strengthFill.classList.add('strength-fair');
+                strengthText.textContent = 'Fair';
+                strengthText.style.color = '#f59e0b';
+                break;
+            case 3:
+                strengthFill.classList.add('strength-good');
+                strengthText.textContent = 'Good';
+                strengthText.style.color = '#10b981';
+                break;
+            case 4:
+                strengthFill.classList.add('strength-strong');
+                strengthText.textContent = 'Strong';
+                strengthText.style.color = '#10b981';
+                break;
+        }
+    }
+
+    // Form submission
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        const btn = document.getElementById('signupBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+    });
+</script>
+{% endblock %} 
