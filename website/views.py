@@ -13,8 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+# Chrome service not needed - PythonAnywhere has pre-installed ChromeDriver
 import platform
 import subprocess
 import time
@@ -921,32 +920,17 @@ def scrape_turnitin_results(access_code):
 def submit_to_turnitin(user_id, file_path, filename):
     """Automate submission to Turnitin using Selenium"""
     try:
-        # Set up Chrome/Chromium driver with appropriate options
+        # Set up Chrome options for PythonAnywhere
         chrome_options = Options()
-        
-        # Configure Chrome options for PythonAnywhere
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--window-size=1920,1080')
-        chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--disable-plugins')
-        chrome_options.add_argument('--disable-web-security')
-        chrome_options.add_argument('--allow-running-insecure-content')
-        chrome_options.add_argument('--disable-features=VizDisplayCompositor')
         
-        # Set Chromium binary path for PythonAnywhere
-        chrome_options.binary_location = "/usr/bin/chromium"
-        
-        # Get ChromeDriver without complex version detection
-        chromedriver_path = ChromeDriverManager().install()
-        print(f"ChromeDriver installed at: {chromedriver_path}")
-        
-        # Initialize WebDriver
-        service = Service(chromedriver_path)
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        print("Successfully initialized WebDriver with Chromium")
+        # Initialize WebDriver - PythonAnywhere has Chrome/ChromeDriver pre-installed
+        driver = webdriver.Chrome(options=chrome_options)
+        print("Successfully initialized WebDriver")
         
         wait = WebDriverWait(driver, 30)
         
