@@ -117,10 +117,12 @@ def home(request):
     return render(request, 'website/home.html', context)
 
 def portfolio(request):
-    """Portfolio showcase page"""
+    """Combined Portfolio page - includes Portfolio, Awards, Journey, and Blog content"""
     context = {
-        'title': 'Portfolio Showcase',
+        'title': 'Portfolio & Achievements',
         'name': 'Abdurakhmon',
+        
+        # Original Portfolio Content
         'dev_projects': [
             {
                 'title': 'E-Commerce Platform',
@@ -181,6 +183,105 @@ def portfolio(request):
                 'image': 'business3.jpg',
                 'case_study': 'Portfolio Overview'
             }
+        ],
+        
+        # Awards/Achievements Content
+        'certifications': [
+            {'name': 'AWS Solutions Architect Professional', 'issuer': 'Amazon Web Services', 'year': '2024', 'icon': 'fab fa-aws'},
+            {'name': 'Google Cloud Professional Developer', 'issuer': 'Google Cloud', 'year': '2023', 'icon': 'fab fa-google'},
+            {'name': 'Certified Kubernetes Administrator', 'issuer': 'CNCF', 'year': '2023', 'icon': 'fas fa-dharmachakra'},
+            {'name': 'PMP - Project Management Professional', 'issuer': 'PMI', 'year': '2022', 'icon': 'fas fa-project-diagram'},
+        ],
+        'awards': [
+            {'title': 'Tech Innovator of the Year', 'organization': 'TechCrunch', 'year': '2024'},
+            {'title': 'Best Startup Mentor', 'organization': 'Startup Grind', 'year': '2023'},
+            {'title': 'Outstanding Engineering Excellence', 'organization': 'IEEE', 'year': '2022'},
+        ],
+        'testimonials': [
+            {
+                'text': 'Abdurakhmon transformed our tech infrastructure and doubled our efficiency.',
+                'author': 'Sarah Johnson',
+                'role': 'CTO, TechCorp Inc.',
+                'avatar': 'testimonial1.jpg'
+            },
+            {
+                'text': 'His business insights helped us secure $5M Series A funding.',
+                'author': 'Michael Chen',
+                'role': 'CEO, StartupXYZ',
+                'avatar': 'testimonial2.jpg'
+            }
+        ],
+        
+        # Journey/Timeline Content
+        'timeline_events': [
+            {
+                'year': '2024',
+                'title': 'Founded TechVentures LLC',
+                'description': 'Launched consulting firm specializing in tech-business strategy',
+                'type': 'business',
+                'icon': 'fas fa-rocket',
+                'achievements': ['$1M Revenue Target', '15 Enterprise Clients', 'Team of 8']
+            },
+            {
+                'year': '2023',
+                'title': 'Senior Software Architect',
+                'description': 'Led technical architecture for Fortune 500 company',
+                'type': 'technical',
+                'icon': 'fas fa-code',
+                'achievements': ['Microservices Migration', '40% Performance Improvement', 'Team Leadership']
+            },
+            {
+                'year': '2022',
+                'title': 'Startup Co-Founder & CTO',
+                'description': 'Co-founded FinTech startup, scaled to $2M ARR',
+                'type': 'business',
+                'icon': 'fas fa-chart-line',
+                'achievements': ['0 to $2M ARR', 'Successful Exit', '50K Users']
+            },
+            {
+                'year': '2021',
+                'title': 'Full-Stack Developer',
+                'description': 'Built scalable web applications serving millions',
+                'type': 'technical',
+                'icon': 'fas fa-laptop-code',
+                'achievements': ['1M+ Users', 'Cloud Architecture', 'DevOps Implementation']
+            },
+            {
+                'year': '2020',
+                'title': 'Computer Science Degree',
+                'description': 'Graduated with honors, specialized in distributed systems',
+                'type': 'education',
+                'icon': 'fas fa-graduation-cap',
+                'achievements': ['Summa Cum Laude', 'Research Publication', 'Dean\'s List']
+            }
+        ],
+        
+        # Blog Content
+        'featured_posts': [
+            {
+                'title': 'The Future of Microservices Architecture',
+                'excerpt': 'Exploring emerging patterns in distributed systems and container orchestration...',
+                'category': 'Technical',
+                'read_time': '8 min read',
+                'date': '2024-01-15',
+                'image': 'blog1.jpg',
+                'tags': ['Microservices', 'Kubernetes', 'Architecture']
+            },
+            {
+                'title': 'Building Billion-Dollar Startups: Lessons Learned',
+                'excerpt': 'Key insights from mentoring 20+ startups and 3 successful exits...',
+                'category': 'Business',
+                'read_time': '12 min read',
+                'date': '2024-01-10',
+                'image': 'blog2.jpg',
+                'tags': ['Startups', 'Strategy', 'Investment']
+            }
+        ],
+        'blog_categories': [
+            {'name': 'Technical', 'count': 15, 'icon': 'fas fa-code'},
+            {'name': 'Business', 'count': 12, 'icon': 'fas fa-briefcase'},
+            {'name': 'Leadership', 'count': 8, 'icon': 'fas fa-users'},
+            {'name': 'Innovation', 'count': 5, 'icon': 'fas fa-lightbulb'},
         ]
     }
     return render(request, 'website/portfolio.html', context)
@@ -225,10 +326,12 @@ def achievements(request):
     return render(request, 'website/achievements.html', context)
 
 def timeline(request):
-    """Interactive timeline page"""
+    """Combined Timeline page - includes Metrics and Booking content"""
     context = {
-        'title': 'Professional Journey',
+        'title': 'Timeline & Metrics',
         'name': 'Abdurakhmon',
+        
+        # Original Timeline Content
         'timeline_events': [
             {
                 'year': '2024',
@@ -269,6 +372,45 @@ def timeline(request):
                 'type': 'education',
                 'icon': 'fas fa-graduation-cap',
                 'achievements': ['Summa Cum Laude', 'Research Publication', 'Dean\'s List']
+            }
+        ],
+        
+        # Metrics Content
+        'live_stats': [
+            {'label': 'GitHub Commits', 'value': '2,847', 'trend': '+12%', 'icon': 'fab fa-github'},
+            {'label': 'Lines of Code', 'value': '145K', 'trend': '+8%', 'icon': 'fas fa-code'},
+            {'label': 'Active Projects', 'value': '8', 'trend': '+2', 'icon': 'fas fa-project-diagram'},
+            {'label': 'Consulting Hours', 'value': '1,240', 'trend': '+15%', 'icon': 'fas fa-clock'},
+        ],
+        'availability': {
+            'status': 'Available',
+            'next_slot': 'Jan 25, 2024',
+            'response_time': '< 2 hours',
+            'capacity': '75%'
+        },
+        
+        # Booking Content
+        'services': [
+            {
+                'name': 'Technical Consultation',
+                'duration': '60 minutes',
+                'price': '$200',
+                'description': 'Architecture review, code audit, technology strategy',
+                'icon': 'fas fa-code'
+            },
+            {
+                'name': 'Business Strategy Session',
+                'duration': '90 minutes',
+                'price': '$350',
+                'description': 'Market analysis, growth planning, investment strategy',
+                'icon': 'fas fa-chart-line'
+            },
+            {
+                'name': 'Startup Mentoring',
+                'duration': '45 minutes',
+                'price': '$150',
+                'description': 'Product development, funding guidance, team building',
+                'icon': 'fas fa-rocket'
             }
         ]
     }
@@ -360,10 +502,12 @@ def booking(request):
     return render(request, 'website/booking.html', context)
 
 def resources(request):
-    """Resources and tools page"""
+    """Combined Projects page - includes Resources and Turnitin functionality"""
     context = {
-        'title': 'Free Resources & Tools',
+        'title': 'Projects & Tools',
         'name': 'Abdurakhmon',
+        
+        # Resources Content
         'tools': [
             {
                 'name': 'Startup Valuation Calculator',
@@ -399,9 +543,83 @@ def resources(request):
                 'downloads': '800+',
                 'icon': 'fas fa-file-powerpoint'
             }
-        ]
+        ],
+        
+        # Turnitin Integration
+        'turnitin_info': {
+            'title': 'Turnitin Automation',
+            'description': 'Automated document submission to Turnitin plagiarism checker',
+            'supported_formats': ['.docx', '.pdf', '.pptx'],
+            'max_file_size': '10MB',
+            'features': [
+                'Automatic form filling',
+                'Direct submission to Turnitin',
+                'Progress tracking',
+                'Success confirmation'
+            ]
+        }
     }
     return render(request, 'website/resources.html', context)
+
+def projects(request):
+    """Combined Projects page - includes Resources and Turnitin functionality"""
+    context = {
+        'title': 'Projects & Tools',
+        'name': 'Abdurakhmon',
+        
+        # Resources Content
+        'tools': [
+            {
+                'name': 'Startup Valuation Calculator',
+                'description': 'Calculate your startup valuation using multiple methodologies',
+                'type': 'Calculator',
+                'icon': 'fas fa-calculator'
+            },
+            {
+                'name': 'API Performance Analyzer',
+                'description': 'Analyze and optimize your API performance',
+                'type': 'Tool',
+                'icon': 'fas fa-tachometer-alt'
+            },
+            {
+                'name': 'Business Model Canvas',
+                'description': 'Interactive canvas for business model development',
+                'type': 'Template',
+                'icon': 'fas fa-th-large'
+            }
+        ],
+        'downloads': [
+            {
+                'title': 'The Complete Guide to Microservices',
+                'type': 'PDF Guide',
+                'pages': '50 pages',
+                'downloads': '1,200+',
+                'icon': 'fas fa-file-pdf'
+            },
+            {
+                'title': 'Startup Funding Deck Template',
+                'type': 'PowerPoint',
+                'pages': '25 slides',
+                'downloads': '800+',
+                'icon': 'fas fa-file-powerpoint'
+            }
+        ],
+        
+        # Turnitin Integration
+        'turnitin_info': {
+            'title': 'Turnitin Automation',
+            'description': 'Automated document submission to Turnitin plagiarism checker',
+            'supported_formats': ['.docx', '.pdf', '.pptx'],
+            'max_file_size': '10MB',
+            'features': [
+                'Automatic form filling',
+                'Direct submission to Turnitin',
+                'Progress tracking',
+                'Success confirmation'
+            ]
+        }
+    }
+    return render(request, 'website/projects.html', context)
 
 @csrf_exempt
 def turnitin(request):
