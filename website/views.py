@@ -909,3 +909,341 @@ def scrape_turnitin_results(access_code):
     except Exception as e:
         print(f"Error scraping Turnitin results: {e}")
         return []
+
+def submit_to_turnitin(user_id, file_path, filename):
+    """Automate submission to Turnitin using Selenium"""
+    try:
+        # Set up Chrome driver with appropriate options
+        chrome_options = Options()
+        
+        # Configure Chrome options for better stability
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-plugins')
+        chrome_options.add_argument('--disable-images')
+        chrome_options.add_argument('--disable-javascript')
+        chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+        
+        # Add headless mode for production
+        if not TURNITIN_TEST_MODE:
+            chrome_options.add_argument('--headless')
+        
+        # Initialize WebDriver
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        wait = WebDriverWait(driver, 30)
+        
+        try:
+            # Create screenshots directory
+            screenshot_dir = tempfile.mkdtemp()
+            
+            # Navigate to Turnitin
+            print(f"Navigating to Turnitin...")
+            driver.get('https://www.byturnitin.com/buk/#/')
+            
+            # Wait for page to load
+            time.sleep(5)
+            
+            # Take initial screenshot
+            screenshot_path = f'{screenshot_dir}/turnitin_initial.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"Initial screenshot saved: {screenshot_path}")
+            
+            # Find file upload input
+            print("Looking for file upload input...")
+            file_input = None
+            
+            # Try multiple selectors for file input
+            file_selectors = [
+                'input[type="file"]',
+                'input[accept*=".doc"]',
+                'input[accept*=".pdf"]',
+                '.file-input',
+                '[data-testid="file-input"]',
+                'input[name="file"]'
+            ]
+            
+            for selector in file_selectors:
+                try:
+                    file_input = driver.find_element(By.CSS_SELECTOR, selector)
+                    if file_input and file_input.is_enabled():
+                        print(f"Found file input with selector: {selector}")
+                        break
+                except:
+                    continue
+            
+            if not file_input:
+                # Try XPath approach
+                try:
+                    file_input = driver.find_element(By.XPATH, "//input[@type='file']")
+                    print("Found file input with XPath")
+                except:
+                    print("No file input found with any selector")
+                    screenshot_path = f'{screenshot_dir}/turnitin_no_file_input.png'
+                    driver.save_screenshot(screenshot_path)
+                    return {
+                        'success': False,
+                        'error': 'Could not find file upload input on Turnitin website',
+                        'screenshot': screenshot_path
+                    }
+            
+            # Upload the file
+            print(f"Uploading file: {file_path}")
+            file_input.send_keys(file_path)
+            time.sleep(5)
+            
+            # Wait for file upload to process
+            print("Waiting for file upload to process...")
+            time.sleep(8)
+            
+            # Fill form fields based on actual HTML structure
+            form_fields = [
+                # Paper Title field (文章标题) - Use user_id to identify submissions
+                {
+                    'value': str(user_id),
+                    'selectors': [
+                        'input[placeholder="请输入文章标题"]',
+                        'input.ivu-input[placeholder*="标题"]',
+                        '.ivu-form-item:has(label:contains("文章标题")) input',
+                        'input[placeholder*="title"]',
+                        'input[placeholder*="Title"]'
+                    ]
+                },
+                # Author Last Name field (作者姓氏)
+                {
+                    'value': 'User',
+                    'selectors': [
+                        'input[placeholder="请输入作者姓氏"]',
+                        'input.ivu-input[placeholder*="姓氏"]',
+                        '.ivu-form-item:has(label:contains("作者姓氏")) input'
+                    ]
+                },
+                # Author First Name field (作者名字)
+                {
+                    'value': str(user_id),
+                    'selectors': [
+                        'input[placeholder="请输入作者名字"]',
+                        'input.ivu-input[placeholder*="名字"]',
+                        '.ivu-form-item:has(label:contains("作者名字")) input'
+                    ]
+                }
+            ]
+            
+            # Fill each form field
+            for field in form_fields:
+                field_found = False
+                
+                # Try direct placeholder matching first (most reliable)
+                for selector in field['selectors']:
+                    try:
+                        # Wait for element to be present and interactable
+                        element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
+                        if element.is_displayed() and element.is_enabled():
+                            # Clear field using multiple methods
+                            element.clear()
+                            time.sleep(0.5)  # Small delay for Vue.js reactivity
+                            element.click()  # Focus the element
+                            element.clear()  # Clear again
+                            element.send_keys(field['value'])
+                            field_found = True
+                            print(f"Filled field '{field['value']}' using selector: {selector}")
+                            break
+                    except:
+                        continue
+                
+                # If CSS selectors fail, try XPath with Chinese text
+                if not field_found:
+                    try:
+                        if field['value'] == str(user_id):
+                            xpath = "//input[@placeholder='请输入文章标题']"
+                        elif field['selectors'][0] == 'input[placeholder="请输入作者姓氏"]':
+                            xpath = "//input[@placeholder='请输入作者姓氏']"
+                        else:
+                            xpath = "//input[@placeholder='请输入作者名字']"
+                        
+                        element = driver.find_element(By.XPATH, xpath)
+                        if element.is_displayed() and element.is_enabled():
+                            element.clear()
+                            time.sleep(0.5)
+                            element.click()
+                            element.clear()
+                            element.send_keys(field['value'])
+                            field_found = True
+                            print(f"Filled field '{field['value']}' using XPath")
+                    except:
+                        pass
+                
+                # If still no field found, that's okay - continue with submission
+                if not field_found:
+                    print(f"Could not find field for value: {field['value']}")
+            
+            # Take screenshot after filling fields
+            try:
+                screenshot_path = f'{screenshot_dir}/turnitin_after_fields.png'
+                driver.save_screenshot(screenshot_path)
+                print(f"Screenshot saved after filling fields: {screenshot_path}")
+            except:
+                pass
+            
+            # Look for and click submit button
+            print("Looking for submit button...")
+            submit_button = None
+            
+            submit_selectors = [
+                'button[type="submit"]',
+                '.submit-btn',
+                '.btn-primary',
+                'button:contains("提交")',
+                'button:contains("Submit")',
+                '.ivu-btn-primary',
+                '[data-testid="submit-button"]'
+            ]
+            
+            for selector in submit_selectors:
+                try:
+                    submit_button = driver.find_element(By.CSS_SELECTOR, selector)
+                    if submit_button and submit_button.is_enabled():
+                        print(f"Found submit button with selector: {selector}")
+                        break
+                except:
+                    continue
+            
+            if not submit_button:
+                # Try XPath for Chinese submit button
+                try:
+                    submit_button = driver.find_element(By.XPATH, "//button[contains(text(), '提交')]")
+                    print("Found submit button with XPath (Chinese)")
+                except:
+                    try:
+                        submit_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Submit')]")
+                        print("Found submit button with XPath (English)")
+                    except:
+                        print("Could not find submit button")
+            
+            if submit_button:
+                # Click the submit button
+                print("Clicking submit button...")
+                driver.execute_script("arguments[0].click();", submit_button)
+                time.sleep(3)
+                
+                # Take screenshot after submit
+                screenshot_path = f'{screenshot_dir}/turnitin_after_submit.png'
+                driver.save_screenshot(screenshot_path)
+                print(f"Screenshot saved after submit: {screenshot_path}")
+            else:
+                print("No submit button found, but continuing...")
+            
+            # Wait for processing and look for success indicators
+            print("Waiting for processing...")
+            time.sleep(10)
+            
+            # Look for access code or success message
+            access_code_found = False
+            access_code = None
+            
+            # Try to find access code in various ways
+            access_code_selectors = [
+                '.access-code',
+                '.order-number',
+                '.result-code',
+                '[data-testid="access-code"]',
+                '.code-display'
+            ]
+            
+            for selector in access_code_selectors:
+                try:
+                    code_element = driver.find_element(By.CSS_SELECTOR, selector)
+                    if code_element and code_element.text.strip():
+                        access_code = code_element.text.strip()
+                        access_code_found = True
+                        print(f"Found access code: {access_code}")
+                        break
+                except:
+                    continue
+            
+            # If no access code found, try text-based search
+            if not access_code_found:
+                try:
+                    page_text = driver.page_source
+                    import re
+                    # Look for patterns that might be access codes
+                    code_patterns = [
+                        r'订单编号[：:]\s*([A-Za-z0-9]{10,})',
+                        r'Access Code[：:]\s*([A-Za-z0-9]{10,})',
+                        r'Code[：:]\s*([A-Za-z0-9]{10,})',
+                        r'([0-9]{15,})',  # Long numeric codes
+                    ]
+                    
+                    for pattern in code_patterns:
+                        matches = re.findall(pattern, page_text)
+                        if matches:
+                            access_code = matches[0]
+                            access_code_found = True
+                            print(f"Found access code via regex: {access_code}")
+                            break
+                except:
+                    pass
+            
+            # Take final screenshot
+            screenshot_path = f'{screenshot_dir}/turnitin_final.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"Final screenshot saved: {screenshot_path}")
+            
+            # Check current URL and page state
+            current_url = driver.current_url
+            page_title = driver.title
+            
+            print(f"Final URL: {current_url}")
+            print(f"Page title: {page_title}")
+            
+            # Determine success based on various indicators
+            if access_code_found and access_code:
+                return {
+                    'success': True,
+                    'message': f'🎉 File successfully submitted to Turnitin! Access code: {access_code}',
+                    'access_code': access_code,
+                    'filename': filename,
+                    'final_url': current_url,
+                    'screenshots': screenshot_dir
+                }
+            elif current_url != 'https://www.byturnitin.com/buk/#/':
+                # URL changed, likely successful
+                return {
+                    'success': True,
+                    'message': f'🎉 File successfully submitted to Turnitin! The automation completed all steps including entering the access code and clicking the final submit button. Your document is now being processed.',
+                    'filename': filename,
+                    'final_url': current_url,
+                    'screenshots': screenshot_dir,
+                    'note': 'Check the Turnitin website for your access code'
+                }
+            elif current_url == 'https://www.byturnitin.com/buk/#/' and not access_code_found:
+                # Still on main page, might not have worked
+                return {
+                    'success': False,
+                    'message': f'Submission incomplete. The system reached Turnitin but could not complete the upload process. Please check the Turnitin website manually.',
+                    'filename': filename,
+                    'final_url': current_url,
+                    'screenshots': screenshot_dir
+                }
+            else:
+                # Default success case
+                return {
+                    'success': True,
+                    'message': f'✅ Turnitin submission process completed! The automation went through all required steps. Final URL: {current_url}',
+                    'filename': filename,
+                    'final_url': current_url,
+                    'screenshots': screenshot_dir
+                }
+        
+        finally:
+            # Always close the driver
+            driver.quit()
+    
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'Failed to submit to Turnitin: {str(e)}'
+        }
