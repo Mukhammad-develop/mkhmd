@@ -879,14 +879,101 @@ def turnitin(request):
 
 @login_required
 def turnitin_results(request):
-    """Show user's Turnitin results history"""
-    user_results = TurnitinResult.objects.filter(user=request.user)
+    """Show user's Turnitin results - automatically fetch from Turnitin website"""
+    
+    # Fixed test access code for all users
+    FIXED_ACCESS_CODE = "2884078633760879499"
+    user_id_str = str(request.user.id)
+    
+    print(f"Fetching Turnitin results for user {user_id_str}")
+    
+    # First, try to get existing results from database
+    existing_results = TurnitinResult.objects.filter(
+        user=request.user, 
+        title=user_id_str
+    ).order_by('-submission_date')
+    
+    # Always try to fetch fresh results from Turnitin
+    fresh_results = []
+    error_message = None
+    
+    try:
+        # Scrape latest results from Turnitin website
+        print(f"Scraping fresh results from Turnitin with access code: {FIXED_ACCESS_CODE}")
+        scraped_results = scrape_turnitin_results(FIXED_ACCESS_CODE)
+        
+        if scraped_results:
+            # Filter results to only include those with user's ID as title
+            user_results = [r for r in scraped_results if r.get('title') == user_id_str]
+            print(f"Found {len(user_results)} results for user ID {user_id_str} out of {len(scraped_results)} total results")
+            
+            # Save/update results in database
+            for result_data in user_results:
+                try:
+                    # Check if this specific result already exists
+                    existing = TurnitinResult.objects.filter(
+                        user=request.user,
+                        access_code=FIXED_ACCESS_CODE,
+                        title=user_id_str,
+                        submission_date=result_data.get('submission_date')
+                    ).first()
+                    
+                    if existing:
+                        # Update existing result with latest data
+                        existing.plagiarism_percentage = result_data.get('plagiarism_percentage')
+                        existing.ai_percentage = result_data.get('ai_percentage')
+                        existing.status = result_data.get('status', '检测完成')
+                        existing.ai_report_available = result_data.get('ai_report_available', False)
+                        existing.plagiarism_report_available = result_data.get('plagiarism_report_available', False)
+                        existing.english_guide_available = result_data.get('english_guide_available', False)
+                        existing.save()
+                        fresh_results.append(existing)
+                        print(f"Updated existing result for {existing.submission_date}")
+                    else:
+                        # Create new result
+                        new_result = TurnitinResult.objects.create(
+                            user=request.user,
+                            access_code=FIXED_ACCESS_CODE,
+                            title=user_id_str,
+                            submission_date=result_data.get('submission_date'),
+                            plagiarism_percentage=result_data.get('plagiarism_percentage'),
+                            ai_percentage=result_data.get('ai_percentage'),
+                            status=result_data.get('status', '检测完成'),
+                            turnitin_type=result_data.get('turnitin_type', 'Turnitin UK'),
+                            ai_report_available=result_data.get('ai_report_available', False),
+                            plagiarism_report_available=result_data.get('plagiarism_report_available', False),
+                            english_guide_available=result_data.get('english_guide_available', False)
+                        )
+                        fresh_results.append(new_result)
+                        print(f"Created new result for {new_result.submission_date}")
+                        
+                except Exception as e:
+                    print(f"Error saving result: {e}")
+                    continue
+        else:
+            print("No results found from Turnitin scraping")
+            error_message = "No results found from Turnitin. Your documents may still be processing."
+            
+    except Exception as e:
+        print(f"Error fetching results from Turnitin: {e}")
+        error_message = f"Error fetching latest results: {str(e)}"
+    
+    # Get final results from database (including any newly saved ones)
+    final_results = TurnitinResult.objects.filter(
+        user=request.user,
+        title=user_id_str
+    ).order_by('-submission_date')
     
     context = {
         'title': 'My Turnitin Results',
         'name': 'Abdurakhmon',
-        'results': user_results,
+        'results': final_results,
         'user_balance': request.user.turnitin_balance,
+        'user_id': user_id_str,
+        'access_code': FIXED_ACCESS_CODE,
+        'fresh_results_count': len(fresh_results),
+        'error_message': error_message,
+        'total_results': final_results.count()
     }
     return render(request, 'website/turnitin_results.html', context)
 

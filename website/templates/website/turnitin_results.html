@@ -153,24 +153,51 @@
         {% endif %}
     </div>
 
-    <!-- Check Result Form -->
+    <!-- Auto-Fetch Status -->
     <div class="check-result-form">
-        <h3 style="margin-bottom: 1rem;">Check Result by Access Code</h3>
-        <div id="alertContainer"></div>
-        <form id="checkResultForm">
-            <div class="form-group">
-                <label for="accessCode">Access Code (订单编号)</label>
-                <input type="text" id="accessCode" class="form-input" placeholder="Enter your Turnitin access code" required>
+        <h3 style="margin-bottom: 1rem;">
+            <i class="fas fa-sync-alt"></i> Automatic Results Sync
+        </h3>
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="flex: 1;">
+                <p style="color: var(--text-gray); margin-bottom: 0.5rem;">
+                    <i class="fas fa-user-tag"></i> Your User ID: <strong>{{ user_id }}</strong>
+                </p>
+                <p style="color: var(--text-gray); margin-bottom: 0.5rem;">
+                    <i class="fas fa-key"></i> Access Code: <strong>{{ access_code }}</strong>
+                </p>
+                <p style="color: var(--text-gray);">
+                    <i class="fas fa-info-circle"></i> Results are automatically fetched from Turnitin when you visit this page
+                </p>
             </div>
-            <button type="submit" class="check-btn">
-                <i class="fas fa-search"></i> Check Results
+            <button onclick="location.reload()" class="check-btn" style="white-space: nowrap;">
+                <i class="fas fa-refresh"></i> Refresh Results
             </button>
-        </form>
+        </div>
+        
+        {% if error_message %}
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ error_message }}
+        </div>
+        {% endif %}
+        
+        {% if fresh_results_count > 0 %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            ✅ Found {{ fresh_results_count }} fresh result(s) from Turnitin
+        </div>
+        {% endif %}
     </div>
 
     <!-- Results History -->
     <div class="results-history">
-        <h3 style="margin-bottom: 2rem;">Your Results History</h3>
+        <h3 style="margin-bottom: 2rem;">
+            Your Results History 
+            <span style="color: var(--text-gray); font-size: 1rem; font-weight: normal;">
+                ({{ total_results }} result{{ total_results|pluralize }})
+            </span>
+        </h3>
         
         {% if results %}
             {% for result in results %}
@@ -183,14 +210,14 @@
                         {{ result.ai_percentage|default:"N/A" }}%
                     </div>
                     <div style="flex: 1;">
-                        <h4>{{ result.title }}</h4>
+                        <h4>Document ID: {{ result.title }}</h4>
                         <p style="color: var(--text-gray);">
                             <i class="fas fa-calendar"></i>
                             {{ result.submission_date|date:"Y-m-d H:i" }}
                         </p>
                         <p style="color: var(--text-gray);">
-                            <i class="fas fa-code"></i>
-                            Access Code: {{ result.access_code }}
+                            <i class="fas fa-cogs"></i>
+                            {{ result.turnitin_type }}
                         </p>
                         <p style="color: #10b981;">
                             <i class="fas fa-check-circle"></i>
@@ -222,8 +249,9 @@
         {% else %}
             <div class="result-card" style="text-align: center; color: var(--text-gray);">
                 <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <h4>No Results Yet</h4>
-                <p>Submit documents through the Turnitin system and check results here.</p>
+                <h4>No Results Found</h4>
+                <p>No documents found with your User ID ({{ user_id }}) as the title.</p>
+                <p style="margin-top: 1rem;">Make sure to submit documents through our Turnitin system using your User ID.</p>
                 <a href="{% url 'website:turnitin' %}" class="check-btn" style="display: inline-block; margin-top: 1rem; text-decoration: none;">
                     <i class="fas fa-upload"></i> Submit Document
                 </a>
@@ -235,65 +263,29 @@
 
 {% block extra_js %}
 <script>
-document.getElementById('checkResultForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const accessCode = document.getElementById('accessCode').value.trim();
-    const alertContainer = document.getElementById('alertContainer');
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    
-    if (!accessCode) {
-        showAlert('Please enter an access code', 'error');
-        return;
+// Auto-refresh functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading indicator for refresh button
+    const refreshBtn = document.querySelector('button[onclick="location.reload()"]');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            this.disabled = true;
+        });
     }
     
-    // Show loading state
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
-    submitBtn.disabled = true;
-    
-    fetch('{% url "website:check_turnitin_result" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        },
-        body: JSON.stringify({ access_code: accessCode })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(data.message, 'success');
-            // Reload page to show new results
-            setTimeout(() => location.reload(), 2000);
-        } else {
-            showAlert(data.message || 'Failed to check results', 'error');
-        }
-    })
-    .catch(error => {
-        showAlert('Network error. Please try again.', 'error');
-        console.error('Error:', error);
-    })
-    .finally(() => {
-        submitBtn.innerHTML = '<i class="fas fa-search"></i> Check Results';
-        submitBtn.disabled = false;
+    // Add smooth animations to result cards
+    const resultCards = document.querySelectorAll('.result-card');
+    resultCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
     });
 });
-
-function showAlert(message, type) {
-    const alertContainer = document.getElementById('alertContainer');
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-    
-    alertContainer.innerHTML = `
-        <div class="alert ${alertClass}">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
-            ${message}
-        </div>
-    `;
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        alertContainer.innerHTML = '';
-    }, 5000);
-}
 </script>
 {% endblock %} 
