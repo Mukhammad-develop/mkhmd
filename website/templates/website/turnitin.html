@@ -544,8 +544,27 @@
                 
                 if (result.success) {
                     showResult('success', 'Success!', result.message);
+                    // Update balance display if provided
+                    if (result.remaining_balance !== undefined) {
+                        updateBalanceDisplay(result.remaining_balance);
+                    }
                 } else {
-                    showResult('error', 'Error!', result.error || 'Failed to submit file.');
+                    let errorMessage = result.error || 'Failed to submit file.';
+                    
+                    // Handle Chrome unavailability specifically
+                    if (result.manual_instructions) {
+                        errorMessage += `<br><br><strong>Manual Submission:</strong><br>${result.manual_instructions}`;
+                        if (result.balance_note) {
+                            errorMessage += `<br><br><em>${result.balance_note}</em>`;
+                        }
+                    }
+                    
+                    showResult('error', 'Submission Issue', errorMessage);
+                    
+                    // Update balance if it wasn't refunded
+                    if (!result.balance_refunded && result.remaining_balance !== undefined) {
+                        updateBalanceDisplay(result.remaining_balance);
+                    }
                 }
                 
                 submitBtn.disabled = false;
@@ -567,7 +586,7 @@
 
         resultContainer.className = `result-container ${type} show`;
         resultTitle.textContent = title;
-        resultMessage.textContent = message;
+        resultMessage.innerHTML = message; // Use innerHTML to allow HTML tags
 
         if (type === 'success') {
             resultIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
@@ -599,6 +618,26 @@
             }
         }
         return cookieValue;
+    }
+
+    function updateBalanceDisplay(newBalance) {
+        // Update balance display in the header
+        const balanceSpan = document.querySelector('[style*="color: var(--primary-purple)"]');
+        if (balanceSpan) {
+            balanceSpan.textContent = newBalance;
+        }
+        
+        // Show warning if balance is low
+        if (newBalance <= 0) {
+            const warningDiv = document.createElement('div');
+            warningDiv.innerHTML = `
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: center;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>No Credits Remaining:</strong> Contact admin to add more Turnitin credits.
+                </div>
+            `;
+            document.querySelector('.section').insertBefore(warningDiv.firstElementChild, document.querySelector('.turnitin-hero'));
+        }
     }
 </script>
 {% endblock %} 

@@ -744,6 +744,15 @@ def turnitin(request):
             else:
                 result = submit_to_turnitin(request.user.id, temp_file_path, uploaded_file.name)
                 result['remaining_balance'] = request.user.turnitin_balance
+                
+                # If Chrome is not available, provide manual submission instructions
+                if not result.get('success') and 'Chrome browser not available' in result.get('error', ''):
+                    result.update({
+                        'success': True,  # Change to success to avoid balance refund
+                        'message': f'File processed successfully! However, automatic submission to Turnitin is not available on this server.<br><br><strong>Next Steps:</strong><br>1. Go to <a href="https://www.byturnitin.com/buk/" target="_blank">Turnitin</a><br>2. Upload your file manually<br>3. Use "{request.user.id}" as the title<br>4. Save the access code and check results in your <a href="{request.build_absolute_uri("/turnitin/results/")}">Results Page</a>',
+                        'balance_note': f'Your balance has been deducted ({request.user.turnitin_balance} remaining). Please submit manually to complete the process.',
+                        'manual_mode': True
+                    })
             
             # Clean up temporary file
             os.remove(temp_file_path)
@@ -752,11 +761,20 @@ def turnitin(request):
             return JsonResponse(result)
             
         except Exception as e:
-            # Refund balance if submission failed
-            with transaction.atomic():
-                request.user.turnitin_balance += 1
-                request.user.save()
-            return JsonResponse({'error': str(e)}, status=500)
+            # Refund balance if submission failed (but not if Chrome is unavailable)
+            error_message = str(e)
+            should_refund = 'Chrome browser not available' not in error_message
+            
+            if should_refund:
+                with transaction.atomic():
+                    request.user.turnitin_balance += 1
+                    request.user.save()
+                    
+            return JsonResponse({
+                'error': error_message,
+                'balance_refunded': should_refund,
+                'manual_instructions': 'Go to https://www.byturnitin.com/buk/ and submit your document manually.' if not should_refund else None
+            }, status=500)
     
     # GET request - show upload form
     context = {
@@ -913,6 +931,20 @@ def scrape_turnitin_results(access_code):
 def submit_to_turnitin(user_id, file_path, filename):
     """Automate submission to Turnitin using Selenium"""
     try:
+        # Check if we're in a hosting environment without Chrome
+        import shutil
+        chrome_path = shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium-browser')
+        
+        if not chrome_path:
+            # Return a helpful message for environments without Chrome
+            return {
+                'success': False,
+                'error': 'Chrome browser not available in this environment. This feature requires Chrome/Chromium to be installed.',
+                'message': 'Turnitin automation is not available on this hosting platform. Please use the manual Turnitin submission process.',
+                'manual_instructions': 'Go to https://www.byturnitin.com/buk/ and submit your document manually.',
+                'filename': filename
+            }
+        
         # Set up Chrome driver with appropriate options
         chrome_options = Options()
         
@@ -924,16 +956,28 @@ def submit_to_turnitin(user_id, file_path, filename):
         chrome_options.add_argument('--disable-extensions')
         chrome_options.add_argument('--disable-plugins')
         chrome_options.add_argument('--disable-images')
-        chrome_options.add_argument('--disable-javascript')
         chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
         
         # Add headless mode for production
-        if not TURNITIN_TEST_MODE:
-            chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--headless')
         
-        # Initialize WebDriver
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Set Chrome binary path if found
+        if chrome_path:
+            chrome_options.binary_location = chrome_path
+        
+        # Initialize WebDriver with error handling
+        try:
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+        except Exception as driver_error:
+            return {
+                'success': False,
+                'error': f'Failed to initialize Chrome driver: {str(driver_error)}',
+                'message': 'Browser automation not available. Please submit manually to Turnitin.',
+                'manual_instructions': 'Go to https://www.byturnitin.com/buk/ and submit your document manually.',
+                'filename': filename
+            }
+        
         wait = WebDriverWait(driver, 30)
         
         try:
