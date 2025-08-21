@@ -1005,12 +1005,14 @@ def submit_to_turnitin(user_id, file_path, filename):
                     # For Chromium 90, use compatible ChromeDriver 90
                     from webdriver_manager.chrome import ChromeDriverManager
                     # Try multiple compatible versions for Chromium 90
-                    compatible_versions = ["90.0.4430.24", "90.0.4430.85", "90.0.4430.212"]
+                    compatible_versions = ["90.0.4430.24", "90.0.4430.85"]
                     service = None
                     
                     for version in compatible_versions:
                         try:
-                            service = Service(ChromeDriverManager(version=version).install())
+                            # Use ChromeDriverManager with driver_version parameter
+                            manager = ChromeDriverManager(driver_version=version)
+                            service = Service(manager.install())
                             print(f"Successfully using ChromeDriver {version} for Chromium {browser_version}")
                             break
                         except Exception as v_error:
@@ -1018,13 +1020,21 @@ def submit_to_turnitin(user_id, file_path, filename):
                             continue
                     
                     if not service:
-                        # Last resort - use version 90 without patch
-                        service = Service(ChromeDriverManager(version="90").install())
-                        print(f"Using ChromeDriver 90 (no patch) for Chromium {browser_version}")
-                        
+                        # Last resort - use latest and hope for the best
+                        try:
+                            service = Service(ChromeDriverManager().install())
+                            print(f"Using latest ChromeDriver for Chromium {browser_version}")
+                        except:
+                            return {
+                                'success': False,
+                                'error': 'Could not download any compatible ChromeDriver version',
+                                'filename': filename
+                            }
+                            
                 elif int(browser_version) <= 100:
                     # For browsers 91-100, use ChromeDriver 100
-                    service = Service(ChromeDriverManager(version="100.0.4896.60").install())
+                    manager = ChromeDriverManager(driver_version="100.0.4896.60")
+                    service = Service(manager.install())
                     print(f"Using ChromeDriver 100 for Chromium {browser_version}")
                 else:
                     # For newer browsers, use latest
@@ -1032,19 +1042,11 @@ def submit_to_turnitin(user_id, file_path, filename):
                     print(f"Using latest ChromeDriver for Chromium {browser_version}")
             else:
                 # No version detected, assume old browser and use ChromeDriver 90
-                compatible_versions = ["90.0.4430.24", "90.0.4430.85", "90"]
-                service = None
-                
-                for version in compatible_versions:
-                    try:
-                        service = Service(ChromeDriverManager(version=version).install())
-                        print(f"No version detected, using ChromeDriver {version}")
-                        break
-                    except Exception as v_error:
-                        print(f"ChromeDriver {version} not available: {v_error}")
-                        continue
-                
-                if not service:
+                try:
+                    manager = ChromeDriverManager(driver_version="90.0.4430.24")
+                    service = Service(manager.install())
+                    print("No version detected, using ChromeDriver 90.0.4430.24")
+                except:
                     service = Service(ChromeDriverManager().install())
                     print("Using latest ChromeDriver as final fallback")
             
