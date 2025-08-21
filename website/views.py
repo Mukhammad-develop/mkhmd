@@ -27,7 +27,7 @@ TURNITIN_TEST_MODE = getattr(settings, 'TURNITIN_TEST_MODE', True)
 TURNITIN_CHROME_PATH = getattr(settings, 'TURNITIN_CHROME_PATH', None)
 
 def parse_turnitin_results(html_content, access_code):
-    """Parse Turnitin results from the HTML response"""
+    """Parse Turnitin results from the HTML response with enhanced parsing"""
     from bs4 import BeautifulSoup
     import re
     from datetime import datetime
@@ -36,61 +36,165 @@ def parse_turnitin_results(html_content, access_code):
         soup = BeautifulSoup(html_content, 'html.parser')
         results = []
         
-        # Find all result sections
-        result_sections = soup.find_all('div', class_='flex-row items-center section_7')
+        print("Starting HTML parsing...")
         
-        for section in result_sections:
+        # Look for the main results container
+        results_container = soup.find('div', class_='resultdata')
+        if not results_container:
+            print("No resultdata container found, searching for individual results...")
+            # Fallback: look for individual result sections
+            result_sections = soup.find_all('div', class_='flex-row items-center section_7')
+        else:
+            print("Found resultdata container")
+            result_sections = results_container.find_all('div', class_='flex-row items-center section_7')
+        
+        print(f"Found {len(result_sections)} result sections")
+        
+        for i, section in enumerate(result_sections):
+            print(f"Processing result section {i+1}")
             result_data = {}
             
-            # Extract plagiarism percentage
-            plagiarism_circle = section.find('span', class_='demo-Circle-inner font_5')
-            if plagiarism_circle:
-                plagiarism_text = plagiarism_circle.get_text(strip=True)
-                plagiarism_match = re.search(r'(\d+\.?\d*)%', plagiarism_text)
-                if plagiarism_match:
-                    result_data['plagiarism_percentage'] = float(plagiarism_match.group(1))
+            # Extract plagiarism percentage from circular charts
+            plagiarism_percentage = None
+            ai_percentage = None
             
-            # Extract AI percentage
-            ai_spans = section.find_all('span', style=lambda x: x and 'color: black' in x)
-            for span in ai_spans:
-                ai_text = span.get_text(strip=True)
-                if '%' in ai_text and ai_text != plagiarism_text:
-                    ai_match = re.search(r'(\d+)%', ai_text)
-                    if ai_match:
-                        result_data['ai_percentage'] = float(ai_match.group(1))
+            # Look for circular chart elements
+            chart_circles = section.find_all('div', class_='ivu-chart-circle-inner')
+            for circle in chart_circles:
+                # Get the percentage text
+                percentage_span = circle.find('span', class_='demo-Circle-inner font_5')
+                if percentage_span:
+                    percentage_text = percentage_span.get_text(strip=True)
+                    print(f"Found percentage text: {percentage_text}")
+                    
+                    # Check if this is plagiarism (重复率) or AI (AI比率)
+                    label_span = circle.find('span', class_='font_9 text_8')
+                    if label_span:
+                        label_text = label_span.get_text(strip=True)
+                        print(f"Label text: {label_text}")
+                        
+                        # Extract percentage value
+                        percentage_match = re.search(r'(\d+\.?\d*)%?', percentage_text)
+                        if percentage_match:
+                            percentage_value = float(percentage_match.group(1))
+                            
+                            if '重复率' in label_text or 'plagiarism' in label_text.lower():
+                                plagiarism_percentage = percentage_value
+                                print(f"Found plagiarism percentage: {plagiarism_percentage}%")
+                            elif 'AI比率' in label_text or 'ai' in label_text.lower():
+                                ai_percentage = percentage_value
+                                print(f"Found AI percentage: {ai_percentage}%")
+            
+            # Alternative method: look for percentage in spans with specific styles
+            if plagiarism_percentage is None or ai_percentage is None:
+                # Look for spans with percentage values
+                percentage_spans = section.find_all('span', class_='demo-Circle-inner font_5')
+                for span in percentage_spans:
+                    text = span.get_text(strip=True)
+                    percentage_match = re.search(r'(\d+\.?\d*)%', text)
+                    if percentage_match:
+                        value = float(percentage_match.group(1))
+                        # Try to determine if it's plagiarism or AI based on context
+                        parent = span.find_parent()
+                        if parent:
+                            parent_text = parent.get_text()
+                            if '重复率' in parent_text and plagiarism_percentage is None:
+                                plagiarism_percentage = value
+                            elif 'AI比率' in parent_text and ai_percentage is None:
+                                ai_percentage = value
+            
+            # Look for AI percentage in spans with black color style
+            if ai_percentage is None:
+                ai_spans = section.find_all('span', style=lambda x: x and 'color: black' in x)
+                for span in ai_spans:
+                    ai_text = span.get_text(strip=True)
+                    if '%' in ai_text:
+                        ai_match = re.search(r'(\d+)%', ai_text)
+                        if ai_match:
+                            ai_percentage = float(ai_match.group(1))
+                            print(f"Found AI percentage from black span: {ai_percentage}%")
+                            break
             
             # Extract title
-            title_span = section.find('span', class_='font_8')
-            if title_span:
-                result_data['title'] = title_span.get_text(strip=True)
+            title = None
+            title_spans = section.find_all('span', class_='font_8')
+            for span in title_spans:
+                text = span.get_text(strip=True)
+                if text and text not in ['检测完成', 'Turnitin UK']:
+                    title = text
+                    print(f"Found title: {title}")
+                    break
             
             # Extract date and status
+            submission_date = None
+            status = '检测完成'  # Default status
+            
             date_spans = section.find_all('span', class_='font_3')
             for span in date_spans:
                 text = span.get_text(strip=True)
-                if re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}', text):
+                # Look for date pattern
+                date_match = re.match(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2})', text)
+                if date_match:
                     try:
-                        result_data['submission_date'] = datetime.strptime(text, '%Y-%m-%d %H:%M')
+                        submission_date = datetime.strptime(date_match.group(1), '%Y-%m-%d %H:%M')
+                        print(f"Found submission date: {submission_date}")
                     except:
+                        print(f"Could not parse date: {text}")
                         pass
             
+            # Check for status in green colored spans
+            status_spans = section.find_all('span', style=lambda x: x and 'color: green' in x)
+            for span in status_spans:
+                text = span.get_text(strip=True)
+                if text:
+                    status = text
+                    print(f"Found status: {status}")
+                    break
+            
+            # Extract Turnitin type
+            turnitin_type = 'Turnitin UK'  # Default
+            type_spans = section.find_all('span', class_='font_7')
+            for span in type_spans:
+                text = span.get_text(strip=True)
+                if 'Turnitin' in text:
+                    turnitin_type = text
+                    print(f"Found Turnitin type: {turnitin_type}")
+                    break
+            
             # Check for download availability
-            result_data['ai_report_available'] = bool(section.find(attrs={'title': 'AI检测报告'}))
-            result_data['plagiarism_report_available'] = bool(section.find(attrs={'title': '下载查重报告'}))
-            result_data['english_guide_available'] = bool(section.find(attrs={'title': '下载英文秘籍'}))
+            ai_report_available = bool(section.find(attrs={'title': 'AI检测报告'})) or bool(section.find(string=re.compile('下载AI报告')))
+            plagiarism_report_available = bool(section.find(attrs={'title': '下载查重报告'})) or bool(section.find(string=re.compile('下载查重报告')))
+            english_guide_available = bool(section.find(attrs={'title': '下载英文秘籍'})) or bool(section.find(string=re.compile('下载英文秘籍')))
             
-            # Set defaults
-            result_data.setdefault('status', '检测完成')
-            result_data.setdefault('turnitin_type', 'Turnitin UK')
-            result_data['access_code'] = access_code
+            print(f"Download availability - AI: {ai_report_available}, Plagiarism: {plagiarism_report_available}, English: {english_guide_available}")
             
-            if result_data.get('title'):  # Only add if we found a title
+            # Build result data
+            if title or plagiarism_percentage is not None or ai_percentage is not None:
+                result_data = {
+                    'access_code': access_code,
+                    'title': title or 'Unknown Document',
+                    'plagiarism_percentage': plagiarism_percentage,
+                    'ai_percentage': ai_percentage,
+                    'submission_date': submission_date,
+                    'status': status,
+                    'turnitin_type': turnitin_type,
+                    'ai_report_available': ai_report_available,
+                    'plagiarism_report_available': plagiarism_report_available,
+                    'english_guide_available': english_guide_available
+                }
+                
                 results.append(result_data)
+                print(f"Added result: {result_data}")
+            else:
+                print(f"Skipping result section {i+1} - no meaningful data found")
         
+        print(f"Parsing completed. Found {len(results)} valid results.")
         return results
     
     except Exception as e:
         print(f"Error parsing Turnitin results: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 # Create your views here.
@@ -818,50 +922,80 @@ def check_turnitin_result(request):
                 })
             
             # Scrape results from Turnitin website
+            print(f"User {request.user.id} checking access code: {access_code}")
             results = scrape_turnitin_results(access_code)
             
             if results:
-                # Save results for user
+                # Save all results found (not just user ID matches)
                 saved_results = []
                 for result_data in results:
-                    # Only save results that match user's ID (title)
-                    if result_data.get('title') == str(request.user.id):
-                        turnitin_result = TurnitinResult.objects.create(
+                    try:
+                        # Check if this specific result already exists
+                        existing = TurnitinResult.objects.filter(
                             user=request.user,
                             access_code=access_code,
-                            title=result_data.get('title', 'Unknown'),
-                            submission_date=result_data.get('submission_date'),
-                            plagiarism_percentage=result_data.get('plagiarism_percentage'),
-                            ai_percentage=result_data.get('ai_percentage'),
-                            status=result_data.get('status', '检测完成'),
-                            turnitin_type=result_data.get('turnitin_type', 'Turnitin UK'),
-                            ai_report_available=result_data.get('ai_report_available', False),
-                            plagiarism_report_available=result_data.get('plagiarism_report_available', False),
-                            english_guide_available=result_data.get('english_guide_available', False)
-                        )
-                        saved_results.append(turnitin_result)
+                            title=result_data.get('title', 'Unknown')
+                        ).first()
+                        
+                        if not existing:
+                            turnitin_result = TurnitinResult.objects.create(
+                                user=request.user,
+                                access_code=access_code,
+                                title=result_data.get('title', 'Unknown Document'),
+                                submission_date=result_data.get('submission_date'),
+                                plagiarism_percentage=result_data.get('plagiarism_percentage'),
+                                ai_percentage=result_data.get('ai_percentage'),
+                                status=result_data.get('status', '检测完成'),
+                                turnitin_type=result_data.get('turnitin_type', 'Turnitin UK'),
+                                ai_report_available=result_data.get('ai_report_available', False),
+                                plagiarism_report_available=result_data.get('plagiarism_report_available', False),
+                                english_guide_available=result_data.get('english_guide_available', False)
+                            )
+                            saved_results.append(turnitin_result)
+                            print(f"Saved new result: {turnitin_result.title}")
+                        else:
+                            # Update existing result with latest data
+                            existing.plagiarism_percentage = result_data.get('plagiarism_percentage')
+                            existing.ai_percentage = result_data.get('ai_percentage')
+                            existing.status = result_data.get('status', '检测完成')
+                            existing.ai_report_available = result_data.get('ai_report_available', False)
+                            existing.plagiarism_report_available = result_data.get('plagiarism_report_available', False)
+                            existing.english_guide_available = result_data.get('english_guide_available', False)
+                            existing.save()
+                            saved_results.append(existing)
+                            print(f"Updated existing result: {existing.title}")
+                            
+                    except Exception as e:
+                        print(f"Error saving result: {e}")
+                        continue
                 
                 if saved_results:
                     return JsonResponse({
                         'success': True,
-                        'message': f'Found and saved {len(saved_results)} result(s)',
+                        'message': f'✅ Found and saved {len(saved_results)} result(s) for access code {access_code}',
                         'results': [{
+                            'id': r.id,
                             'title': r.title,
                             'plagiarism_percentage': r.plagiarism_percentage,
                             'ai_percentage': r.ai_percentage,
                             'submission_date': r.submission_date.isoformat() if r.submission_date else None,
-                            'status': r.status
+                            'status': r.status,
+                            'turnitin_type': r.turnitin_type,
+                            'ai_report_available': r.ai_report_available,
+                            'plagiarism_report_available': r.plagiarism_report_available,
+                            'english_guide_available': r.english_guide_available,
+                            'access_code': r.access_code
                         } for r in saved_results]
                     })
                 else:
                     return JsonResponse({
                         'success': False,
-                        'message': 'No results found for your user ID. Make sure you submitted the document through this system.'
+                        'message': '⚠️ Results were found but all were already in your history. Check your results list.'
                     })
             else:
                 return JsonResponse({
                     'success': False,
-                    'message': 'Could not retrieve results. Please check the access code.'
+                    'message': '❌ Could not retrieve results. Please check the access code and try again. The document may still be processing.'
                 })
                 
         except Exception as e:
@@ -870,43 +1004,149 @@ def check_turnitin_result(request):
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 def scrape_turnitin_results(access_code):
-    """Scrape results from Turnitin website"""
+    """Scrape results from Turnitin website using PythonAnywhere-compatible setup"""
     try:
-        # Set up Chrome driver
+        # Set up Chrome options for PythonAnywhere
         chrome_options = Options()
-        chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--window-size=1920,1080')
         
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Initialize WebDriver - PythonAnywhere has Chrome/ChromeDriver pre-installed
+        driver = webdriver.Chrome(options=chrome_options)
+        print(f"Scraping results for access code: {access_code}")
         
         try:
+            # Create screenshots directory for debugging
+            screenshot_dir = tempfile.mkdtemp()
+            print(f"Results screenshots will be saved to: {screenshot_dir}")
+            
             # Navigate to Turnitin results page
+            print("Navigating to Turnitin results page...")
             driver.get('https://www.byturnitin.com/buk/#/chakanbaogao')
             
             # Wait for page to load
-            wait = WebDriverWait(driver, 10)
+            wait = WebDriverWait(driver, 15)
+            time.sleep(3)
+            
+            # Take initial screenshot
+            screenshot_path = f'{screenshot_dir}/01_results_page_initial.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"Initial results page screenshot: {screenshot_path}")
             
             # Find and fill the access code input
-            access_input = wait.until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[placeholder="请输入订单编号查询检测结果"]'))
-            )
-            access_input.clear()
-            access_input.send_keys(access_code)
+            print("Looking for access code input field...")
+            access_input = None
             
-            # Click the search button
-            search_button = driver.find_element(By.CSS_SELECTOR, '.flex-row.items-center.section_6')
-            search_button.click()
+            # Try multiple selectors for the input field
+            input_selectors = [
+                'input[placeholder="请输入订单编号查询检测结果"]',
+                'input[placeholder*="订单编号"]',
+                '.ivu-input[placeholder*="订单"]',
+                'input[type="text"]'
+            ]
+            
+            for selector in input_selectors:
+                try:
+                    access_input = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
+                    if access_input and access_input.is_displayed():
+                        print(f"Found access input with selector: {selector}")
+                        break
+                except:
+                    continue
+            
+            if not access_input:
+                print("Could not find access code input field")
+                screenshot_path = f'{screenshot_dir}/02_no_input_found.png'
+                driver.save_screenshot(screenshot_path)
+                return []
+            
+            # Clear and enter access code
+            access_input.clear()
+            time.sleep(0.5)
+            access_input.send_keys(access_code)
+            print(f"Entered access code: {access_code}")
+            
+            # Screenshot after entering code
+            screenshot_path = f'{screenshot_dir}/03_after_entering_code.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"After entering code screenshot: {screenshot_path}")
+            
+            # Find and click the search button
+            print("Looking for search button...")
+            search_clicked = False
+            
+            # Try multiple selectors for search button
+            search_selectors = [
+                '.flex-row.items-center.section_6',
+                'span:contains("查询结果")',
+                '.font_2:contains("查询结果")',
+                'img[src*="data:image/png"] + span'
+            ]
+            
+            for selector in search_selectors:
+                try:
+                    if 'contains' in selector:
+                        # Use XPath for contains
+                        search_button = driver.find_element(By.XPATH, f"//span[contains(text(), '查询结果')]/..")
+                    else:
+                        search_button = driver.find_element(By.CSS_SELECTOR, selector)
+                    
+                    if search_button and search_button.is_displayed():
+                        driver.execute_script("arguments[0].click();", search_button)
+                        print("Clicked search button")
+                        search_clicked = True
+                        break
+                except Exception as e:
+                    print(f"Search button selector failed: {selector} - {e}")
+                    continue
+            
+            if not search_clicked:
+                print("Could not find or click search button")
+                screenshot_path = f'{screenshot_dir}/04_search_button_not_found.png'
+                driver.save_screenshot(screenshot_path)
+                return []
             
             # Wait for results to load
-            time.sleep(5)
+            print("Waiting for results to load...")
+            time.sleep(8)
             
-            # Get page HTML
+            # Screenshot after search
+            screenshot_path = f'{screenshot_dir}/05_after_search.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"After search screenshot: {screenshot_path}")
+            
+            # Check if results are loaded by looking for result data
+            try:
+                # Wait for result data to appear
+                result_data = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.resultdata, .flex-row.items-center.section_7')))
+                print("Results data found on page")
+            except:
+                print("No results data found, checking for error messages...")
+                # Take screenshot of potential error state
+                screenshot_path = f'{screenshot_dir}/06_no_results_found.png'
+                driver.save_screenshot(screenshot_path)
+            
+            # Get page HTML for parsing
             html_content = driver.page_source
             
-            # Parse results
+            # Take final screenshot
+            screenshot_path = f'{screenshot_dir}/07_final_results_page.png'
+            driver.save_screenshot(screenshot_path)
+            print(f"Final results page screenshot: {screenshot_path}")
+            
+            # Parse results using enhanced parser
+            print("Parsing results from HTML...")
             results = parse_turnitin_results(html_content, access_code)
+            
+            if results:
+                print(f"Successfully parsed {len(results)} result(s)")
+                for i, result in enumerate(results):
+                    print(f"Result {i+1}: {result.get('title', 'No title')} - {result.get('plagiarism_percentage', 'N/A')}% plagiarism, {result.get('ai_percentage', 'N/A')}% AI")
+            else:
+                print("No results found in parsed HTML")
             
             return results
             
@@ -1107,7 +1347,7 @@ def submit_to_turnitin(user_id, file_path, filename):
                 print("WARNING: Could not proceed to next step")
                 return {
                     'success': False,
-                    'error': 'Could not find or click the "下一步" (Next Step) button',
+                    'error': f'Could not find or click the "下一步" (Next Step) button',
                     'screenshots': screenshot_dir,
                     'debug_info': {
                         'fields_filled': f'{fields_filled}/3',
