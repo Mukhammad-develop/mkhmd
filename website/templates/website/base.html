@@ -140,6 +140,52 @@
             color: var(--pure-white);
         }
 
+        /* Dropdown menu styles */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-gray);
+            border-radius: 10px;
+            min-width: 160px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            margin-top: 0.5rem;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--pure-white);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 0.25rem;
+        }
+
+        .dropdown-content a:hover {
+            background: var(--primary-purple);
+            color: var(--pure-white);
+        }
+
+        .dropdown > a::after {
+            content: ' ▼';
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
         /* Page specific content */
         .page-content {
             min-height: 100vh;
@@ -400,14 +446,32 @@
             <a href="{% url 'website:home' %}" class="logo">&lt;{{ name|lower }}/&gt;</a>
             <ul class="nav-links">
                 <li><a href="{% url 'website:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
-                <li><a href="{% url 'website:portfolio' %}" {% if request.resolver_match.url_name == 'portfolio' %}class="active"{% endif %}>Portfolio</a></li>
-                <li><a href="{% url 'website:achievements' %}" {% if request.resolver_match.url_name == 'achievements' %}class="active"{% endif %}>Awards</a></li>
-                <li><a href="{% url 'website:timeline' %}" {% if request.resolver_match.url_name == 'timeline' %}class="active"{% endif %}>Journey</a></li>
-                <li><a href="{% url 'website:blog' %}" {% if request.resolver_match.url_name == 'blog' %}class="active"{% endif %}>Blog</a></li>
-                <li><a href="{% url 'website:metrics' %}" {% if request.resolver_match.url_name == 'metrics' %}class="active"{% endif %}>Metrics</a></li>
-                <li><a href="{% url 'website:booking' %}" {% if request.resolver_match.url_name == 'booking' %}class="active"{% endif %}>Book</a></li>
-                <li><a href="{% url 'website:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>Resources</a></li>
-                <li><a href="{% url 'website:turnitin' %}" {% if request.resolver_match.url_name == 'turnitin' %}class="active"{% endif %}>Turnitin</a></li>
+                
+                <li class="dropdown">
+                    <a href="{% url 'website:portfolio' %}" {% if request.resolver_match.url_name in 'portfolio,achievements,timeline,blog' %}class="active"{% endif %}>Portfolio</a>
+                    <div class="dropdown-content">
+                        <a href="{% url 'website:portfolio' %}">Portfolio</a>
+                        <a href="{% url 'website:achievements' %}">Awards</a>
+                        <a href="{% url 'website:timeline' %}">Journey</a>
+                        <a href="{% url 'website:blog' %}">Blog</a>
+                    </div>
+                </li>
+                
+                <li class="dropdown">
+                    <a href="{% url 'website:metrics' %}" {% if request.resolver_match.url_name in 'metrics,booking' %}class="active"{% endif %}>Timeline</a>
+                    <div class="dropdown-content">
+                        <a href="{% url 'website:metrics' %}">Metrics</a>
+                        <a href="{% url 'website:booking' %}">Book</a>
+                    </div>
+                </li>
+                
+                <li class="dropdown">
+                    <a href="{% url 'website:resources' %}" {% if request.resolver_match.url_name in 'resources,turnitin' %}class="active"{% endif %}>Projects</a>
+                    <div class="dropdown-content">
+                        <a href="{% url 'website:resources' %}">Resources</a>
+                        <a href="{% url 'website:turnitin' %}">Turnitin</a>
+                    </div>
+                </li>
             </ul>
         </div>
     </nav>
