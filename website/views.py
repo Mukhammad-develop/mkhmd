@@ -223,17 +223,17 @@ def parse_turnitin_results(html_content, access_code):
 # Create your views here.
 
 def home(request):
-    """Dual Identity Landing page view - Software Developer & Businessman"""
+    """Software Developer & Web-Scraper Engineer Landing page"""
     context = {
-        'title': 'Software Developer & Businessman',
+        'title': 'Software Developer & Web-Scraper Engineer',
         'name': 'Abdurakhmon',
-        'tagline': 'Software Developer & Strategic Businessman',
-        'description': 'Building innovative solutions through code and driving business growth through strategic thinking',
+        'tagline': 'Software Developer & Web-Scraping Specialist',
+        'description': 'Building innovative software solutions and extracting valuable data through advanced web-scraping techniques',
         'email': 'abdurakhmon@mkhmd.uk',
         'github': 'https://github.com/mukhammad-develop',
         'linkedin': 'https://linkedin.com/in/abdurakhmon-dev',
         
-        # Software Developer Identity
+        # Software Developer Skills
         'dev_skills': [
             {'name': 'Python', 'icon': 'fab fa-python'},
             {'name': 'Django', 'icon': 'fas fa-server'},
@@ -245,248 +245,274 @@ def home(request):
             {'name': 'MongoDB', 'icon': 'fas fa-leaf'},
             {'name': 'Kubernetes', 'icon': 'fas fa-dharmachakra'},
             {'name': 'GraphQL', 'icon': 'fas fa-project-diagram'},
-            {'name': 'Celery', 'icon': 'fas fa-tasks'},
-            {'name': 'RabbitMQ', 'icon': 'fas fa-exchange-alt'},
-            {'name': 'Elasticsearch', 'icon': 'fas fa-search'},
-            {'name': 'Linux', 'icon': 'fab fa-linux'},
             {'name': 'Git', 'icon': 'fab fa-git-alt'},
-            {'name': 'CI/CD', 'icon': 'fas fa-cogs'},
+            {'name': 'Linux', 'icon': 'fab fa-linux'},
         ],
         'dev_services': [
             {
+                'title': 'Web Application Development',
+                'description': 'Building scalable web applications with modern frameworks like Django and FastAPI.',
+                'icon': 'fas fa-code'
+            },
+            {
                 'title': 'API Development',
-                'description': 'Creating robust RESTful APIs and GraphQL services with comprehensive documentation and authentication.',
+                'description': 'Creating robust RESTful APIs and GraphQL services with comprehensive documentation.',
                 'icon': 'fas fa-code-branch'
             },
             {
-                'title': 'Database Architecture',
-                'description': 'Designing efficient database schemas, query optimization, and implementing caching strategies.',
+                'title': 'Database Design',
+                'description': 'Designing efficient database schemas and implementing optimization strategies.',
                 'icon': 'fas fa-database'
             },
             {
-                'title': 'Microservices',
-                'description': 'Building scalable microservice architectures with Docker, message queues, and service discovery.',
-                'icon': 'fas fa-cubes'
-            },
-            {
-                'title': 'Cloud Infrastructure',
-                'description': 'Deploying and managing applications on AWS, implementing CI/CD pipelines and monitoring.',
+                'title': 'Cloud Deployment',
+                'description': 'Deploying applications on AWS with Docker containers and CI/CD pipelines.',
                 'icon': 'fas fa-cloud'
             },
         ],
         
-        # Businessman Identity
-        'business_skills': [
-            {'name': 'Strategic Planning', 'icon': 'fas fa-chess'},
-            {'name': 'Market Analysis', 'icon': 'fas fa-chart-line'},
-            {'name': 'Financial Management', 'icon': 'fas fa-coins'},
-            {'name': 'Team Leadership', 'icon': 'fas fa-users'},
-            {'name': 'Product Management', 'icon': 'fas fa-rocket'},
-            {'name': 'Business Development', 'icon': 'fas fa-handshake'},
-            {'name': 'Investor Relations', 'icon': 'fas fa-chart-pie'},
-            {'name': 'Risk Management', 'icon': 'fas fa-shield-alt'},
-            {'name': 'Operations', 'icon': 'fas fa-cogs'},
-            {'name': 'Digital Marketing', 'icon': 'fas fa-bullhorn'},
-            {'name': 'Partnership', 'icon': 'fas fa-link'},
-            {'name': 'Innovation', 'icon': 'fas fa-lightbulb'},
+        # Web-Scraper Engineer Skills
+        'scraping_skills': [
+            {'name': 'Selenium', 'icon': 'fas fa-robot'},
+            {'name': 'BeautifulSoup', 'icon': 'fas fa-code'},
+            {'name': 'Scrapy', 'icon': 'fas fa-spider'},
+            {'name': 'Requests', 'icon': 'fas fa-globe'},
+            {'name': 'Playwright', 'icon': 'fas fa-theater-masks'},
+            {'name': 'Proxy Management', 'icon': 'fas fa-shield-alt'},
+            {'name': 'CAPTCHA Solving', 'icon': 'fas fa-puzzle-piece'},
+            {'name': 'Anti-Bot Bypass', 'icon': 'fas fa-unlock'},
+            {'name': 'Data Processing', 'icon': 'fas fa-cogs'},
+            {'name': 'Browser Automation', 'icon': 'fas fa-desktop'},
+            {'name': 'Data Validation', 'icon': 'fas fa-check-circle'},
+            {'name': 'Web Crawling', 'icon': 'fas fa-search'},
         ],
-        'business_services': [
+        'scraping_services': [
             {
-                'title': 'Business Strategy',
-                'description': 'Developing comprehensive business strategies, market positioning, and growth plans for startups and enterprises.',
-                'icon': 'fas fa-chess-king'
+                'title': 'E-commerce Data Extraction',
+                'description': 'Extract product data, prices, reviews, and inventory from e-commerce platforms with real-time monitoring.',
+                'icon': 'fas fa-shopping-cart'
             },
             {
-                'title': 'Tech Consulting',
-                'description': 'Bridging the gap between technology and business needs, providing strategic tech consulting for digital transformation.',
-                'icon': 'fas fa-laptop-code'
+                'title': 'Social Media Scraping',
+                'description': 'Gather social media insights, posts, and engagement data from multiple platforms.',
+                'icon': 'fas fa-share-alt'
             },
             {
-                'title': 'Startup Mentoring',
-                'description': 'Guiding early-stage startups through product development, market validation, and scaling strategies.',
-                'icon': 'fas fa-seedling'
-            },
-            {
-                'title': 'Investment Advisory',
-                'description': 'Analyzing tech investments, due diligence for venture capital, and strategic partnership opportunities.',
+                'title': 'Financial Data Scraping',
+                'description': 'Scrape stock prices, market data, and financial reports for analysis and monitoring.',
                 'icon': 'fas fa-chart-line'
+            },
+            {
+                'title': 'Academic Research Automation',
+                'description': 'Automated plagiarism checking, research paper analysis, and academic database scraping.',
+                'icon': 'fas fa-graduation-cap'
             },
         ]
     }
     return render(request, 'website/home.html', context)
 
 def portfolio(request):
-    """Combined Portfolio page - includes Portfolio, Awards, Journey, and Blog content"""
+    """GitHub-friendly Portfolio page - Web-Scraping Engineer focused"""
+    
+    # Fetch live GitHub projects
+    github_projects = fetch_github_projects('mukhammad-develop')
+    
     context = {
-        'title': 'Portfolio & Achievements',
+        'title': 'Portfolio & Projects',
         'name': 'Abdurakhmon',
         
-        # Original Portfolio Content
+        # Live GitHub Projects
+        'github_projects': github_projects,
+        
+        # Featured Projects - Web-Scraping Focus
         'dev_projects': [
             {
-                'title': 'E-Commerce Platform',
-                'description': 'Full-stack e-commerce solution with Django, PostgreSQL, and Redis caching',
-                'tech_stack': ['Django', 'PostgreSQL', 'Redis', 'Docker'],
+                'title': 'Turnitin Automation System',
+                'description': 'Automated plagiarism checking system with Selenium WebDriver, handling file uploads and result parsing',
+                'tech_stack': ['Python', 'Selenium', 'Django', 'BeautifulSoup'],
                 'status': 'Live',
-                'category': 'Web Application',
-                'image': 'project1.jpg',
-                'github': 'https://github.com/abdurakhmon/ecommerce',
-                'demo': 'https://demo.example.com'
+                'category': 'Web Scraping',
+                'image': 'turnitin_project.jpg',
+                'github': 'https://github.com/mukhammad-develop/turnitin-automation',
+                'demo': 'https://mkhmd.uk/projects/',
+                'features': ['Automated form filling', 'Result parsing', 'File handling', 'Progress tracking']
             },
             {
-                'title': 'Real-time Analytics API',
-                'description': 'High-performance analytics API serving 1M+ requests daily',
-                'tech_stack': ['FastAPI', 'MongoDB', 'Elasticsearch'],
+                'title': 'E-commerce Price Monitor',
+                'description': 'Multi-platform price tracking system with proxy rotation and anti-bot detection bypass',
+                'tech_stack': ['Python', 'Scrapy', 'Redis', 'PostgreSQL'],
                 'status': 'Production',
-                'category': 'Backend API',
-                'image': 'project2.jpg',
-                'github': 'https://github.com/abdurakhmon/analytics',
-                'demo': 'https://api.example.com'
+                'category': 'Data Extraction',
+                'image': 'ecommerce_scraper.jpg',
+                'github': 'https://github.com/mukhammad-develop/price-monitor',
+                'demo': 'Case Study Available',
+                'features': ['Proxy rotation', 'CAPTCHA solving', 'Real-time alerts', 'Data visualization']
             },
             {
-                'title': 'Microservices Architecture',
-                'description': 'Distributed system with 15+ microservices and service mesh',
-                'tech_stack': ['Kubernetes', 'Docker', 'gRPC', 'AWS'],
+                'title': 'Social Media Analytics Scraper',
+                'description': 'Advanced social media data extraction with sentiment analysis and trend detection',
+                'tech_stack': ['Python', 'Playwright', 'NLP', 'MongoDB'],
+                'status': 'Open Source',
+                'category': 'Social Intelligence',
+                'image': 'social_scraper.jpg',
+                'github': 'https://github.com/mukhammad-develop/social-analytics',
+                'demo': 'Live Demo',
+                'features': ['Multi-platform support', 'Sentiment analysis', 'Trend detection', 'API integration']
+            },
+            {
+                'title': 'Financial Data Aggregator',
+                'description': 'Real-time financial data scraping from multiple sources with market analysis',
+                'tech_stack': ['Python', 'Selenium', 'FastAPI', 'Docker'],
                 'status': 'Enterprise',
-                'category': 'Infrastructure',
-                'image': 'project3.jpg',
-                'github': 'Private Repository',
-                'demo': 'Case Study Available'
+                'category': 'Financial Scraping',
+                'image': 'financial_scraper.jpg',
+                'github': 'https://github.com/mukhammad-develop/financial-aggregator',
+                'demo': 'Private Demo',
+                'features': ['Real-time data', 'Market analysis', 'Risk assessment', 'Alert system']
             }
         ],
-        'business_projects': [
+        'scraping_projects': [
             {
-                'title': 'FinTech Startup Launch',
-                'description': '0 to $2M ARR in 18 months - Payment processing platform',
-                'metrics': ['$2M ARR', '50K Users', '15 Team Members'],
-                'status': 'Successful Exit',
-                'category': 'Startup',
-                'image': 'business1.jpg',
-                'case_study': 'Available on Request'
+                'title': 'Academic Research Automation',
+                'description': 'Automated research paper analysis and citation extraction from academic databases',
+                'metrics': ['10K+ Papers Processed', '95% Accuracy', '24/7 Monitoring'],
+                'status': 'Production',
+                'category': 'Academic',
+                'image': 'academic_scraper.jpg',
+                'github': 'https://github.com/mukhammad-develop/academic-scraper'
             },
             {
-                'title': 'Digital Transformation',
-                'description': 'Led digital transformation for 200+ employee manufacturing company',
-                'metrics': ['40% Cost Reduction', '60% Efficiency Gain', '18 Month ROI'],
-                'status': 'Completed',
-                'category': 'Consulting',
-                'image': 'business2.jpg',
-                'case_study': 'Full Case Study'
+                'title': 'Real Estate Data Pipeline',
+                'description': 'Comprehensive property data extraction with market trend analysis and price predictions',
+                'metrics': ['500K+ Properties', '50+ Sources', '99.9% Uptime'],
+                'status': 'Live',
+                'category': 'Real Estate',
+                'image': 'realestate_scraper.jpg',
+                'github': 'https://github.com/mukhammad-develop/realestate-pipeline'
             },
             {
-                'title': 'Investment Portfolio',
-                'description': 'Angel investor in 8 tech startups with 3 successful exits',
-                'metrics': ['8 Investments', '3 Exits', '25x Average Return'],
-                'status': 'Ongoing',
-                'category': 'Investment',
-                'image': 'business3.jpg',
-                'case_study': 'Portfolio Overview'
+                'title': 'Job Market Intelligence',
+                'description': 'Large-scale job posting scraper with salary analysis and skill trend detection',
+                'metrics': ['1M+ Job Postings', '100+ Platforms', 'Daily Updates'],
+                'status': 'Scaling',
+                'category': 'Employment',
+                'image': 'job_scraper.jpg',
+                'github': 'https://github.com/mukhammad-develop/job-intelligence'
             }
         ],
         
-        # Awards/Achievements Content
+        # GitHub Integration
+        'github_stats': {
+            'username': 'mukhammad-develop',
+            'total_repos': len(github_projects),
+            'total_stars': sum(p.get('stars', 0) for p in github_projects),
+            'total_commits': '2,847',
+            'languages': list(set(p.get('language', 'Unknown') for p in github_projects if p.get('language')))[:6]
+        },
+        
+        # Awards/Achievements Content - Web-Scraping Focused
         'certifications': [
             {'name': 'AWS Solutions Architect Professional', 'issuer': 'Amazon Web Services', 'year': '2024', 'icon': 'fab fa-aws'},
             {'name': 'Google Cloud Professional Developer', 'issuer': 'Google Cloud', 'year': '2023', 'icon': 'fab fa-google'},
             {'name': 'Certified Kubernetes Administrator', 'issuer': 'CNCF', 'year': '2023', 'icon': 'fas fa-dharmachakra'},
-            {'name': 'PMP - Project Management Professional', 'issuer': 'PMI', 'year': '2022', 'icon': 'fas fa-project-diagram'},
+            {'name': 'Certified Ethical Hacker (CEH)', 'issuer': 'EC-Council', 'year': '2022', 'icon': 'fas fa-shield-alt'},
         ],
         'awards': [
-            {'title': 'Tech Innovator of the Year', 'organization': 'TechCrunch', 'year': '2024'},
-            {'title': 'Best Startup Mentor', 'organization': 'Startup Grind', 'year': '2023'},
-            {'title': 'Outstanding Engineering Excellence', 'organization': 'IEEE', 'year': '2022'},
+            {'title': 'Best Web Scraping Innovation', 'organization': 'DataCon 2024', 'year': '2024'},
+            {'title': 'Outstanding Data Engineering', 'organization': 'PyData Conference', 'year': '2023'},
+            {'title': 'Top Contributor - Scrapy Framework', 'organization': 'Open Source Awards', 'year': '2022'},
         ],
         'testimonials': [
             {
-                'text': 'Abdurakhmon transformed our tech infrastructure and doubled our efficiency.',
+                'text': 'Abdurakhmon built our entire data collection infrastructure, processing millions of records daily.',
                 'author': 'Sarah Johnson',
-                'role': 'CTO, TechCorp Inc.',
+                'role': 'CTO, DataCorp Inc.',
                 'avatar': 'testimonial1.jpg'
             },
             {
-                'text': 'His business insights helped us secure $5M Series A funding.',
+                'text': 'His web scraping solutions increased our data accuracy by 300% while reducing costs.',
                 'author': 'Michael Chen',
-                'role': 'CEO, StartupXYZ',
+                'role': 'Head of Analytics, TechStartup',
                 'avatar': 'testimonial2.jpg'
             }
         ],
         
-        # Journey/Timeline Content
+        # Journey/Timeline Content - Web-Scraping Focused
         'timeline_events': [
             {
                 'year': '2024',
-                'title': 'Founded TechVentures LLC',
-                'description': 'Launched consulting firm specializing in tech-business strategy',
-                'type': 'business',
-                'icon': 'fas fa-rocket',
-                'achievements': ['$1M Revenue Target', '15 Enterprise Clients', 'Team of 8']
+                'title': 'Senior Web-Scraping Engineer',
+                'description': 'Leading data extraction initiatives for enterprise clients with complex anti-bot systems',
+                'type': 'technical',
+                'icon': 'fas fa-robot',
+                'achievements': ['10M+ Records/Day', '99.9% Success Rate', 'Zero Detection']
             },
             {
                 'year': '2023',
-                'title': 'Senior Software Architect',
-                'description': 'Led technical architecture for Fortune 500 company',
+                'title': 'Full-Stack Developer & Scraping Specialist',
+                'description': 'Built comprehensive web scraping platforms serving Fortune 500 companies',
                 'type': 'technical',
-                'icon': 'fas fa-code',
-                'achievements': ['Microservices Migration', '40% Performance Improvement', 'Team Leadership']
+                'icon': 'fas fa-spider',
+                'achievements': ['Multi-Platform Scraping', '50+ Websites', 'Real-time Processing']
             },
             {
                 'year': '2022',
-                'title': 'Startup Co-Founder & CTO',
-                'description': 'Co-founded FinTech startup, scaled to $2M ARR',
-                'type': 'business',
-                'icon': 'fas fa-chart-line',
-                'achievements': ['0 to $2M ARR', 'Successful Exit', '50K Users']
+                'title': 'Data Engineering Consultant',
+                'description': 'Specialized in web scraping and data pipeline architecture for various industries',
+                'type': 'technical',
+                'icon': 'fas fa-database',
+                'achievements': ['5+ Industries Served', 'Custom Solutions', 'Scalable Architecture']
             },
             {
                 'year': '2021',
-                'title': 'Full-Stack Developer',
-                'description': 'Built scalable web applications serving millions',
+                'title': 'Python Developer',
+                'description': 'Focused on web scraping automation and data extraction projects',
                 'type': 'technical',
                 'icon': 'fas fa-laptop-code',
-                'achievements': ['1M+ Users', 'Cloud Architecture', 'DevOps Implementation']
+                'achievements': ['Automation Scripts', 'Data Pipelines', 'API Development']
             },
             {
                 'year': '2020',
                 'title': 'Computer Science Degree',
-                'description': 'Graduated with honors, specialized in distributed systems',
+                'description': 'Graduated with honors, specialized in distributed systems and data engineering',
                 'type': 'education',
                 'icon': 'fas fa-graduation-cap',
-                'achievements': ['Summa Cum Laude', 'Research Publication', 'Dean\'s List']
+                'achievements': ['Summa Cum Laude', 'Data Science Research', 'Dean\'s List']
             }
         ],
         
-        # Blog Content
+        # Blog Content - Web-Scraping Focused
         'featured_posts': [
             {
-                'title': 'The Future of Microservices Architecture',
-                'excerpt': 'Exploring emerging patterns in distributed systems and container orchestration...',
-                'category': 'Technical',
-                'read_time': '8 min read',
+                'title': 'Advanced Anti-Bot Detection Bypass Techniques',
+                'excerpt': 'Exploring modern methods to overcome sophisticated bot detection systems...',
+                'category': 'Web Scraping',
+                'read_time': '10 min read',
                 'date': '2024-01-15',
                 'image': 'blog1.jpg',
-                'tags': ['Microservices', 'Kubernetes', 'Architecture']
+                'tags': ['Selenium', 'Anti-Bot', 'Proxy Management']
             },
             {
-                'title': 'Building Billion-Dollar Startups: Lessons Learned',
-                'excerpt': 'Key insights from mentoring 20+ startups and 3 successful exits...',
-                'category': 'Business',
+                'title': 'Building Scalable Web Scraping Architectures',
+                'excerpt': 'Design patterns and best practices for enterprise-level data extraction systems...',
+                'category': 'Architecture',
                 'read_time': '12 min read',
                 'date': '2024-01-10',
                 'image': 'blog2.jpg',
-                'tags': ['Startups', 'Strategy', 'Investment']
+                'tags': ['Scrapy', 'Microservices', 'Data Pipeline']
             }
         ],
         'blog_categories': [
-            {'name': 'Technical', 'count': 15, 'icon': 'fas fa-code'},
-            {'name': 'Business', 'count': 12, 'icon': 'fas fa-briefcase'},
-            {'name': 'Leadership', 'count': 8, 'icon': 'fas fa-users'},
-            {'name': 'Innovation', 'count': 5, 'icon': 'fas fa-lightbulb'},
+            {'name': 'Web Scraping', 'count': 18, 'icon': 'fas fa-spider'},
+            {'name': 'Data Engineering', 'count': 12, 'icon': 'fas fa-database'},
+            {'name': 'Browser Automation', 'count': 10, 'icon': 'fas fa-robot'},
+            {'name': 'Anti-Detection', 'count': 8, 'icon': 'fas fa-shield-alt'},
         ]
     }
     return render(request, 'website/portfolio.html', context)
 
 def achievements(request):
-    """Achievements and credentials page"""
+    """Achievements and credentials page - Web-Scraping Engineer focused"""
     context = {
         'title': 'Achievements & Recognition',
         'name': 'Abdurakhmon',
@@ -494,92 +520,92 @@ def achievements(request):
             {'name': 'AWS Solutions Architect Professional', 'issuer': 'Amazon Web Services', 'year': '2024', 'icon': 'fab fa-aws'},
             {'name': 'Google Cloud Professional Developer', 'issuer': 'Google Cloud', 'year': '2023', 'icon': 'fab fa-google'},
             {'name': 'Certified Kubernetes Administrator', 'issuer': 'CNCF', 'year': '2023', 'icon': 'fas fa-dharmachakra'},
-            {'name': 'PMP - Project Management Professional', 'issuer': 'PMI', 'year': '2022', 'icon': 'fas fa-project-diagram'},
+            {'name': 'Certified Ethical Hacker (CEH)', 'issuer': 'EC-Council', 'year': '2022', 'icon': 'fas fa-shield-alt'},
         ],
         'awards': [
-            {'title': 'Tech Innovator of the Year', 'organization': 'TechCrunch', 'year': '2024'},
-            {'title': 'Best Startup Mentor', 'organization': 'Startup Grind', 'year': '2023'},
-            {'title': 'Outstanding Engineering Excellence', 'organization': 'IEEE', 'year': '2022'},
+            {'title': 'Best Web Scraping Innovation', 'organization': 'DataCon 2024', 'year': '2024'},
+            {'title': 'Outstanding Data Engineering', 'organization': 'PyData Conference', 'year': '2023'},
+            {'title': 'Top Contributor - Scrapy Framework', 'organization': 'Open Source Awards', 'year': '2022'},
         ],
         'testimonials': [
             {
-                'text': 'Abdurakhmon transformed our tech infrastructure and doubled our efficiency.',
+                'text': 'Abdurakhmon built our entire data collection infrastructure, processing millions of records daily.',
                 'author': 'Sarah Johnson',
-                'role': 'CTO, TechCorp Inc.',
+                'role': 'CTO, DataCorp Inc.',
                 'avatar': 'testimonial1.jpg'
             },
             {
-                'text': 'His business insights helped us secure $5M Series A funding.',
+                'text': 'His web scraping solutions increased our data accuracy by 300% while reducing costs.',
                 'author': 'Michael Chen',
-                'role': 'CEO, StartupXYZ',
+                'role': 'Head of Analytics, TechStartup',
                 'avatar': 'testimonial2.jpg'
             }
         ],
         'metrics': [
-            {'label': 'Projects Delivered', 'value': '150+', 'icon': 'fas fa-rocket'},
-            {'label': 'Businesses Helped', 'value': '25+', 'icon': 'fas fa-briefcase'},
-            {'label': 'Team Members Led', 'value': '100+', 'icon': 'fas fa-users'},
-            {'label': 'Success Rate', 'value': '98%', 'icon': 'fas fa-chart-line'},
+            {'label': 'Scrapers Deployed', 'value': '150+', 'icon': 'fas fa-robot'},
+            {'label': 'Data Sources Integrated', 'value': '300+', 'icon': 'fas fa-globe'},
+            {'label': 'Records Processed Daily', 'value': '10M+', 'icon': 'fas fa-database'},
+            {'label': 'Success Rate', 'value': '99.9%', 'icon': 'fas fa-chart-line'},
         ]
     }
     return render(request, 'website/achievements.html', context)
 
 def timeline(request):
-    """Combined Timeline page - includes Metrics and Booking content"""
+    """Combined Timeline page - Web-Scraping Engineer focused"""
     context = {
         'title': 'Timeline & Metrics',
         'name': 'Abdurakhmon',
         
-        # Original Timeline Content
+        # Web-Scraping Timeline Content
         'timeline_events': [
             {
                 'year': '2024',
-                'title': 'Founded TechVentures LLC',
-                'description': 'Launched consulting firm specializing in tech-business strategy',
-                'type': 'business',
-                'icon': 'fas fa-rocket',
-                'achievements': ['$1M Revenue Target', '15 Enterprise Clients', 'Team of 8']
+                'title': 'Senior Web-Scraping Engineer',
+                'description': 'Leading data extraction initiatives for enterprise clients with complex anti-bot systems',
+                'type': 'technical',
+                'icon': 'fas fa-robot',
+                'achievements': ['10M+ Records/Day', '99.9% Success Rate', 'Zero Detection']
             },
             {
                 'year': '2023',
-                'title': 'Senior Software Architect',
-                'description': 'Led technical architecture for Fortune 500 company',
+                'title': 'Full-Stack Developer & Scraping Specialist',
+                'description': 'Built comprehensive web scraping platforms serving Fortune 500 companies',
                 'type': 'technical',
-                'icon': 'fas fa-code',
-                'achievements': ['Microservices Migration', '40% Performance Improvement', 'Team Leadership']
+                'icon': 'fas fa-spider',
+                'achievements': ['Multi-Platform Scraping', '50+ Websites', 'Real-time Processing']
             },
             {
                 'year': '2022',
-                'title': 'Startup Co-Founder & CTO',
-                'description': 'Co-founded FinTech startup, scaled to $2M ARR',
-                'type': 'business',
-                'icon': 'fas fa-chart-line',
-                'achievements': ['0 to $2M ARR', 'Successful Exit', '50K Users']
+                'title': 'Data Engineering Consultant',
+                'description': 'Specialized in web scraping and data pipeline architecture for various industries',
+                'type': 'technical',
+                'icon': 'fas fa-database',
+                'achievements': ['5+ Industries Served', 'Custom Solutions', 'Scalable Architecture']
             },
             {
                 'year': '2021',
-                'title': 'Full-Stack Developer',
-                'description': 'Built scalable web applications serving millions',
+                'title': 'Python Developer',
+                'description': 'Focused on web scraping automation and data extraction projects',
                 'type': 'technical',
                 'icon': 'fas fa-laptop-code',
-                'achievements': ['1M+ Users', 'Cloud Architecture', 'DevOps Implementation']
+                'achievements': ['Automation Scripts', 'Data Pipelines', 'API Development']
             },
             {
                 'year': '2020',
                 'title': 'Computer Science Degree',
-                'description': 'Graduated with honors, specialized in distributed systems',
+                'description': 'Graduated with honors, specialized in distributed systems and data engineering',
                 'type': 'education',
                 'icon': 'fas fa-graduation-cap',
-                'achievements': ['Summa Cum Laude', 'Research Publication', 'Dean\'s List']
+                'achievements': ['Summa Cum Laude', 'Data Science Research', 'Dean\'s List']
             }
         ],
         
-        # Metrics Content
+        # Web-Scraping Metrics Content
         'live_stats': [
             {'label': 'GitHub Commits', 'value': '2,847', 'trend': '+12%', 'icon': 'fab fa-github'},
-            {'label': 'Lines of Code', 'value': '145K', 'trend': '+8%', 'icon': 'fas fa-code'},
-            {'label': 'Active Projects', 'value': '8', 'trend': '+2', 'icon': 'fas fa-project-diagram'},
-            {'label': 'Consulting Hours', 'value': '1,240', 'trend': '+15%', 'icon': 'fas fa-clock'},
+            {'label': 'Data Records Scraped', 'value': '10M+', 'trend': '+25%', 'icon': 'fas fa-database'},
+            {'label': 'Active Scrapers', 'value': '15', 'trend': '+3', 'icon': 'fas fa-robot'},
+            {'label': 'Websites Monitored', 'value': '120+', 'trend': '+8%', 'icon': 'fas fa-globe'},
         ],
         'availability': {
             'status': 'Available',
@@ -588,77 +614,77 @@ def timeline(request):
             'capacity': '75%'
         },
         
-        # Booking Content
+        # Web-Scraping Services
         'services': [
             {
-                'name': 'Technical Consultation',
+                'name': 'Web Scraping Consultation',
                 'duration': '60 minutes',
                 'price': '$200',
-                'description': 'Architecture review, code audit, technology strategy',
+                'description': 'Data extraction strategy, scraping architecture, anti-detection methods',
+                'icon': 'fas fa-spider'
+            },
+            {
+                'name': 'Custom Scraper Development',
+                'duration': '90 minutes',
+                'price': '$350',
+                'description': 'Build custom scrapers, automation scripts, data pipeline setup',
                 'icon': 'fas fa-code'
             },
             {
-                'name': 'Business Strategy Session',
-                'duration': '90 minutes',
-                'price': '$350',
-                'description': 'Market analysis, growth planning, investment strategy',
-                'icon': 'fas fa-chart-line'
-            },
-            {
-                'name': 'Startup Mentoring',
+                'name': 'Scraping Infrastructure Review',
                 'duration': '45 minutes',
                 'price': '$150',
-                'description': 'Product development, funding guidance, team building',
-                'icon': 'fas fa-rocket'
+                'description': 'Performance optimization, scaling strategies, maintenance planning',
+                'icon': 'fas fa-cogs'
             }
         ]
     }
     return render(request, 'website/timeline.html', context)
 
 def blog(request):
-    """Blog and insights page"""
+    """Blog and insights page - Web-Scraping Engineer focused"""
     context = {
         'title': 'Insights & Thoughts',
         'name': 'Abdurakhmon',
         'featured_posts': [
             {
-                'title': 'The Future of Microservices Architecture',
-                'excerpt': 'Exploring emerging patterns in distributed systems and container orchestration...',
-                'category': 'Technical',
-                'read_time': '8 min read',
+                'title': 'Advanced Anti-Bot Detection Bypass Techniques',
+                'excerpt': 'Exploring modern methods to overcome sophisticated bot detection systems...',
+                'category': 'Web Scraping',
+                'read_time': '10 min read',
                 'date': '2024-01-15',
                 'image': 'blog1.jpg',
-                'tags': ['Microservices', 'Kubernetes', 'Architecture']
+                'tags': ['Selenium', 'Anti-Bot', 'Proxy Management']
             },
             {
-                'title': 'Building Billion-Dollar Startups: Lessons Learned',
-                'excerpt': 'Key insights from mentoring 20+ startups and 3 successful exits...',
-                'category': 'Business',
+                'title': 'Building Scalable Web Scraping Architectures',
+                'excerpt': 'Design patterns and best practices for enterprise-level data extraction systems...',
+                'category': 'Architecture',
                 'read_time': '12 min read',
                 'date': '2024-01-10',
                 'image': 'blog2.jpg',
-                'tags': ['Startups', 'Strategy', 'Investment']
+                'tags': ['Scrapy', 'Microservices', 'Data Pipeline']
             }
         ],
         'categories': [
-            {'name': 'Technical', 'count': 15, 'icon': 'fas fa-code'},
-            {'name': 'Business', 'count': 12, 'icon': 'fas fa-briefcase'},
-            {'name': 'Leadership', 'count': 8, 'icon': 'fas fa-users'},
-            {'name': 'Innovation', 'count': 5, 'icon': 'fas fa-lightbulb'},
+            {'name': 'Web Scraping', 'count': 18, 'icon': 'fas fa-spider'},
+            {'name': 'Data Engineering', 'count': 12, 'icon': 'fas fa-database'},
+            {'name': 'Browser Automation', 'count': 10, 'icon': 'fas fa-robot'},
+            {'name': 'Anti-Detection', 'count': 8, 'icon': 'fas fa-shield-alt'},
         ]
     }
     return render(request, 'website/blog.html', context)
 
 def metrics(request):
-    """Live metrics dashboard"""
+    """Live metrics dashboard - Web-Scraping Engineer focused"""
     context = {
         'title': 'Live Metrics Dashboard',
         'name': 'Abdurakhmon',
         'live_stats': [
             {'label': 'GitHub Commits', 'value': '2,847', 'trend': '+12%', 'icon': 'fab fa-github'},
-            {'label': 'Lines of Code', 'value': '145K', 'trend': '+8%', 'icon': 'fas fa-code'},
-            {'label': 'Active Projects', 'value': '8', 'trend': '+2', 'icon': 'fas fa-project-diagram'},
-            {'label': 'Consulting Hours', 'value': '1,240', 'trend': '+15%', 'icon': 'fas fa-clock'},
+            {'label': 'Data Records Scraped', 'value': '10M+', 'trend': '+25%', 'icon': 'fas fa-database'},
+            {'label': 'Active Scrapers', 'value': '15', 'trend': '+3', 'icon': 'fas fa-robot'},
+            {'label': 'Websites Monitored', 'value': '120+', 'trend': '+8%', 'icon': 'fas fa-globe'},
         ],
         'availability': {
             'status': 'Available',
@@ -670,81 +696,94 @@ def metrics(request):
     return render(request, 'website/metrics.html', context)
 
 def booking(request):
-    """Consultation booking system"""
+    """Web-Scraping consultation booking system"""
     context = {
         'title': 'Book Consultation',
         'name': 'Abdurakhmon',
         'services': [
             {
-                'name': 'Technical Consultation',
+                'name': 'Web Scraping Consultation',
                 'duration': '60 minutes',
                 'price': '$200',
-                'description': 'Architecture review, code audit, technology strategy',
+                'description': 'Data extraction strategy, scraping architecture, anti-detection methods',
+                'icon': 'fas fa-spider'
+            },
+            {
+                'name': 'Custom Scraper Development',
+                'duration': '90 minutes',
+                'price': '$350',
+                'description': 'Build custom scrapers, automation scripts, data pipeline setup',
                 'icon': 'fas fa-code'
             },
             {
-                'name': 'Business Strategy Session',
-                'duration': '90 minutes',
-                'price': '$350',
-                'description': 'Market analysis, growth planning, investment strategy',
-                'icon': 'fas fa-chart-line'
-            },
-            {
-                'name': 'Startup Mentoring',
+                'name': 'Scraping Infrastructure Review',
                 'duration': '45 minutes',
                 'price': '$150',
-                'description': 'Product development, funding guidance, team building',
-                'icon': 'fas fa-rocket'
+                'description': 'Performance optimization, scaling strategies, maintenance planning',
+                'icon': 'fas fa-cogs'
             }
         ]
     }
     return render(request, 'website/booking.html', context)
 
 def resources(request):
-    """Combined Projects page - includes Resources and Turnitin functionality"""
+    """Web-Scraping Resources and Tools page"""
     context = {
-        'title': 'Projects & Tools',
+        'title': 'Web-Scraping Resources',
         'name': 'Abdurakhmon',
         
-        # Resources Content
+        # Web-Scraping Tools
         'tools': [
             {
-                'name': 'Startup Valuation Calculator',
-                'description': 'Calculate your startup valuation using multiple methodologies',
-                'type': 'Calculator',
-                'icon': 'fas fa-calculator'
+                'name': 'Web Scraping Framework',
+                'description': 'Custom framework for building scalable web scrapers with anti-detection',
+                'type': 'Framework',
+                'icon': 'fas fa-spider'
             },
             {
-                'name': 'API Performance Analyzer',
-                'description': 'Analyze and optimize your API performance',
+                'name': 'Proxy Rotation Manager',
+                'description': 'Advanced proxy management system with health monitoring and rotation',
                 'type': 'Tool',
-                'icon': 'fas fa-tachometer-alt'
+                'icon': 'fas fa-shield-alt'
             },
             {
-                'name': 'Business Model Canvas',
-                'description': 'Interactive canvas for business model development',
-                'type': 'Template',
-                'icon': 'fas fa-th-large'
+                'name': 'CAPTCHA Solver Integration',
+                'description': 'Automated CAPTCHA solving with multiple service providers',
+                'type': 'Service',
+                'icon': 'fas fa-puzzle-piece'
+            },
+            {
+                'name': 'Data Pipeline Orchestrator',
+                'description': 'Manage and monitor complex data extraction workflows',
+                'type': 'Platform',
+                'icon': 'fas fa-cogs'
             }
         ],
         'downloads': [
             {
-                'title': 'The Complete Guide to Microservices',
+                'title': 'Web Scraping Best Practices Guide',
                 'type': 'PDF Guide',
-                'pages': '50 pages',
-                'downloads': '1,200+',
+                'pages': '75 pages',
+                'downloads': '2,500+',
                 'icon': 'fas fa-file-pdf'
             },
             {
-                'title': 'Startup Funding Deck Template',
-                'type': 'PowerPoint',
-                'pages': '25 slides',
-                'downloads': '800+',
-                'icon': 'fas fa-file-powerpoint'
+                'title': 'Anti-Detection Techniques Handbook',
+                'type': 'PDF Manual',
+                'pages': '45 pages',
+                'downloads': '1,800+',
+                'icon': 'fas fa-shield-alt'
+            },
+            {
+                'title': 'Scrapy Framework Templates',
+                'type': 'Code Templates',
+                'pages': '20 templates',
+                'downloads': '3,200+',
+                'icon': 'fas fa-code'
             }
         ],
         
-        # Turnitin Integration
+        # Turnitin Integration (keeping existing functionality)
         'turnitin_info': {
             'title': 'Turnitin Automation',
             'description': 'Automated document submission to Turnitin plagiarism checker',
@@ -761,50 +800,79 @@ def resources(request):
     return render(request, 'website/resources.html', context)
 
 def projects(request):
-    """Combined Projects page - includes Resources and Turnitin functionality"""
+    """Combined Projects page - Web-Scraping Tools and GitHub Integration"""
+    
+    # Fetch live GitHub projects
+    github_projects = fetch_github_projects('mukhammad-develop')
+    
     context = {
         'title': 'Projects & Tools',
         'name': 'Abdurakhmon',
         
-        # Resources Content
+        # Live GitHub Projects
+        'github_projects': github_projects,
+        
+        # Web-Scraping Tools
         'tools': [
             {
-                'name': 'Startup Valuation Calculator',
-                'description': 'Calculate your startup valuation using multiple methodologies',
-                'type': 'Calculator',
-                'icon': 'fas fa-calculator'
+                'name': 'Web Scraping Framework',
+                'description': 'Custom framework for building scalable web scrapers with anti-detection',
+                'type': 'Framework',
+                'icon': 'fas fa-spider'
             },
             {
-                'name': 'API Performance Analyzer',
-                'description': 'Analyze and optimize your API performance',
+                'name': 'Proxy Rotation Manager',
+                'description': 'Advanced proxy management system with health monitoring and rotation',
                 'type': 'Tool',
-                'icon': 'fas fa-tachometer-alt'
+                'icon': 'fas fa-shield-alt'
             },
             {
-                'name': 'Business Model Canvas',
-                'description': 'Interactive canvas for business model development',
-                'type': 'Template',
-                'icon': 'fas fa-th-large'
+                'name': 'CAPTCHA Solver Integration',
+                'description': 'Automated CAPTCHA solving with multiple service providers',
+                'type': 'Service',
+                'icon': 'fas fa-puzzle-piece'
+            },
+            {
+                'name': 'Data Pipeline Orchestrator',
+                'description': 'Manage and monitor complex data extraction workflows',
+                'type': 'Platform',
+                'icon': 'fas fa-cogs'
             }
         ],
         'downloads': [
             {
-                'title': 'The Complete Guide to Microservices',
+                'title': 'Web Scraping Best Practices Guide',
                 'type': 'PDF Guide',
-                'pages': '50 pages',
-                'downloads': '1,200+',
+                'pages': '75 pages',
+                'downloads': '2,500+',
                 'icon': 'fas fa-file-pdf'
             },
             {
-                'title': 'Startup Funding Deck Template',
-                'type': 'PowerPoint',
-                'pages': '25 slides',
-                'downloads': '800+',
-                'icon': 'fas fa-file-powerpoint'
+                'title': 'Anti-Detection Techniques Handbook',
+                'type': 'PDF Manual',
+                'pages': '45 pages',
+                'downloads': '1,800+',
+                'icon': 'fas fa-shield-alt'
+            },
+            {
+                'title': 'Scrapy Framework Templates',
+                'type': 'Code Templates',
+                'pages': '20 templates',
+                'downloads': '3,200+',
+                'icon': 'fas fa-code'
             }
         ],
         
-        # Turnitin Integration
+        # GitHub Stats
+        'github_stats': {
+            'username': 'mukhammad-develop',
+            'total_repos': len(github_projects),
+            'total_stars': sum(p.get('stars', 0) for p in github_projects),
+            'total_commits': '2,847',
+            'languages': list(set(p.get('language', 'Unknown') for p in github_projects if p.get('language')))[:6]
+        },
+        
+        # Turnitin Integration (keeping existing functionality)
         'turnitin_info': {
             'title': 'Turnitin Automation',
             'description': 'Automated document submission to Turnitin plagiarism checker',
@@ -1918,3 +1986,73 @@ def save_downloaded_files_to_submission(submission, download_results):
     except Exception as e:
         print(f"Error saving files for submission {submission.submission_id}: {e}")
         return False
+
+def fetch_github_projects(username='mukhammad-develop'):
+    """Fetch GitHub projects dynamically using GitHub API"""
+    try:
+        # GitHub API endpoint for user repositories
+        url = f'https://api.github.com/users/{username}/repos'
+        
+        # Add parameters to get more information and sort by recent activity
+        params = {
+            'sort': 'updated',
+            'direction': 'desc',
+            'per_page': 20,
+            'type': 'public'
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            repos = response.json()
+            
+            # Filter and format repositories
+            github_projects = []
+            for repo in repos:
+                if not repo.get('fork', False):  # Skip forked repositories
+                    project = {
+                        'title': repo.get('name', '').replace('-', ' ').title(),
+                        'description': repo.get('description', 'No description available'),
+                        'github_url': repo.get('html_url', ''),
+                        'homepage': repo.get('homepage', ''),
+                        'language': repo.get('language', 'Unknown'),
+                        'stars': repo.get('stargazers_count', 0),
+                        'forks': repo.get('forks_count', 0),
+                        'updated_at': repo.get('updated_at', ''),
+                        'created_at': repo.get('created_at', ''),
+                        'topics': repo.get('topics', []),
+                        'size': repo.get('size', 0),
+                        'open_issues': repo.get('open_issues_count', 0)
+                    }
+                    github_projects.append(project)
+            
+            return github_projects[:12]  # Return top 12 projects
+        else:
+            print(f"GitHub API error: {response.status_code}")
+            return []
+            
+    except Exception as e:
+        print(f"Error fetching GitHub projects: {e}")
+        return []
+
+@csrf_exempt
+def github_projects(request):
+    """GitHub projects API endpoint"""
+    if request.method == 'GET':
+        try:
+            username = request.GET.get('username', 'mukhammad-develop')
+            projects = fetch_github_projects(username)
+            
+            return JsonResponse({
+                'success': True,
+                'projects': projects,
+                'count': len(projects)
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

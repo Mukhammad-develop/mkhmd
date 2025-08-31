@@ -17,4 +17,5 @@ urlpatterns = [
     path('turnitin/results/', views.turnitin_results, name='turnitin_results'),
     path('turnitin/check/', views.check_turnitin_result, name='check_turnitin_result'),
     path('turnitin/check-status/', views.check_submissions_status, name='check_submissions_status'),
+    path('api/github-projects/', views.github_projects, name='github_projects'),
 ] 

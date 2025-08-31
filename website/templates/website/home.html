@@ -857,16 +857,16 @@
 
     <section id="identity" class="section">
         <div class="section-header">
-            <h2 class="section-title">Explore My Dual Identity</h2>
-            <p class="section-subtitle">Discover my expertise across technology and business domains</p>
+            <h2 class="section-title">Explore My Dual Expertise</h2>
+            <p class="section-subtitle">Discover my expertise across software development and web-scraping domains</p>
         </div>
         
         <div class="identity-toggle">
             <button class="identity-btn active" data-identity="developer">
                 <i class="fas fa-code"></i> Software Developer
             </button>
-            <button class="identity-btn" data-identity="businessman">
-                <i class="fas fa-briefcase"></i> Businessman
+            <button class="identity-btn" data-identity="scraper">
+                <i class="fas fa-spider"></i> Web-Scraper Engineer
             </button>
         </div>
 
@@ -904,14 +904,14 @@
             </div>
         </div>
 
-        <!-- Businessman Identity -->
-        <div id="businessman-content" class="identity-content">
+        <!-- Web-Scraper Engineer Identity -->
+        <div id="scraper-content" class="identity-content">
             <div class="section-header">
-                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Business Expertise</h3>
-                <p class="section-subtitle">Strategic business skills for driving growth and innovation</p>
+                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Web-Scraping Expertise</h3>
+                <p class="section-subtitle">Advanced tools and techniques for data extraction and automation</p>
             </div>
             <div class="skills-grid">
-                {% for skill in business_skills %}
+                {% for skill in scraping_skills %}
                 <div class="skill-card">
                     <div class="skill-icon">
                         <i class="{{ skill.icon }}"></i>
@@ -922,11 +922,11 @@
             </div>
             
             <div class="section-header" style="margin-top: 5rem;">
-                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Business Services</h3>
-                <p class="section-subtitle">Strategic consulting services for business growth and success</p>
+                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Scraping Services</h3>
+                <p class="section-subtitle">Specialized web-scraping and data extraction services</p>
             </div>
             <div class="services-grid">
-                {% for service in business_services %}
+                {% for service in scraping_services %}
                 <div class="service-card">
                     <div class="service-icon">
                         <i class="{{ service.icon }}"></i>
@@ -1416,11 +1416,11 @@
                 createToggleEffect(button);
                 
                 // Update page title dynamically
-                const isBusinessman = targetIdentity === 'businessman';
-                const newTitle = isBusinessman ? 'Strategic Businessman' : 'Software Developer';
+                const isScraper = targetIdentity === 'scraper';
+                const newTitle = isScraper ? 'Web-Scraper Engineer' : 'Software Developer';
                 const taglineElement = document.getElementById('typing-tagline');
                 if (taglineElement) {
-                    taglineElement.innerHTML = newTitle + ' & ' + (isBusinessman ? 'Tech Innovator' : 'Strategic Thinker');
+                    taglineElement.innerHTML = newTitle + ' & ' + (isScraper ? 'Data Extraction Specialist' : 'Web-Scraping Expert');
                 }
             });
         });
@@ -1477,7 +1477,7 @@
             if (e.key === '1') {
                 document.querySelector('[data-identity="developer"]').click();
             } else if (e.key === '2') {
-                document.querySelector('[data-identity="businessman"]').click();
+                document.querySelector('[data-identity="scraper"]').click();
             }
         });
     </script>

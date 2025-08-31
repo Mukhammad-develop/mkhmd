@@ -1,8 +1,43 @@
 # Debug files
 turnitin_*.png
 test_document.*
+
+# Database files
 db.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
 *.pyc
 __pycache__/
+
+# Media and uploads
 media/
+uploads/
+
+# Environment and secrets
 .env
+.env.local
+.env.production
+
+# Backup files
+*_backup_*.csv
+users_backup_*.csv
+profiles_backup_*.csv
+email_verifications_backup_*.csv
+
+# IDE and system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+screenshots/
