@@ -2,6 +2,7 @@
 
 {% block extra_css %}
 <style>
+    /* Portfolio Responsive Design */
     .filter-tabs {
         display: flex;
         justify-content: center;
@@ -283,6 +284,57 @@
 
         .project-links {
             flex-direction: column;
+        }
+        
+        .portfolio-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+        }
+    }
+    
+    /* Mobile phones - portfolio specific */
+    @media (max-width: 480px) {
+        .filter-tabs {
+            flex-direction: column;
+            gap: 0.8rem;
+            max-width: 280px;
+            margin: 0 auto 2rem;
+        }
+        
+        .filter-tab {
+            padding: 0.8rem 1rem;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        
+        .portfolio-stats {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .stat-card {
+            padding: 1.2rem;
+        }
+        
+        .stat-number {
+            font-size: 1.8rem;
+        }
+        
+        .project-card {
+            border-radius: 12px;
+        }
+        
+        .project-links {
+            gap: 0.8rem;
+        }
+        
+        .project-links .btn {
+            padding: 0.7rem 1rem;
+            font-size: 0.85rem;
         }
     }
 </style>
