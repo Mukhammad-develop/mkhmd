@@ -581,6 +581,116 @@ def timeline(request):
     }
     return render(request, 'website/timeline.html', context)
 
+
+def schedule(request):
+    """Schedule & Booking page - View my availability and book time"""
+    from datetime import datetime, timedelta
+    from .models import TimeSlot, Booking
+    
+    # Get all active time slots grouped by weekday
+    time_slots = TimeSlot.objects.filter(is_active=True).order_by('weekday', 'start_time')
+    
+    # Get upcoming bookings for the next 30 days
+    today = timezone.now().date()
+    upcoming_bookings = Booking.objects.filter(
+        date__gte=today,
+        date__lte=today + timedelta(days=30),
+        status__in=['confirmed', 'pending']
+    ).order_by('date', 'start_time')
+    
+    # Organize time slots by weekday
+    slots_by_day = {}
+    for slot in time_slots:
+        day_name = slot.get_weekday_display()
+        if day_name not in slots_by_day:
+            slots_by_day[day_name] = []
+        slots_by_day[day_name].append(slot)
+    
+    context = {
+        'title': 'Schedule & Booking',
+        'name': 'Abdurakhmon',
+        'time_slots': time_slots,
+        'slots_by_day': slots_by_day,
+        'upcoming_bookings': upcoming_bookings,
+        'booking_types': [
+            {
+                'value': 'consultation',
+                'name': 'Consultation',
+                'description': 'Technical consultation and advice',
+                'duration': '60 minutes',
+                'icon': 'fas fa-comments'
+            },
+            {
+                'value': 'project_discussion',
+                'name': 'Project Discussion',
+                'description': 'Discuss potential projects and collaborations',
+                'duration': '60-90 minutes',
+                'icon': 'fas fa-handshake'
+            },
+            {
+                'value': 'technical_support',
+                'name': 'Technical Support',
+                'description': 'Get help with existing projects',
+                'duration': '30-60 minutes',
+                'icon': 'fas fa-life-ring'
+            },
+            {
+                'value': 'collaboration',
+                'name': 'Collaboration',
+                'description': 'Explore collaboration opportunities',
+                'duration': '45-60 minutes',
+                'icon': 'fas fa-users'
+            },
+        ]
+    }
+    return render(request, 'website/schedule.html', context)
+
+
+@csrf_exempt
+def book_appointment(request):
+    """Handle appointment booking submissions"""
+    from .models import Booking
+    from datetime import datetime
+    import json
+    
+    if request.method == 'POST':
+        try:
+            # Parse JSON data
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST.dict()
+            
+            # Create booking
+            booking = Booking.objects.create(
+                name=data.get('name'),
+                email=data.get('email'),
+                phone=data.get('phone', ''),
+                company=data.get('company', ''),
+                date=data.get('date'),
+                start_time=data.get('start_time'),
+                end_time=data.get('end_time'),
+                duration_minutes=int(data.get('duration_minutes', 60)),
+                subject=data.get('subject'),
+                message=data.get('message'),
+                booking_type=data.get('booking_type', 'consultation'),
+                status='pending'
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Booking request submitted successfully! I will confirm shortly.',
+                'booking_id': booking.id
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error: {str(e)}'
+            }, status=400)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
 def blog(request):
     """Blog and insights page - Web-Scraping Engineer focused"""
     context = {
@@ -740,30 +850,23 @@ def resources(request):
     return render(request, 'website/resources.html', context)
 
 def projects(request):
-    """Combined Projects page - Web-Scraping Tools and GitHub Integration"""
+    """Combined Projects page - All active projects"""
     
     # Fetch live GitHub projects
     github_projects = fetch_github_projects('mukhammad-develop')
     
-    # Get all active projects from database
-    all_projects = Project.objects.filter(is_active=True)
+    # Get ALL active projects from database (ordered by order field, then by creation date)
+    all_projects = Project.objects.filter(is_active=True).order_by('order', '-created_at')
     
-    # Get featured project
-    featured_project = all_projects.filter(is_featured=True).first()
-    
-    # Get live/production projects (for "Development Tools" section)
-    live_projects = all_projects.filter(status__in=['live', 'production']).exclude(is_featured=True)
-    
-    # Get Turnitin project specifically
+    # Get Turnitin project specifically (for special section)
     turnitin_project = all_projects.filter(slug='turnitin-automation-system').first()
     
     context = {
         'title': 'Projects & Tools',
         'name': 'Abdurakhmon',
         
-        # Dynamic Projects from Database
-        'featured_project': featured_project,
-        'live_projects': live_projects,
+        # All Active Projects
+        'all_projects': all_projects,
         'turnitin_project': turnitin_project,
         
         # Live GitHub Projects

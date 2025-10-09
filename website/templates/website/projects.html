@@ -194,26 +194,39 @@
     <p class="projects-subtitle">Free resources, automation tools, and innovative solutions for developers and entrepreneurs</p>
 </div>
 
-<!-- Live Projects Section -->
+<!-- All Projects Section -->
 <section class="section">
     <div class="section-header">
-        <h2 class="section-title">Live Projects</h2>
-        <p class="section-description">Production-ready applications and tools currently available</p>
+        <h2 class="section-title">All Projects</h2>
+        <p class="section-description">Explore all my current projects and ongoing work</p>
     </div>
     
-    {% if live_projects %}
+    {% if all_projects %}
     <div class="tools-grid">
-        {% for project in live_projects %}
+        {% for project in all_projects %}
         <div class="tool-card">
             <div class="tool-icon">
                 <i class="{{ project.icon }}"></i>
             </div>
             <h3 class="tool-title">{{ project.title }}</h3>
-            <span class="tool-type">{{ project.get_status_display }} • {{ project.get_category_display }}</span>
+            <span class="tool-type">
+                <span style="background: {% if project.status == 'live' or project.status == 'production' %}rgba(34, 197, 94, 0.2); color: #22c55e{% elif project.status == 'development' %}rgba(59, 130, 246, 0.2); color: #3b82f6{% elif project.status == 'planning' %}rgba(168, 85, 247, 0.2); color: #a855f7{% else %}rgba(156, 163, 175, 0.2); color: #9ca3af{% endif %}; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 500;">
+                    {{ project.get_status_display }}
+                </span>
+                • {{ project.get_category_display }}
+            </span>
             <p class="tool-description">{{ project.description|truncatewords:25 }}</p>
             
+            {% if project.get_technologies_list %}
+            <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% for tech in project.get_technologies_list|slice:":4" %}
+                <span style="background: rgba(139, 92, 246, 0.1); color: var(--primary-purple); padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.75rem;">{{ tech }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
             {% if project.demo_url or project.github_url %}
-            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                 {% if project.demo_url %}
                 <a href="{{ project.demo_url }}" class="btn btn-primary" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; text-decoration: none;">
                     <i class="fas fa-play"></i> Try It
@@ -232,7 +245,7 @@
     {% else %}
     <div style="text-align: center; padding: 3rem; color: var(--text-gray);">
         <i class="fas fa-rocket" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary-purple);"></i>
-        <p>No live projects yet. Add them from the admin panel!</p>
+        <p>No projects yet. Add them from the admin panel!</p>
     </div>
     {% endif %}
 </section>

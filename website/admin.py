@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project
+from .models import Project, TimeSlot, Booking
 
 
 @admin.register(Project)
@@ -36,3 +36,44 @@ class ProjectAdmin(admin.ModelAdmin):
         if not change:  # If creating new object
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(TimeSlot)
+class TimeSlotAdmin(admin.ModelAdmin):
+    list_display = ('weekday', 'start_time', 'end_time', 'duration_minutes', 'is_active', 'created_at')
+    list_filter = ('weekday', 'is_active')
+    list_editable = ('is_active',)
+    ordering = ('weekday', 'start_time')
+
+
+@admin.register(Booking)
+class BookingAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'date', 'start_time', 'booking_type', 'status', 'created_at')
+    list_filter = ('status', 'booking_type', 'date', 'created_at')
+    search_fields = ('name', 'email', 'company', 'subject', 'message')
+    list_editable = ('status',)
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Client Information', {
+            'fields': ('name', 'email', 'phone', 'company')
+        }),
+        ('Appointment Details', {
+            'fields': ('date', 'start_time', 'end_time', 'duration_minutes', 'booking_type')
+        }),
+        ('Purpose', {
+            'fields': ('subject', 'message')
+        }),
+        ('Status & Notes', {
+            'fields': ('status', 'notes')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        """Order by date descending"""
+        qs = super().get_queryset(request)
+        return qs.order_by('-date', '-start_time')

@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from datetime import datetime, timedelta
 
 User = get_user_model()
 
@@ -97,3 +99,115 @@ class Project(models.Model):
         if self.availability:
             stats.append({'value': self.availability, 'label': 'Availability'})
         return stats
+
+
+class TimeSlot(models.Model):
+    """Model for defining available time slots for booking"""
+    
+    WEEKDAY_CHOICES = [
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
+    ]
+    
+    weekday = models.IntegerField(choices=WEEKDAY_CHOICES, help_text="Day of the week")
+    start_time = models.TimeField(help_text="Start time of availability")
+    end_time = models.TimeField(help_text="End time of availability")
+    is_active = models.BooleanField(default=True, help_text="Is this time slot currently available?")
+    duration_minutes = models.IntegerField(default=60, help_text="Duration of each appointment slot in minutes")
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['weekday', 'start_time']
+        verbose_name = 'Time Slot'
+        verbose_name_plural = 'Time Slots'
+    
+    def __str__(self):
+        return f"{self.get_weekday_display()} {self.start_time.strftime('%H:%M')} - {self.end_time.strftime('%H:%M')}"
+    
+    def clean(self):
+        """Validate that end_time is after start_time"""
+        if self.end_time <= self.start_time:
+            raise ValidationError("End time must be after start time")
+
+
+class Booking(models.Model):
+    """Model for storing client bookings"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+        ('completed', 'Completed'),
+    ]
+    
+    # Client Information
+    name = models.CharField(max_length=200, help_text="Client's full name")
+    email = models.EmailField(help_text="Client's email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Client's phone number (optional)")
+    company = models.CharField(max_length=200, blank=True, help_text="Company name (optional)")
+    
+    # Booking Details
+    date = models.DateField(help_text="Date of the appointment")
+    start_time = models.TimeField(help_text="Start time of the appointment")
+    end_time = models.TimeField(help_text="End time of the appointment")
+    duration_minutes = models.IntegerField(default=60, help_text="Duration in minutes")
+    
+    # Purpose
+    subject = models.CharField(max_length=300, help_text="Meeting subject")
+    message = models.TextField(help_text="Additional details or requirements")
+    booking_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('consultation', 'Consultation'),
+            ('project_discussion', 'Project Discussion'),
+            ('technical_support', 'Technical Support'),
+            ('collaboration', 'Collaboration Opportunity'),
+            ('other', 'Other'),
+        ],
+        default='consultation'
+    )
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Metadata
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(blank=True, help_text="Admin notes (not visible to client)")
+    
+    class Meta:
+        ordering = ['-date', '-start_time']
+        verbose_name = 'Booking'
+        verbose_name_plural = 'Bookings'
+    
+    def __str__(self):
+        return f"{self.name} - {self.date} {self.start_time.strftime('%H:%M')}"
+    
+    def clean(self):
+        """Validate booking"""
+        # Check that end_time is after start_time
+        if self.end_time <= self.start_time:
+            raise ValidationError("End time must be after start time")
+        
+        # Check that booking is not in the past
+        booking_datetime = datetime.combine(self.date, self.start_time)
+        if timezone.make_aware(booking_datetime) < timezone.now():
+            raise ValidationError("Cannot book appointments in the past")
+    
+    @property
+    def is_upcoming(self):
+        """Check if booking is in the future"""
+        booking_datetime = datetime.combine(self.date, self.start_time)
+        return timezone.make_aware(booking_datetime) > timezone.now()
+    
+    @property
+    def is_today(self):
+        """Check if booking is today"""
+        return self.date == timezone.now().date()
