@@ -194,51 +194,76 @@
     <p class="projects-subtitle">Free resources, automation tools, and innovative solutions for developers and entrepreneurs</p>
 </div>
 
-<!-- Tools Section -->
+<!-- Live Projects Section -->
 <section class="section">
     <div class="section-header">
-        <h2 class="section-title">Development Tools</h2>
-        <p class="section-description">Professional tools and calculators to accelerate your projects</p>
+        <h2 class="section-title">Live Projects</h2>
+        <p class="section-description">Production-ready applications and tools currently available</p>
     </div>
     
+    {% if live_projects %}
     <div class="tools-grid">
-        {% for tool in tools %}
+        {% for project in live_projects %}
         <div class="tool-card">
             <div class="tool-icon">
-                <i class="{{ tool.icon }}"></i>
+                <i class="{{ project.icon }}"></i>
             </div>
-            <h3 class="tool-title">{{ tool.name }}</h3>
-            <span class="tool-type">{{ tool.type }}</span>
-            <p class="tool-description">{{ tool.description }}</p>
+            <h3 class="tool-title">{{ project.title }}</h3>
+            <span class="tool-type">{{ project.get_status_display }} • {{ project.get_category_display }}</span>
+            <p class="tool-description">{{ project.description|truncatewords:25 }}</p>
+            
+            {% if project.demo_url or project.github_url %}
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                {% if project.demo_url %}
+                <a href="{{ project.demo_url }}" class="btn btn-primary" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; text-decoration: none;">
+                    <i class="fas fa-play"></i> Try It
+                </a>
+                {% endif %}
+                {% if project.github_url %}
+                <a href="{{ project.github_url }}" target="_blank" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; text-decoration: none;">
+                    <i class="fab fa-github"></i> Code
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: var(--text-gray);">
+        <i class="fas fa-rocket" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary-purple);"></i>
+        <p>No live projects yet. Add them from the admin panel!</p>
+    </div>
+    {% endif %}
 </section>
 
 <!-- Turnitin Automation Section -->
+{% if turnitin_project %}
 <section class="section">
     <div class="turnitin-section">
         <h2 class="turnitin-title">
-            <i class="fas fa-file-upload"></i>
-            {{ turnitin_info.title }}
+            <i class="{{ turnitin_project.icon }}"></i>
+            {{ turnitin_project.title }}
         </h2>
-        <p class="turnitin-description">{{ turnitin_info.description }}</p>
+        <p class="turnitin-description">{{ turnitin_project.description }}</p>
         
+        {% if turnitin_project.get_features_list %}
         <div class="turnitin-features">
-            {% for feature in turnitin_info.features %}
+            {% for feature in turnitin_project.get_features_list %}
             <div class="feature-item">
                 <i class="fas fa-check"></i> {{ feature }}
             </div>
             {% endfor %}
         </div>
+        {% endif %}
         
         <div style="margin: 2rem 0;">
             <strong>Supported formats:</strong> 
-            {% for format in turnitin_info.supported_formats %}
-                <span style="background: rgba(139, 92, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 5px; margin: 0 0.25rem;">{{ format }}</span>
-            {% endfor %}
+            <span style="background: rgba(139, 92, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 5px; margin: 0 0.25rem;">.docx</span>
+            <span style="background: rgba(139, 92, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 5px; margin: 0 0.25rem;">.pdf</span>
+            <span style="background: rgba(139, 92, 246, 0.2); padding: 0.25rem 0.5rem; border-radius: 5px; margin: 0 0.25rem;">.pptx</span>
             <br><br>
-            <strong>Maximum file size:</strong> {{ turnitin_info.max_file_size }}
+            <strong>Maximum file size:</strong> 10MB
         </div>
         
         <a href="{% url 'website:turnitin' %}" class="turnitin-button">
@@ -246,28 +271,5 @@
         </a>
     </div>
 </section>
-
-<!-- Downloads Section -->
-<section class="section">
-    <div class="section-header">
-        <h2 class="section-title">Free Downloads</h2>
-        <p class="section-description">Comprehensive guides and templates for your success</p>
-    </div>
-    
-    <div class="downloads-section">
-        {% for download in downloads %}
-        <div class="download-item">
-            <div class="download-icon">
-                <i class="{{ download.icon }}"></i>
-            </div>
-            <div class="download-info">
-                <h4>{{ download.title }}</h4>
-                <div class="download-meta">
-                    {{ download.type }} • {{ download.pages }} • {{ download.downloads }} downloads
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
+{% endif %}
 {% endblock %} 

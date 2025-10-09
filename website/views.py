@@ -745,63 +745,29 @@ def projects(request):
     # Fetch live GitHub projects
     github_projects = fetch_github_projects('mukhammad-develop')
     
+    # Get all active projects from database
+    all_projects = Project.objects.filter(is_active=True)
+    
+    # Get featured project
+    featured_project = all_projects.filter(is_featured=True).first()
+    
+    # Get live/production projects (for "Development Tools" section)
+    live_projects = all_projects.filter(status__in=['live', 'production']).exclude(is_featured=True)
+    
+    # Get Turnitin project specifically
+    turnitin_project = all_projects.filter(slug='turnitin-automation-system').first()
+    
     context = {
         'title': 'Projects & Tools',
         'name': 'Abdurakhmon',
         
+        # Dynamic Projects from Database
+        'featured_project': featured_project,
+        'live_projects': live_projects,
+        'turnitin_project': turnitin_project,
+        
         # Live GitHub Projects
         'github_projects': github_projects,
-        
-        # Web-Scraping Tools
-        'tools': [
-            {
-                'name': 'Web Scraping Framework',
-                'description': 'Custom framework for building scalable web scrapers with anti-detection',
-                'type': 'Framework',
-                'icon': 'fas fa-spider'
-            },
-            {
-                'name': 'Proxy Rotation Manager',
-                'description': 'Advanced proxy management system with health monitoring and rotation',
-                'type': 'Tool',
-                'icon': 'fas fa-shield-alt'
-            },
-            {
-                'name': 'CAPTCHA Solver Integration',
-                'description': 'Automated CAPTCHA solving with multiple service providers',
-                'type': 'Service',
-                'icon': 'fas fa-puzzle-piece'
-            },
-            {
-                'name': 'Data Pipeline Orchestrator',
-                'description': 'Manage and monitor complex data extraction workflows',
-                'type': 'Platform',
-                'icon': 'fas fa-cogs'
-            }
-        ],
-        'downloads': [
-            {
-                'title': 'Web Scraping Best Practices Guide',
-                'type': 'PDF Guide',
-                'pages': '75 pages',
-                'downloads': '2,500+',
-                'icon': 'fas fa-file-pdf'
-            },
-            {
-                'title': 'Anti-Detection Techniques Handbook',
-                'type': 'PDF Manual',
-                'pages': '45 pages',
-                'downloads': '1,800+',
-                'icon': 'fas fa-shield-alt'
-            },
-            {
-                'title': 'Scrapy Framework Templates',
-                'type': 'Code Templates',
-                'pages': '20 templates',
-                'downloads': '3,200+',
-                'icon': 'fas fa-code'
-            }
-        ],
         
         # GitHub Stats
         'github_stats': {
@@ -811,20 +777,6 @@ def projects(request):
             'total_commits': '2,847',
             'languages': list(set(p.get('language', 'Unknown') for p in github_projects if p.get('language')))[:6]
         },
-        
-        # Turnitin Integration (keeping existing functionality)
-        'turnitin_info': {
-            'title': 'Turnitin Automation',
-            'description': 'Automated document submission to Turnitin plagiarism checker',
-            'supported_formats': ['.docx', '.pdf', '.pptx'],
-            'max_file_size': '10MB',
-            'features': [
-                'Automatic form filling',
-                'Direct submission to Turnitin',
-                'Progress tracking',
-                'Success confirmation'
-            ]
-        }
     }
     return render(request, 'website/projects.html', context)
 
