@@ -880,6 +880,228 @@
             animation: fadeInUp 1.2s ease-out;
         }
 
+        /* Featured Project Styles */
+        .featured-project {
+            background: var(--soft-black);
+            border: 1px solid var(--border-gray);
+            border-radius: 12px;
+            padding: 3rem;
+            position: relative;
+            margin-top: 3rem;
+            transition: all 0.4s ease;
+        }
+
+        .featured-project:hover {
+            border-color: var(--primary-purple);
+            box-shadow: 0 20px 60px rgba(139, 92, 246, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .project-badge {
+            position: absolute;
+            top: -15px;
+            left: 3rem;
+            background: var(--primary-purple);
+            color: var(--pure-white);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .project-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .project-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--deep-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: var(--pure-white);
+            flex-shrink: 0;
+        }
+
+        .project-title-section {
+            flex: 1;
+        }
+
+        .project-title {
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .tag {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary-purple);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .project-description {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+        }
+
+        .project-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--pure-white);
+            font-size: 0.95rem;
+        }
+
+        .feature-item i {
+            color: var(--primary-purple);
+            font-size: 1.1rem;
+        }
+
+        .project-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            background: var(--charcoal);
+            border-radius: 8px;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary-purple), var(--light-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Coming Soon Projects */
+        .coming-soon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .coming-soon-card {
+            background: var(--soft-black);
+            border: 1px solid var(--border-gray);
+            border-radius: 12px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coming-soon-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-purple), transparent);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .coming-soon-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .coming-soon-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-purple);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.1);
+        }
+
+        .coming-soon-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: var(--primary-purple);
+            margin: 0 auto 1.5rem;
+        }
+
+        .coming-soon-card h4 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: var(--pure-white);
+        }
+
+        .coming-soon-card p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--primary-purple);
+            padding: 0.4rem 1rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
         /* Comprehensive Mobile Responsiveness */
         
         /* Large tablets and small desktops */
@@ -909,6 +1131,53 @@
 
             .mobile-menu-toggle {
                 display: block;
+            }
+
+            .featured-project {
+                padding: 2rem;
+            }
+
+            .project-header {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .project-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+
+            .project-title {
+                font-size: 1.5rem;
+            }
+
+            .project-features {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+
+            .project-stats {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+                padding: 1.5rem;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .project-actions {
+                flex-direction: column;
+            }
+
+            .project-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .coming-soon-grid {
+                grid-template-columns: 1fr;
             }
             
             .nav-links {
@@ -1037,6 +1306,43 @@
 
             .hero h1 {
                 font-size: 2.2rem;
+            }
+
+            .featured-project {
+                padding: 1.5rem;
+            }
+
+            .project-badge {
+                left: 1.5rem;
+                font-size: 0.75rem;
+                padding: 0.4rem 1rem;
+            }
+
+            .project-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+
+            .project-title {
+                font-size: 1.3rem;
+            }
+
+            .project-description {
+                font-size: 1rem;
+            }
+
+            .project-stats {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .stat-value {
+                font-size: 1.8rem;
+            }
+
+            .coming-soon-card {
+                padding: 1.5rem;
             }
 
             .hero-tagline {
@@ -1172,8 +1478,8 @@
             <div class="hero-tagline selectable-highlight" id="typing-tagline"></div>
             <p class="hero-description selectable-highlight">{{ description }}</p>
             <div class="hero-buttons">
-                <a href="#identity" class="btn btn-primary">
-                    <i class="fas fa-user"></i> Explore My Identity
+                <a href="#projects" class="btn btn-primary">
+                    <i class="fas fa-rocket"></i> View My Projects
                 </a>
                 <a href="#contact" class="btn btn-secondary">
                     <i class="fas fa-envelope"></i> Get In Touch
@@ -1182,88 +1488,117 @@
         </div>
     </section>
 
-    <section id="identity" class="section">
+    <section id="projects" class="section">
         <div class="section-header">
-            <h2 class="section-title">Explore My Dual Expertise</h2>
-            <p class="section-subtitle">Discover my expertise across software development and web-scraping domains</p>
+            <h2 class="section-title">Featured Projects</h2>
+            <p class="section-subtitle">Real-world applications showcasing automation and web development expertise</p>
         </div>
         
-        <div class="identity-toggle">
-            <button class="identity-btn active" data-identity="developer">
-                <i class="fas fa-code"></i> Software Developer
-            </button>
-            <button class="identity-btn" data-identity="scraper">
-                <i class="fas fa-spider"></i> Web-Scraper Engineer
-            </button>
+        <!-- Featured Project -->
+        {% if featured_project %}
+        <div class="featured-project">
+            <div class="project-badge">
+                <i class="fas fa-star"></i> Featured Project
+            </div>
+            <div class="project-content">
+                <div class="project-header">
+                    <div class="project-icon">
+                        <i class="{{ featured_project.icon }}"></i>
+                    </div>
+                    <div class="project-title-section">
+                        <h3 class="project-title">{{ featured_project.title }}</h3>
+                        <div class="project-tags">
+                            {% for tech in featured_project.get_technologies_list %}
+                            <span class="tag">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="project-description">
+                    {{ featured_project.description }}
+                </p>
+                
+                {% if featured_project.get_features_list %}
+                <div class="project-features">
+                    {% for feature in featured_project.get_features_list %}
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ feature }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if featured_project.get_stats_dict %}
+                <div class="project-stats">
+                    {% for stat in featured_project.get_stats_dict %}
+                    <div class="stat">
+                        <div class="stat-value">{{ stat.value }}</div>
+                        <div class="stat-label">{{ stat.label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="project-actions">
+                    {% if featured_project.demo_url %}
+                        {% if user.is_authenticated %}
+                            <a href="{{ featured_project.demo_url }}" class="btn btn-primary">
+                                <i class="fas fa-play"></i> Try It Now
+                            </a>
+                        {% else %}
+                            <a href="{% url 'accounts:signup' %}" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Sign Up to Try
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if featured_project.github_url %}
+                        <a href="{{ featured_project.github_url }}" target="_blank" class="btn btn-secondary">
+                            <i class="fab fa-github"></i> View on GitHub
+                        </a>
+                    {% endif %}
+                    
+                    {% if featured_project.documentation_url %}
+                        <a href="{{ featured_project.documentation_url }}" target="_blank" class="btn btn-secondary">
+                            <i class="fas fa-book"></i> Documentation
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+        {% else %}
+        <!-- Fallback if no featured project -->
+        <div class="featured-project">
+            <div class="project-content" style="text-align: center; padding: 4rem;">
+                <i class="fas fa-rocket" style="font-size: 4rem; color: var(--primary-purple); margin-bottom: 1rem;"></i>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">No Featured Project Yet</h3>
+                <p style="color: var(--text-gray);">Add a featured project from the Django admin panel to showcase it here!</p>
+            </div>
+        </div>
+        {% endif %}
 
-        <!-- Developer Identity -->
-        <div id="developer-content" class="identity-content active">
-            <div class="section-header">
-                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Technical Expertise</h3>
-                <p class="section-subtitle">Technologies I use to build exceptional software solutions</p>
-            </div>
-            <div class="skills-grid">
-                {% for skill in dev_skills %}
-                <div class="skill-card">
-                    <div class="skill-icon">
-                        <i class="{{ skill.icon }}"></i>
-                    </div>
-                    <div class="skill-name selectable-highlight">{{ skill.name }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="section-header" style="margin-top: 5rem;">
-                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Development Services</h3>
-                <p class="section-subtitle">Specialized software development services I provide</p>
-            </div>
-            <div class="services-grid">
-                {% for service in dev_services %}
-                <div class="service-card">
-                    <div class="service-icon">
-                        <i class="{{ service.icon }}"></i>
-                    </div>
-                    <h3 class="service-title selectable-highlight">{{ service.title }}</h3>
-                    <p class="service-description selectable-highlight">{{ service.description }}</p>
-                </div>
-                {% endfor %}
-            </div>
+        <!-- Coming Soon Projects -->
+        {% if coming_soon_projects %}
+        <div class="section-header" style="margin-top: 5rem;">
+            <h3 class="section-title" style="font-size: 2rem;">More Projects Coming Soon</h3>
+            <p class="section-subtitle">Currently working on exciting new automation and web development projects</p>
         </div>
-
-        <!-- Web-Scraper Engineer Identity -->
-        <div id="scraper-content" class="identity-content">
-            <div class="section-header">
-                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Web-Scraping Expertise</h3>
-                <p class="section-subtitle">Advanced tools and techniques for data extraction and automation</p>
-            </div>
-            <div class="skills-grid">
-                {% for skill in scraping_skills %}
-                <div class="skill-card">
-                    <div class="skill-icon">
-                        <i class="{{ skill.icon }}"></i>
-                    </div>
-                    <div class="skill-name selectable-highlight">{{ skill.name }}</div>
+        
+        <div class="coming-soon-grid">
+            {% for project in coming_soon_projects %}
+            <div class="coming-soon-card">
+                <div class="coming-soon-icon">
+                    <i class="{{ project.icon }}"></i>
                 </div>
-                {% endfor %}
+                <h4>{{ project.title }}</h4>
+                <p>{{ project.description|truncatewords:20 }}</p>
+                <span class="status-badge">{{ project.get_status_display }}</span>
             </div>
-            
-            <div class="section-header" style="margin-top: 5rem;">
-                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 1rem;">Scraping Services</h3>
-                <p class="section-subtitle">Specialized web-scraping and data extraction services</p>
-            </div>
-            <div class="services-grid">
-                {% for service in scraping_services %}
-                <div class="service-card">
-                    <div class="service-icon">
-                        <i class="{{ service.icon }}"></i>
-                    </div>
-                    <h3 class="service-title selectable-highlight">{{ service.title }}</h3>
-                    <p class="service-description selectable-highlight">{{ service.description }}</p>
-                </div>
-                {% endfor %}
-            </div>
+            {% endfor %}
         </div>
+        {% endif %}
     </section>
 
     <section id="contact" class="section contact">
@@ -1748,99 +2083,7 @@
                     ring.style.opacity = '0';
                 });
                 
-                                 setTimeout(() => ring.remove(), 600);
-             }
-         });
-
-        // Identity Toggle Functionality
-        const identityButtons = document.querySelectorAll('.identity-btn');
-        const identityContents = document.querySelectorAll('.identity-content');
-
-        identityButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetIdentity = button.dataset.identity;
-                
-                // Remove active class from all buttons and contents
-                identityButtons.forEach(btn => btn.classList.remove('active'));
-                identityContents.forEach(content => content.classList.remove('active'));
-                
-                // Add active class to clicked button
-                button.classList.add('active');
-                
-                // Show corresponding content with animation
-                const targetContent = document.getElementById(targetIdentity + '-content');
-                if (targetContent) {
-                    setTimeout(() => {
-                        targetContent.classList.add('active');
-                    }, 100);
-                }
-                
-                // Create toggle effect particles
-                createToggleEffect(button);
-                
-                // Update page title dynamically
-                const isScraper = targetIdentity === 'scraper';
-                const newTitle = isScraper ? 'Web-Scraper Engineer' : 'Software Developer';
-                const taglineElement = document.getElementById('typing-tagline');
-                if (taglineElement) {
-                    taglineElement.innerHTML = newTitle + ' & ' + (isScraper ? 'Data Extraction Specialist' : 'Web-Scraping Expert');
-                }
-            });
-        });
-
-        function createToggleEffect(button) {
-            const rect = button.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            // Create burst effect
-            for (let i = 0; i < 12; i++) {
-                setTimeout(() => {
-                    createToggleParticle(centerX, centerY, i);
-                }, i * 20);
-            }
-        }
-
-        function createToggleParticle(x, y, index) {
-            const particle = document.createElement('div');
-            const angle = (Math.PI * 2 * index) / 12;
-            const distance = 30 + Math.random() * 20;
-            
-            particle.style.position = 'fixed';
-            particle.style.left = x + 'px';
-            particle.style.top = y + 'px';
-            particle.style.width = '6px';
-            particle.style.height = '6px';
-            particle.style.background = 'var(--primary-purple)';
-            particle.style.borderRadius = '50%';
-            particle.style.pointerEvents = 'none';
-            particle.style.zIndex = '10000';
-            particle.style.opacity = '1';
-            particle.style.boxShadow = '0 0 12px var(--primary-purple)';
-            particle.style.transition = 'all 0.8s ease-out';
-            
-            document.body.appendChild(particle);
-            
-            // Animate particle
-            requestAnimationFrame(() => {
-                const endX = x + Math.cos(angle) * distance;
-                const endY = y + Math.sin(angle) * distance;
-                
-                particle.style.left = endX + 'px';
-                particle.style.top = endY + 'px';
-                particle.style.opacity = '0';
-                particle.style.transform = 'scale(0)';
-            });
-            
-            setTimeout(() => particle.remove(), 800);
-        }
-
-        // Add keyboard shortcuts for identity switching
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '1') {
-                document.querySelector('[data-identity="developer"]').click();
-            } else if (e.key === '2') {
-                document.querySelector('[data-identity="scraper"]').click();
+                setTimeout(() => ring.remove(), 600);
             }
         });
     </script>

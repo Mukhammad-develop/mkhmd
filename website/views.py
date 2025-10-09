@@ -21,6 +21,7 @@ import tempfile
 
 # Import models
 from accounts.models import User, TurnitinSubmission
+from .models import Project
 
 # Turnitin Settings
 TURNITIN_TEST_MODE = getattr(settings, 'TURNITIN_TEST_MODE', True)
@@ -224,6 +225,17 @@ def parse_turnitin_results(html_content, access_code):
 
 def home(request):
     """Software Developer & Web-Scraper Engineer Landing page"""
+    
+    # Get featured project (only one featured project for home page)
+    featured_project = Project.objects.filter(is_featured=True, is_active=True).first()
+    
+    # Get coming soon projects (not featured, but active)
+    coming_soon_projects = Project.objects.filter(
+        is_active=True, 
+        is_featured=False,
+        status__in=['development', 'planning', 'research']
+    )[:3]
+    
     context = {
         'title': 'Software Developer & Web-Scraper Engineer',
         'name': 'Abdurakhmon',
@@ -233,81 +245,9 @@ def home(request):
         'github': 'https://github.com/mukhammad-develop',
         'linkedin': 'https://linkedin.com/in/abdurakhmon-dev',
         
-        # Software Developer Skills
-        'dev_skills': [
-            {'name': 'Python', 'icon': 'fab fa-python'},
-            {'name': 'Django', 'icon': 'fas fa-server'},
-            {'name': 'FastAPI', 'icon': 'fas fa-bolt'},
-            {'name': 'PostgreSQL', 'icon': 'fas fa-database'},
-            {'name': 'Redis', 'icon': 'fas fa-memory'},
-            {'name': 'Docker', 'icon': 'fab fa-docker'},
-            {'name': 'AWS', 'icon': 'fab fa-aws'},
-            {'name': 'MongoDB', 'icon': 'fas fa-leaf'},
-            {'name': 'Kubernetes', 'icon': 'fas fa-dharmachakra'},
-            {'name': 'GraphQL', 'icon': 'fas fa-project-diagram'},
-            {'name': 'Git', 'icon': 'fab fa-git-alt'},
-            {'name': 'Linux', 'icon': 'fab fa-linux'},
-        ],
-        'dev_services': [
-            {
-                'title': 'Web Application Development',
-                'description': 'Building scalable web applications with modern frameworks like Django and FastAPI.',
-                'icon': 'fas fa-code'
-            },
-            {
-                'title': 'API Development',
-                'description': 'Creating robust RESTful APIs and GraphQL services with comprehensive documentation.',
-                'icon': 'fas fa-code-branch'
-            },
-            {
-                'title': 'Database Design',
-                'description': 'Designing efficient database schemas and implementing optimization strategies.',
-                'icon': 'fas fa-database'
-            },
-            {
-                'title': 'Cloud Deployment',
-                'description': 'Deploying applications on AWS with Docker containers and CI/CD pipelines.',
-                'icon': 'fas fa-cloud'
-            },
-        ],
-        
-        # Web-Scraper Engineer Skills
-        'scraping_skills': [
-            {'name': 'Selenium', 'icon': 'fas fa-robot'},
-            {'name': 'BeautifulSoup', 'icon': 'fas fa-code'},
-            {'name': 'Scrapy', 'icon': 'fas fa-spider'},
-            {'name': 'Requests', 'icon': 'fas fa-globe'},
-            {'name': 'Playwright', 'icon': 'fas fa-theater-masks'},
-            {'name': 'Proxy Management', 'icon': 'fas fa-shield-alt'},
-            {'name': 'CAPTCHA Solving', 'icon': 'fas fa-puzzle-piece'},
-            {'name': 'Anti-Bot Bypass', 'icon': 'fas fa-unlock'},
-            {'name': 'Data Processing', 'icon': 'fas fa-cogs'},
-            {'name': 'Browser Automation', 'icon': 'fas fa-desktop'},
-            {'name': 'Data Validation', 'icon': 'fas fa-check-circle'},
-            {'name': 'Web Crawling', 'icon': 'fas fa-search'},
-        ],
-        'scraping_services': [
-            {
-                'title': 'E-commerce Data Extraction',
-                'description': 'Extract product data, prices, reviews, and inventory from e-commerce platforms with real-time monitoring.',
-                'icon': 'fas fa-shopping-cart'
-            },
-            {
-                'title': 'Social Media Scraping',
-                'description': 'Gather social media insights, posts, and engagement data from multiple platforms.',
-                'icon': 'fas fa-share-alt'
-            },
-            {
-                'title': 'Financial Data Scraping',
-                'description': 'Scrape stock prices, market data, and financial reports for analysis and monitoring.',
-                'icon': 'fas fa-chart-line'
-            },
-            {
-                'title': 'Academic Research Automation',
-                'description': 'Automated plagiarism checking, research paper analysis, and academic database scraping.',
-                'icon': 'fas fa-graduation-cap'
-            },
-        ]
+        # Dynamic Projects
+        'featured_project': featured_project,
+        'coming_soon_projects': coming_soon_projects,
     }
     return render(request, 'website/home.html', context)
 
