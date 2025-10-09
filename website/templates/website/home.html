@@ -1450,7 +1450,7 @@
             <ul class="nav-links" id="nav-links">
                 <li><a href="{% url 'website:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
                 <li><a href="{% url 'website:portfolio' %}" {% if request.resolver_match.url_name in 'portfolio,achievements,blog' %}class="active"{% endif %}>Portfolio</a></li>
-                <li><a href="{% url 'website:timeline' %}" {% if request.resolver_match.url_name in 'timeline,metrics,booking' %}class="active"{% endif %}>Timeline</a></li>
+                <li><a href="{% url 'website:schedule' %}" {% if request.resolver_match.url_name in 'schedule,metrics,booking' %}class="active"{% endif %}>Schedule</a></li>
                 <li><a href="{% url 'website:projects' %}" {% if request.resolver_match.url_name in 'projects,resources,turnitin' %}class="active"{% endif %}>Projects</a></li>
                 
                 {% if user.is_authenticated %}
