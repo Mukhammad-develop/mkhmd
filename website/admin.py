@@ -61,7 +61,6 @@ class BookingAdmin(admin.ModelAdmin):
     )
     list_filter = ('status', 'booking_type', 'date', 'created_at')
     search_fields = ('name', 'email', 'company', 'subject', 'message', 'phone')
-    list_editable = ('status',)
     readonly_fields = ('created_at', 'updated_at', 'meeting_summary')
     date_hierarchy = 'date'
     actions = ['mark_as_confirmed', 'mark_as_completed', 'mark_as_cancelled']
