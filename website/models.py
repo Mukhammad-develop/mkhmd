@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
+import uuid
 
 User = get_user_model()
 
@@ -211,3 +212,57 @@ class Booking(models.Model):
     def is_today(self):
         """Check if booking is today"""
         return self.date == timezone.now().date()
+
+
+class ChatSession(models.Model):
+    """Model for chat sessions - each visitor gets a session"""
+    
+    session_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_sessions')
+    visitor_name = models.CharField(max_length=100, blank=True, help_text="Name for anonymous visitors")
+    visitor_email = models.EmailField(blank=True, help_text="Email for anonymous visitors")
+    is_active = models.BooleanField(default=True, help_text="Is this chat session still active?")
+    is_read_by_admin = models.BooleanField(default=False, help_text="Has admin read this conversation?")
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+        verbose_name = 'Chat Session'
+        verbose_name_plural = 'Chat Sessions'
+    
+    def __str__(self):
+        if self.user:
+            return f"Chat with {self.user.username}"
+        elif self.visitor_name:
+            return f"Chat with {self.visitor_name}"
+        return f"Chat #{self.session_id.hex[:8]}"
+    
+    @property
+    def unread_messages_count(self):
+        """Count unread messages from visitor"""
+        return self.messages.filter(is_from_admin=False, is_read=False).count()
+    
+    @property
+    def last_message(self):
+        """Get the last message in this session"""
+        return self.messages.order_by('-created_at').first()
+
+
+class ChatMessage(models.Model):
+    """Model for individual chat messages"""
+    
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')
+    message = models.TextField(help_text="Message content")
+    is_from_admin = models.BooleanField(default=False, help_text="Is this message from admin?")
+    is_read = models.BooleanField(default=False, help_text="Has the message been read?")
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Chat Message'
+        verbose_name_plural = 'Chat Messages'
+    
+    def __str__(self):
+        sender = "Admin" if self.is_from_admin else "Visitor"
+        return f"{sender}: {self.message[:50]}"

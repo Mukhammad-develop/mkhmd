@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
-from .models import Project, TimeSlot, Booking
+from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage
 
 
 @admin.register(Project)
@@ -210,3 +210,131 @@ class BookingAdmin(admin.ModelAdmin):
         updated = queryset.update(status='cancelled')
         self.message_user(request, f'{updated} booking(s) marked as cancelled.')
     mark_as_cancelled.short_description = "❌ Mark selected as Cancelled"
+
+
+class ChatMessageInline(admin.TabularInline):
+    model = ChatMessage
+    extra = 0
+    fields = ('message_preview', 'sender_badge', 'created_at', 'is_read')
+    readonly_fields = ('message_preview', 'sender_badge', 'created_at', 'is_read')
+    can_delete = False
+    
+    def message_preview(self, obj):
+        return obj.message[:100] + '...' if len(obj.message) > 100 else obj.message
+    message_preview.short_description = 'Message'
+    
+    def sender_badge(self, obj):
+        if obj.is_from_admin:
+            return format_html('<span style="background: #8b5cf6; color: white; padding: 2px 8px; border-radius: 8px;">Admin</span>')
+        return format_html('<span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 8px;">Visitor</span>')
+    sender_badge.short_description = 'From'
+
+
+@admin.register(ChatSession)
+class ChatSessionAdmin(admin.ModelAdmin):
+    list_display = ('visitor_info', 'unread_badge', 'last_message_preview', 'is_active', 'updated_at')
+    list_filter = ('is_active', 'is_read_by_admin', 'created_at')
+    search_fields = ('visitor_name', 'visitor_email', 'user__username', 'user__email')
+    readonly_fields = ('session_id', 'created_at', 'updated_at', 'conversation_summary')
+    inlines = [ChatMessageInline]
+    actions = ['mark_as_read', 'close_chat']
+    
+    fieldsets = (
+        ('Conversation Overview', {
+            'fields': ('conversation_summary',),
+            'classes': ('wide',)
+        }),
+        ('Session Info', {
+            'fields': ('session_id', 'user', 'visitor_name', 'visitor_email')
+        }),
+        ('Status', {
+            'fields': ('is_active', 'is_read_by_admin')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def visitor_info(self, obj):
+        if obj.user:
+            return format_html('<strong>{}</strong><br><small>📧 {}</small>', obj.user.username, obj.user.email)
+        elif obj.visitor_name:
+            return format_html('<strong>{}</strong><br><small>📧 {}</small>', obj.visitor_name, obj.visitor_email or 'No email')
+        return format_html('<small>Anonymous #{}</small>', obj.session_id.hex[:8])
+    visitor_info.short_description = 'Visitor'
+    
+    def unread_badge(self, obj):
+        count = obj.unread_messages_count
+        if count > 0:
+            return format_html(
+                '<span style="background: #ef4444; color: white; padding: 4px 10px; '
+                'border-radius: 12px; font-weight: 600;">{} New</span>',
+                count
+            )
+        return format_html('<span style="color: #6b7280;">All read</span>')
+    unread_badge.short_description = 'Status'
+    
+    def last_message_preview(self, obj):
+        last_msg = obj.last_message
+        if last_msg:
+            sender = "You" if last_msg.is_from_admin else obj.visitor_name or "Visitor"
+            preview = last_msg.message[:60] + '...' if len(last_msg.message) > 60 else last_msg.message
+            return format_html('<strong>{}:</strong> {}', sender, preview)
+        return format_html('<small style="color: #6b7280;">No messages yet</small>')
+    last_message_preview.short_description = 'Last Message'
+    
+    def conversation_summary(self, obj):
+        messages = obj.messages.all()
+        total = messages.count()
+        unread = obj.unread_messages_count
+        
+        html = f'''
+        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+            <h3 style="margin-top: 0; color: #8b5cf6;">💬 Chat Session Summary</h3>
+            <p><strong>Visitor:</strong> {obj.visitor_name or obj.user.username if obj.user else 'Anonymous'}</p>
+            <p><strong>Contact:</strong> {obj.visitor_email or (obj.user.email if obj.user else 'N/A')}</p>
+            <p><strong>Total Messages:</strong> {total}</p>
+            <p><strong>Unread Messages:</strong> {unread}</p>
+            <p><strong>Status:</strong> {'🟢 Active' if obj.is_active else '🔴 Closed'}</p>
+            <p><strong>Started:</strong> {obj.created_at.strftime("%B %d, %Y at %H:%M")}</p>
+            <p><strong>Last Activity:</strong> {obj.updated_at.strftime("%B %d, %Y at %H:%M")}</p>
+        </div>
+        '''
+        return format_html(html)
+    conversation_summary.short_description = 'Chat Overview'
+    
+    def mark_as_read(self, request, queryset):
+        updated = queryset.update(is_read_by_admin=True)
+        # Mark all messages as read
+        for session in queryset:
+            session.messages.filter(is_from_admin=False).update(is_read=True)
+        self.message_user(request, f'{updated} chat session(s) marked as read.')
+    mark_as_read.short_description = "✅ Mark selected as Read"
+    
+    def close_chat(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} chat session(s) closed.')
+    close_chat.short_description = "🔒 Close selected chats"
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('session_info', 'sender_badge', 'message_preview', 'created_at', 'is_read')
+    list_filter = ('is_from_admin', 'is_read', 'created_at')
+    search_fields = ('message', 'session__visitor_name', 'session__visitor_email')
+    readonly_fields = ('session', 'created_at')
+    
+    def session_info(self, obj):
+        return obj.session
+    session_info.short_description = 'Chat Session'
+    
+    def sender_badge(self, obj):
+        if obj.is_from_admin:
+            return format_html('<span style="background: #8b5cf6; color: white; padding: 4px 12px; border-radius: 12px;">Admin</span>')
+        return format_html('<span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px;">Visitor</span>')
+    sender_badge.short_description = 'From'
+    
+    def message_preview(self, obj):
+        return obj.message[:100] + '...' if len(obj.message) > 100 else obj.message
+    message_preview.short_description = 'Message'

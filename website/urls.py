@@ -19,4 +19,9 @@ urlpatterns = [
     path('turnitin/check/', views.check_turnitin_result, name='check_turnitin_result'),
     path('turnitin/check-status/', views.check_submissions_status, name='check_submissions_status'),
     path('api/github-projects/', views.github_projects, name='github_projects'),
+    
+    # Chat API endpoints
+    path('api/chat/init/', views.chat_init, name='chat_init'),
+    path('api/chat/send/', views.chat_send_message, name='chat_send_message'),
+    path('api/chat/messages/', views.chat_get_messages, name='chat_get_messages'),
 ] 

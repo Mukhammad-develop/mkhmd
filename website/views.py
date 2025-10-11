@@ -22,7 +22,7 @@ import tempfile
 
 # Import models
 from accounts.models import User, TurnitinSubmission
-from .models import Project
+from .models import Project, ChatSession, ChatMessage
 
 # Turnitin Settings
 TURNITIN_TEST_MODE = getattr(settings, 'TURNITIN_TEST_MODE', True)
@@ -2001,5 +2001,154 @@ def github_projects(request):
                 'success': False,
                 'error': str(e)
             }, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+# Chat Views
+@csrf_exempt
+def chat_init(request):
+    """Initialize or get existing chat session"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            session_id = data.get('session_id')
+            visitor_name = data.get('name', '')
+            visitor_email = data.get('email', '')
+            
+            # Try to get existing session or create new one
+            if session_id:
+                try:
+                    session = ChatSession.objects.get(session_id=session_id)
+                except ChatSession.DoesNotExist:
+                    session = None
+            else:
+                session = None
+            
+            if not session:
+                # Create new session
+                session = ChatSession.objects.create(
+                    user=request.user if request.user.is_authenticated else None,
+                    visitor_name=visitor_name,
+                    visitor_email=visitor_email
+                )
+            
+            # Get messages
+            messages = []
+            for msg in session.messages.all():
+                messages.append({
+                    'id': msg.id,
+                    'message': msg.message,
+                    'is_from_admin': msg.is_from_admin,
+                    'created_at': msg.created_at.strftime('%H:%M'),
+                    'is_read': msg.is_read
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'session_id': str(session.session_id),
+                'messages': messages
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@csrf_exempt
+def chat_send_message(request):
+    """Send a message in chat"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            session_id = data.get('session_id')
+            message = data.get('message', '').strip()
+            is_from_admin = data.get('is_from_admin', False)
+            
+            if not session_id or not message:
+                return JsonResponse({'success': False, 'error': 'Missing session_id or message'}, status=400)
+            
+            # Get session
+            try:
+                session = ChatSession.objects.get(session_id=session_id)
+            except ChatSession.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+            
+            # Verify admin
+            if is_from_admin and not request.user.is_staff:
+                return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+            
+            # Create message
+            chat_message = ChatMessage.objects.create(
+                session=session,
+                message=message,
+                is_from_admin=is_from_admin
+            )
+            
+            # Mark session as unread by admin if message is from visitor
+            if not is_from_admin:
+                session.is_read_by_admin = False
+                session.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': {
+                    'id': chat_message.id,
+                    'message': chat_message.message,
+                    'is_from_admin': chat_message.is_from_admin,
+                    'created_at': chat_message.created_at.strftime('%H:%M'),
+                    'is_read': chat_message.is_read
+                }
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@csrf_exempt
+def chat_get_messages(request):
+    """Get new messages for a chat session"""
+    if request.method == 'GET':
+        try:
+            session_id = request.GET.get('session_id')
+            last_message_id = int(request.GET.get('last_message_id', 0))
+            
+            if not session_id:
+                return JsonResponse({'success': False, 'error': 'Missing session_id'}, status=400)
+            
+            # Get session
+            try:
+                session = ChatSession.objects.get(session_id=session_id)
+            except ChatSession.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+            
+            # Get new messages
+            messages = []
+            new_messages = session.messages.filter(id__gt=last_message_id)
+            
+            for msg in new_messages:
+                messages.append({
+                    'id': msg.id,
+                    'message': msg.message,
+                    'is_from_admin': msg.is_from_admin,
+                    'created_at': msg.created_at.strftime('%H:%M'),
+                    'is_read': msg.is_read
+                })
+                
+                # Mark visitor messages as read if admin is viewing
+                if request.user.is_staff and not msg.is_from_admin:
+                    msg.is_read = True
+                    msg.save()
+            
+            return JsonResponse({
+                'success': True,
+                'messages': messages
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
