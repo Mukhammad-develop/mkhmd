@@ -255,100 +255,51 @@ def home(request):
 def portfolio(request):
     """GitHub-friendly Portfolio page - Web-Scraping Engineer focused"""
     
-    # Fetch live GitHub projects
-    github_projects = fetch_github_projects('mukhammad-develop')
+    # Get all active projects for portfolio (from database)
+    all_portfolio_projects = Project.objects.filter(is_active=True).order_by('order', '-created_at')
+    
+    # Separate by category and feature status for different sections
+    featured_projects = all_portfolio_projects.filter(is_featured=True)
+    scraping_projects = all_portfolio_projects.filter(category='web_scraping')
+    automation_projects = all_portfolio_projects.filter(category='automation')
+    
+    # Get GitHub projects from database (projects with GitHub URLs)
+    github_projects_db = all_portfolio_projects.filter(
+        github_url__isnull=False
+    ).exclude(github_url='')
+    
+    # Format for template compatibility
+    github_projects = []
+    for project in github_projects_db:
+        github_projects.append({
+            'name': project.title,
+            'description': project.description,
+            'html_url': project.github_url,
+            'homepage': project.demo_url,
+            'language': project.get_technologies_list()[0] if project.get_technologies_list() else 'Python',
+            'stars': 0,  # Can be updated if you track stars
+            'forks': 0,  # Can be updated if you track forks
+        })
     
     context = {
         'title': 'Portfolio & Projects',
         'name': 'Abdurakhmon',
         
-        # Live GitHub Projects
-        'github_projects': github_projects,
+        # Dynamic Projects from Database
+        'dev_projects': featured_projects,
+        'scraping_projects': scraping_projects,
+        'all_projects': all_portfolio_projects,
         
-        # Featured Projects - Web-Scraping Focus
-        'dev_projects': [
-            {
-                'title': 'Turnitin Automation System',
-                'description': 'Automated plagiarism checking system with Selenium WebDriver, handling file uploads and result parsing',
-                'tech_stack': ['Python', 'Selenium', 'Django', 'BeautifulSoup'],
-                'status': 'Live',
-                'category': 'Web Scraping',
-                'image': 'turnitin_project.jpg',
-                'github': 'https://github.com/mukhammad-develop/turnitin-automation',
-                'demo': 'https://mkhmd.uk/projects/',
-                'features': ['Automated form filling', 'Result parsing', 'File handling', 'Progress tracking']
-            },
-            {
-                'title': 'E-commerce Price Monitor',
-                'description': 'Multi-platform price tracking system with proxy rotation and anti-bot detection bypass',
-                'tech_stack': ['Python', 'Scrapy', 'Redis', 'PostgreSQL'],
-                'status': 'Production',
-                'category': 'Data Extraction',
-                'image': 'ecommerce_scraper.jpg',
-                'github': 'https://github.com/mukhammad-develop/price-monitor',
-                'demo': 'Case Study Available',
-                'features': ['Proxy rotation', 'CAPTCHA solving', 'Real-time alerts', 'Data visualization']
-            },
-            {
-                'title': 'Social Media Analytics Scraper',
-                'description': 'Advanced social media data extraction with sentiment analysis and trend detection',
-                'tech_stack': ['Python', 'Playwright', 'NLP', 'MongoDB'],
-                'status': 'Open Source',
-                'category': 'Social Intelligence',
-                'image': 'social_scraper.jpg',
-                'github': 'https://github.com/mukhammad-develop/social-analytics',
-                'demo': 'Live Demo',
-                'features': ['Multi-platform support', 'Sentiment analysis', 'Trend detection', 'API integration']
-            },
-            {
-                'title': 'Financial Data Aggregator',
-                'description': 'Real-time financial data scraping from multiple sources with market analysis',
-                'tech_stack': ['Python', 'Selenium', 'FastAPI', 'Docker'],
-                'status': 'Enterprise',
-                'category': 'Financial Scraping',
-                'image': 'financial_scraper.jpg',
-                'github': 'https://github.com/mukhammad-develop/financial-aggregator',
-                'demo': 'Private Demo',
-                'features': ['Real-time data', 'Market analysis', 'Risk assessment', 'Alert system']
-            }
-        ],
-        'scraping_projects': [
-            {
-                'title': 'Academic Research Automation',
-                'description': 'Automated research paper analysis and citation extraction from academic databases',
-                'metrics': ['10K+ Papers Processed', '95% Accuracy', '24/7 Monitoring'],
-                'status': 'Production',
-                'category': 'Academic',
-                'image': 'academic_scraper.jpg',
-                'github': 'https://github.com/mukhammad-develop/academic-scraper'
-            },
-            {
-                'title': 'Real Estate Data Pipeline',
-                'description': 'Comprehensive property data extraction with market trend analysis and price predictions',
-                'metrics': ['500K+ Properties', '50+ Sources', '99.9% Uptime'],
-                'status': 'Live',
-                'category': 'Real Estate',
-                'image': 'realestate_scraper.jpg',
-                'github': 'https://github.com/mukhammad-develop/realestate-pipeline'
-            },
-            {
-                'title': 'Job Market Intelligence',
-                'description': 'Large-scale job posting scraper with salary analysis and skill trend detection',
-                'metrics': ['1M+ Job Postings', '100+ Platforms', 'Daily Updates'],
-                'status': 'Scaling',
-                'category': 'Employment',
-                'image': 'job_scraper.jpg',
-                'github': 'https://github.com/mukhammad-develop/job-intelligence'
-            }
-        ],
+        # GitHub Projects from Database
+        'github_projects': github_projects,
         
         # GitHub Integration
         'github_stats': {
             'username': 'mukhammad-develop',
-            'total_repos': len(github_projects),
-            'total_stars': sum(p.get('stars', 0) for p in github_projects),
+            'total_repos': github_projects_db.count(),
+            'total_stars': 0,  # Can be calculated if tracking stars
             'total_commits': '2,847',
-            'languages': list(set(p.get('language', 'Unknown') for p in github_projects if p.get('language')))[:6]
+            'languages': list(set(tech for project in github_projects_db for tech in project.get_technologies_list()))[:6]
         },
         
         # Awards/Achievements Content - Web-Scraping Focused
