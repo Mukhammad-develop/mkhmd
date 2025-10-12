@@ -2443,3 +2443,180 @@ def ai_chat_delete(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+# ===========================
+# SUPPORT CHAT VIEWS (User to Admin)
+# ===========================
+
+@login_required
+def support_chat(request):
+    """Support chat page - talk to Abdurakhmon"""
+    # Get user's chat sessions
+    user_sessions = ChatSession.objects.filter(user=request.user).order_by('-updated_at')
+    
+    context = {
+        'title': 'Support Chat',
+        'name': 'Abdurakhmon',
+        'user_sessions': user_sessions,
+    }
+    
+    return render(request, 'website/support_chat.html', context)
+
+
+@login_required
+@csrf_exempt
+def support_chat_init(request):
+    """Initialize a new support chat session"""
+    if request.method == 'POST':
+        try:
+            # Create new session
+            session = ChatSession.objects.create(
+                user=request.user,
+                visitor_name=request.user.get_full_name() or request.user.username,
+                visitor_email=request.user.email,
+                is_active=True
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'session_id': session.id
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def support_chat_send(request):
+    """Send a message in support chat"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            session_id = data.get('session_id')
+            message = data.get('message', '').strip()
+            
+            if not session_id or not message:
+                return JsonResponse({'success': False, 'error': 'Missing data'}, status=400)
+            
+            # Get session (users can only access their own, admins can access all)
+            if request.user.is_superuser:
+                try:
+                    session = ChatSession.objects.get(id=session_id)
+                except ChatSession.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+            else:
+                try:
+                    session = ChatSession.objects.get(id=session_id, user=request.user)
+                except ChatSession.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+            
+            # Determine if user is admin
+            is_from_admin = request.user.is_superuser
+            
+            # Create message
+            chat_message = ChatMessage.objects.create(
+                session=session,
+                message=message,
+                is_from_admin=is_from_admin,
+                is_read=False
+            )
+            
+            # Update session timestamp
+            session.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': {
+                    'id': chat_message.id,
+                    'message': chat_message.message,
+                    'is_from_admin': chat_message.is_from_admin,
+                    'created_at': chat_message.created_at.isoformat()
+                }
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+def support_chat_messages(request):
+    """Get messages for a support chat session"""
+    if request.method == 'GET':
+        try:
+            session_id = request.GET.get('session_id')
+            
+            if not session_id:
+                return JsonResponse({'success': False, 'error': 'Missing session_id'}, status=400)
+            
+            # Get session (users can only see their own, superusers can see all)
+            if request.user.is_superuser:
+                try:
+                    session = ChatSession.objects.get(id=session_id)
+                except ChatSession.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+            else:
+                try:
+                    session = ChatSession.objects.get(id=session_id, user=request.user)
+                except ChatSession.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+            
+            # Get messages
+            messages = []
+            for msg in session.messages.all():
+                messages.append({
+                    'id': msg.id,
+                    'message': msg.message,
+                    'is_from_admin': msg.is_from_admin,
+                    'created_at': msg.created_at.isoformat(),
+                    'is_read': msg.is_read
+                })
+                
+                # Mark as read if user is viewing
+                if not msg.is_read:
+                    if (msg.is_from_admin and not request.user.is_superuser) or \
+                       (not msg.is_from_admin and request.user.is_superuser):
+                        msg.is_read = True
+                        msg.save()
+            
+            return JsonResponse({
+                'success': True,
+                'messages': messages
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def support_chat_delete(request):
+    """Delete a support chat session"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            session_id = data.get('session_id')
+            
+            if not session_id:
+                return JsonResponse({'success': False, 'error': 'Missing session_id'}, status=400)
+            
+            # Get and delete session
+            try:
+                session = ChatSession.objects.get(id=session_id, user=request.user)
+                session.delete()
+                
+                return JsonResponse({'success': True, 'message': 'Chat deleted successfully'})
+            except ChatSession.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

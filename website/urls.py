@@ -34,4 +34,11 @@ urlpatterns = [
     path('api/ai-chat/send/', views.ai_chat_send, name='ai_chat_send'),
     path('api/ai-chat/history/', views.ai_chat_get_history, name='ai_chat_get_history'),
     path('api/ai-chat/delete/', views.ai_chat_delete, name='ai_chat_delete'),
+    
+    # Support Chat endpoints (User to Admin)
+    path('support-chat/', views.support_chat, name='support_chat'),
+    path('api/support-chat/init/', views.support_chat_init, name='support_chat_init'),
+    path('api/support-chat/send/', views.support_chat_send, name='support_chat_send'),
+    path('api/support-chat/messages/', views.support_chat_messages, name='support_chat_messages'),
+    path('api/support-chat/delete/', views.support_chat_delete, name='support_chat_delete'),
 ] 
