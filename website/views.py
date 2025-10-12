@@ -2612,14 +2612,20 @@ def support_chat_delete(request):
             if not session_id:
                 return JsonResponse({'success': False, 'error': 'Missing session_id'}, status=400)
             
-            # Get and delete session
+            # Get and delete session (admins can delete any, users can only delete their own)
             try:
-                session = ChatSession.objects.get(id=session_id, user=request.user)
+                if request.user.is_superuser:
+                    # Superusers can delete any chat
+                    session = ChatSession.objects.get(id=session_id)
+                else:
+                    # Regular users can only delete their own chats
+                    session = ChatSession.objects.get(id=session_id, user=request.user)
+                
                 session.delete()
                 
                 return JsonResponse({'success': True, 'message': 'Chat deleted successfully'})
             except ChatSession.DoesNotExist:
-                return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+                return JsonResponse({'success': False, 'error': 'Session not found or access denied'}, status=404)
             
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
