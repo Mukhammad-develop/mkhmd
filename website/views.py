@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.utils import timezone
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 import os
 import json
 import requests
@@ -2539,8 +2539,10 @@ def support_chat_send(request):
                     user_name = session.user.get_full_name() or session.user.username
                     user_email = session.user.email
                     
-                    email_subject = f'New Support Message from {user_name}'
-                    email_body = f"""
+                    email_subject = f'💬 New Support Message from {user_name}'
+                    
+                    # Plain text version
+                    text_body = f"""
 You have received a new support message from {user_name} ({user_email}).
 
 Message:
@@ -2553,13 +2555,114 @@ Session ID: {session.id}
 This is an automated notification from your website.
                     """
                     
-                    send_mail(
+                    # Beautiful HTML version
+                    html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <!-- Main Container -->
+                <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                                💬 New Support Message
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 16px;">
+                                Someone needs your help!
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            
+                            <!-- User Info -->
+                            <div style="background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                                <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+                                    From
+                                </p>
+                                <p style="margin: 0 0 5px 0; color: #1f2937; font-size: 18px; font-weight: 600;">
+                                    {user_name}
+                                </p>
+                                <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                                    {user_email}
+                                </p>
+                            </div>
+                            
+                            <!-- Message -->
+                            <div style="margin-bottom: 30px;">
+                                <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+                                    Message
+                                </p>
+                                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                    <p style="margin: 0; color: #1f2937; font-size: 16px; line-height: 1.6; white-space: pre-wrap;">
+{message}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="https://www.mkhmd.uk/support-chat/" 
+                                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                                            📱 View & Respond
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Session Info -->
+                            <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #9ca3af; font-size: 13px;">
+                                    Session ID: <strong style="color: #6b7280;">#{session.id}</strong>
+                                </p>
+                            </div>
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
+                                🤖 This is an automated notification from your website
+                            </p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                                <a href="https://www.mkhmd.uk" style="color: #667eea; text-decoration: none; font-weight: 600;">www.mkhmd.uk</a>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+                    """
+                    
+                    # Create email with both text and HTML versions
+                    email = EmailMultiAlternatives(
                         subject=email_subject,
-                        message=email_body,
+                        body=text_body,
                         from_email='no-reply@mkhmd.uk',
-                        recipient_list=['abdurakhmon70@gmail.com'],
-                        fail_silently=True,  # Don't break if email fails
+                        to=['abdurakhmon70@gmail.com']
                     )
+                    email.attach_alternative(html_body, "text/html")
+                    email.send(fail_silently=True)
+                    
                 except Exception as email_error:
                     # Log error but don't fail the request
                     print(f"Failed to send email notification: {email_error}")
