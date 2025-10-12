@@ -239,6 +239,46 @@
         background: var(--soft-black);
     }
 
+    .chat-settings {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .setting-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .setting-group label {
+        font-size: 0.85rem;
+        color: var(--text-gray);
+        white-space: nowrap;
+    }
+
+    .setting-group select {
+        background: var(--charcoal);
+        color: white;
+        border: 1px solid var(--border-gray);
+        border-radius: 6px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .setting-group select:hover {
+        border-color: var(--primary-purple);
+    }
+
+    .setting-group select:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+    }
+
     .chat-input-container {
         display: flex;
         gap: 1rem;
@@ -362,6 +402,25 @@
         </div>
 
         <div class="chat-input-area">
+            <div class="chat-settings">
+                <div class="setting-group">
+                    <label>Creativity:</label>
+                    <select id="temperatureSelect">
+                        <option value="0.3">Low</option>
+                        <option value="0.7" selected>Medium</option>
+                        <option value="1.0">High</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Length:</label>
+                    <select id="maxTokensSelect">
+                        <option value="100">Short</option>
+                        <option value="200" selected>Medium</option>
+                        <option value="400">Long</option>
+                        <option value="600">Very Long</option>
+                    </select>
+                </div>
+            </div>
             <div class="chat-input-container">
                 <textarea
                     class="chat-textarea"
@@ -381,10 +440,8 @@
     let currentChatId = null;
     let isLoading = false;
 
-    // Initialize - start new chat on load
+    // Initialize - DON'T create chat on load, just show empty state
     window.addEventListener('DOMContentLoaded', () => {
-        startNewChat();
-        
         // Auto-resize textarea
         const textarea = document.getElementById('chatInput');
         textarea.addEventListener('input', function() {
@@ -398,6 +455,15 @@
                 sendMessage();
             }
         });
+        
+        // If there are existing chats, load the most recent one
+        const firstChat = document.querySelector('.chat-history-item');
+        if (firstChat) {
+            const chatId = firstChat.getAttribute('data-chat-id');
+            if (chatId) {
+                loadChat(chatId);
+            }
+        }
     });
 
     async function startNewChat() {
@@ -474,12 +540,21 @@
     }
 
     async function sendMessage() {
-        if (isLoading || !currentChatId) return;
+        if (isLoading) return;
 
         const input = document.getElementById('chatInput');
         const message = input.value.trim();
         
         if (!message) return;
+
+        // If no chat exists, create one first
+        if (!currentChatId) {
+            await startNewChat();
+            if (!currentChatId) {
+                alert('Failed to create chat. Please try again.');
+                return;
+            }
+        }
 
         // Get settings
         const temperature = parseFloat(document.getElementById('temperatureSelect').value);
