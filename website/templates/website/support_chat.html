@@ -515,8 +515,14 @@
 
             const data = await response.json();
             if (data.success) {
-                // Reload messages from server to get the correct order
-                await loadChatMessages(currentSessionId);
+                // Add the message to UI smoothly using data from server
+                const msg = data.message;
+                addMessageToUI(
+                    msg.message, 
+                    msg.is_from_admin ? 'admin' : 'user', 
+                    msg.created_at,
+                    msg.sender_name
+                );
                 
                 if (!isAdmin) {
                     // If regular user, start polling for admin response

@@ -2673,7 +2673,8 @@ This is an automated notification from your website.
                     'id': chat_message.id,
                     'message': chat_message.message,
                     'is_from_admin': chat_message.is_from_admin,
-                    'created_at': chat_message.created_at.isoformat()
+                    'created_at': chat_message.created_at.isoformat(),
+                    'sender_name': 'Abdurakhmon' if is_from_admin else session.user.username,
                 }
             })
             
