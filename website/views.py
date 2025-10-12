@@ -2452,13 +2452,17 @@ def ai_chat_delete(request):
 @login_required
 def support_chat(request):
     """Support chat page - talk to Abdurakhmon"""
-    # Get user's chat sessions
-    user_sessions = ChatSession.objects.filter(user=request.user).order_by('-updated_at')
+    # Superusers see ALL chats, regular users see only their own
+    if request.user.is_superuser:
+        user_sessions = ChatSession.objects.filter(user__isnull=False).order_by('-updated_at')
+    else:
+        user_sessions = ChatSession.objects.filter(user=request.user).order_by('-updated_at')
     
     context = {
         'title': 'Support Chat',
         'name': 'Abdurakhmon',
         'user_sessions': user_sessions,
+        'is_admin': request.user.is_superuser,
     }
     
     return render(request, 'website/support_chat.html', context)

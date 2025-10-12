@@ -313,7 +313,7 @@
 <div class="support-chat-container">
     <!-- Sidebar -->
     <div class="chat-sidebar">
-        <h2><i class="fas fa-comments"></i> My Conversations</h2>
+        <h2><i class="fas fa-comments"></i> {% if is_admin %}All Conversations{% else %}My Conversations{% endif %}</h2>
         <button class="new-chat-btn" onclick="startNewChat()">
             <i class="fas fa-plus"></i> New Conversation
         </button>
@@ -321,8 +321,11 @@
             {% for session in user_sessions %}
             <div class="chat-history-item" data-session-id="{{ session.id }}">
                 <div class="chat-history-content" onclick="loadChat({{ session.id }})">
-                    <h4>{{ session.visitor_name|default:session.user.username }}</h4>
-                    <p>{{ session.updated_at|date:"M d, Y H:i" }}</p>
+                    <h4>{{ session.user.username|default:session.visitor_name }}</h4>
+                    <p>
+                        {% if is_admin %}{{ session.user.email|truncatechars:20 }}<br>{% endif %}
+                        {{ session.updated_at|date:"M d, Y H:i" }}
+                    </p>
                 </div>
                 <button class="chat-delete-btn" onclick="event.stopPropagation(); deleteChat({{ session.id }})" title="Delete conversation">
                     <i class="fas fa-trash"></i>
