@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.utils import timezone
+from django.core.mail import send_mail
 import os
 import json
 import requests
@@ -2531,6 +2532,37 @@ def support_chat_send(request):
             
             # Update session timestamp
             session.save()
+            
+            # Send email notification to admin when user sends a message
+            if not is_from_admin:  # Only notify when user (not admin) sends message
+                try:
+                    user_name = session.user.get_full_name() or session.user.username
+                    user_email = session.user.email
+                    
+                    email_subject = f'New Support Message from {user_name}'
+                    email_body = f"""
+You have received a new support message from {user_name} ({user_email}).
+
+Message:
+{message}
+
+---
+View and respond: https://www.mkhmd.uk/support-chat/
+Session ID: {session.id}
+
+This is an automated notification from your website.
+                    """
+                    
+                    send_mail(
+                        subject=email_subject,
+                        message=email_body,
+                        from_email='no-reply@mkhmd.uk',
+                        recipient_list=['abdurakhmon70@gmail.com'],
+                        fail_silently=True,  # Don't break if email fails
+                    )
+                except Exception as email_error:
+                    # Log error but don't fail the request
+                    print(f"Failed to send email notification: {email_error}")
             
             return JsonResponse({
                 'success': True,
