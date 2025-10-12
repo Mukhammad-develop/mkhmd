@@ -2400,12 +2400,21 @@ def ai_chat_delete(request):
             # Get and delete chat
             try:
                 chat = AIChat.objects.get(id=chat_id, user=request.user)
+                chat_title = chat.title
+                message_count = chat.ai_messages.count()
+                
+                # Delete the chat (this will cascade delete all messages)
                 chat.delete()
                 
-                return JsonResponse({'success': True, 'message': 'Chat deleted successfully'})
+                return JsonResponse({
+                    'success': True, 
+                    'message': f'Chat "{chat_title}" with {message_count} messages deleted successfully'
+                })
             except AIChat.DoesNotExist:
-                return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
+                return JsonResponse({'success': False, 'error': 'Chat not found or already deleted'}, status=404)
             
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
