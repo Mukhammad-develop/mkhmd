@@ -2578,7 +2578,8 @@ def support_chat_messages(request):
                     'message': msg.message,
                     'is_from_admin': msg.is_from_admin,
                     'created_at': msg.created_at.isoformat(),
-                    'is_read': msg.is_read
+                    'is_read': msg.is_read,
+                    'sender_name': 'Abdurakhmon' if msg.is_from_admin else session.user.username,
                 })
                 
                 # Mark as read if user is viewing

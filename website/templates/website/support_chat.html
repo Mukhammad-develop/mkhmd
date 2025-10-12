@@ -437,7 +437,7 @@
                 messagesContainer.innerHTML = '';
                 
                 data.messages.forEach(msg => {
-                    addMessageToUI(msg.message, msg.is_from_admin ? 'admin' : 'user', msg.created_at);
+                    addMessageToUI(msg.message, msg.is_from_admin ? 'admin' : 'user', msg.created_at, msg.sender_name);
                 });
                 
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -458,7 +458,7 @@
                 messagesContainer.innerHTML = '';
                 
                 data.messages.forEach(msg => {
-                    addMessageToUI(msg.message, msg.is_from_admin ? 'admin' : 'user', msg.created_at);
+                    addMessageToUI(msg.message, msg.is_from_admin ? 'admin' : 'user', msg.created_at, msg.sender_name);
                 });
                 
                 document.querySelectorAll('.chat-history-item').forEach(item => {
@@ -534,7 +534,7 @@
         }
     }
 
-    function addMessageToUI(text, type, timestamp = null) {
+    function addMessageToUI(text, type, timestamp = null, senderName = null) {
         const messagesContainer = document.getElementById('chatMessages');
         
         const emptyState = messagesContainer.querySelector('.empty-state');
@@ -547,7 +547,8 @@
                               : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
         const icon = type === 'user' ? 'fa-user' : 'fa-user-tie';
-        const sender = type === 'user' ? 'You' : 'Abdurakhmon';
+        // Use provided senderName, or default to "You" for user messages and "Abdurakhmon" for admin
+        const sender = senderName || (type === 'user' ? 'You' : 'Abdurakhmon');
         
         messageDiv.innerHTML = `
             <div class="message-avatar"><i class="fas ${icon}"></i></div>
@@ -582,7 +583,7 @@
                     if (data.messages.length > displayedCount) {
                         const newMessages = data.messages.slice(displayedCount);
                         newMessages.forEach(msg => {
-                            addMessageToUI(msg.message, msg.is_from_admin ? 'admin' : 'user', msg.created_at);
+                            addMessageToUI(msg.message, msg.is_from_admin ? 'admin' : 'user', msg.created_at, msg.sender_name);
                         });
                     }
                 }
