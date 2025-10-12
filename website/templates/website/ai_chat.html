@@ -66,8 +66,11 @@
         background: var(--soft-black);
         border: 1px solid var(--border-gray);
         border-radius: 8px;
-        cursor: pointer;
         transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .chat-history-item:hover {
@@ -78,6 +81,12 @@
     .chat-history-item.active {
         background: var(--primary-purple);
         border-color: var(--deep-purple);
+    }
+
+    .chat-history-content {
+        flex: 1;
+        cursor: pointer;
+        overflow: hidden;
     }
 
     .chat-history-item h4 {
@@ -93,6 +102,24 @@
         color: var(--text-gray);
     }
 
+    .chat-delete-btn {
+        padding: 0.4rem 0.6rem;
+        background: transparent;
+        color: var(--text-gray);
+        border: 1px solid var(--border-gray);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .chat-delete-btn:hover {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
     /* Main Chat Area */
     .chat-main {
         display: flex;
@@ -101,58 +128,6 @@
         border: 1px solid var(--border-gray);
         border-radius: 12px;
         overflow: hidden;
-    }
-
-    .chat-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--border-gray);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: var(--soft-black);
-    }
-
-    .chat-header h1 {
-        font-size: 1.5rem;
-        color: var(--primary-purple);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .chat-controls {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .chat-controls label {
-        font-size: 0.85rem;
-        color: var(--text-gray);
-    }
-
-    .chat-controls select {
-        background: var(--charcoal);
-        color: white;
-        border: 1px solid var(--border-gray);
-        border-radius: 6px;
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-    }
-
-    .delete-chat-btn {
-        padding: 0.5rem 1rem;
-        background: #ef4444;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        transition: all 0.3s ease;
-    }
-
-    .delete-chat-btn:hover {
-        background: #dc2626;
     }
 
     /* Messages Area */
@@ -359,9 +334,14 @@
         </button>
         <div class="chat-history-list" id="chatHistoryList">
             {% for chat in user_chats %}
-            <div class="chat-history-item" data-chat-id="{{ chat.id }}" onclick="loadChat({{ chat.id }})">
-                <h4>{{ chat.title }}</h4>
-                <p>{{ chat.updated_at|date:"M d, Y H:i" }} • {{ chat.message_count }} messages</p>
+            <div class="chat-history-item" data-chat-id="{{ chat.id }}">
+                <div class="chat-history-content" onclick="loadChat({{ chat.id }})">
+                    <h4>{{ chat.title }}</h4>
+                    <p>{{ chat.updated_at|date:"M d, Y H:i" }} • {{ chat.message_count }} messages</p>
+                </div>
+                <button class="chat-delete-btn" onclick="event.stopPropagation(); deleteChat({{ chat.id }})" title="Delete conversation">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
             {% empty %}
             <p style="text-align: center; color: var(--text-gray); font-size: 0.85rem; margin-top: 1rem;">
@@ -373,28 +353,6 @@
 
     <!-- Main Chat Area -->
     <div class="chat-main">
-        <div class="chat-header">
-            <h1><i class="fas fa-robot"></i> <span id="chatTitle">AI Assistant</span></h1>
-            <div class="chat-controls">
-                <label>Creativity:</label>
-                <select id="temperatureSelect">
-                    <option value="0.3">Low (Focused)</option>
-                    <option value="0.7" selected>Medium (Balanced)</option>
-                    <option value="1.0">High (Creative)</option>
-                </select>
-                <label>Length:</label>
-                <select id="maxTokensSelect">
-                    <option value="100">Short</option>
-                    <option value="200" selected>Medium</option>
-                    <option value="400">Long</option>
-                    <option value="600">Very Long</option>
-                </select>
-                <button class="delete-chat-btn" id="deleteChatBtn" onclick="deleteCurrentChat()" style="display: none;">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-            </div>
-        </div>
-
         <div class="chat-messages" id="chatMessages">
             <div class="empty-state">
                 <i class="fas fa-comments"></i>
@@ -455,7 +413,6 @@
             const data = await response.json();
             if (data.success) {
                 currentChatId = data.chat_id;
-                document.getElementById('chatTitle').textContent = data.title;
                 document.getElementById('chatMessages').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-comments"></i>
@@ -464,7 +421,6 @@
                     </div>
                 `;
                 document.getElementById('chatInput').value = '';
-                document.getElementById('deleteChatBtn').style.display = 'block';
                 
                 // Highlight in sidebar
                 document.querySelectorAll('.chat-history-item').forEach(item => {
@@ -490,8 +446,6 @@
             const data = await response.json();
             if (data.success) {
                 currentChatId = data.chat_id;
-                document.getElementById('chatTitle').textContent = data.title;
-                document.getElementById('deleteChatBtn').style.display = 'block';
                 
                 // Display messages
                 const messagesContainer = document.getElementById('chatMessages');
@@ -579,11 +533,8 @@
             if (data.success) {
                 addMessageToUI(data.message.response, 'ai');
                 
-                // Update chat title
-                document.getElementById('chatTitle').textContent = data.chat_title;
-                
                 // Update sidebar title if it changed
-                const activeSidebarItem = document.querySelector('.chat-history-item.active h4');
+                const activeSidebarItem = document.querySelector('.chat-history-item.active .chat-history-content h4');
                 if (activeSidebarItem && data.chat_title !== 'New Conversation') {
                     activeSidebarItem.textContent = data.chat_title;
                 }
@@ -635,8 +586,8 @@
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    async function deleteCurrentChat() {
-        if (!currentChatId) {
+    async function deleteChat(chatId) {
+        if (!chatId) {
             alert('No conversation selected to delete');
             return;
         }
@@ -649,7 +600,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ chat_id: currentChatId })
+                body: JSON.stringify({ chat_id: chatId })
             });
 
             if (!response.ok) {
@@ -658,10 +609,14 @@
 
             const data = await response.json();
             if (data.success) {
-                // Show success message
-                alert('Conversation deleted successfully!');
-                // Reload page to refresh sidebar
-                location.reload();
+                // If deleting current chat, start a new one
+                if (chatId == currentChatId) {
+                    location.reload();
+                } else {
+                    // Just remove from sidebar
+                    const item = document.querySelector(`[data-chat-id="${chatId}"]`);
+                    if (item) item.remove();
+                }
             } else {
                 alert('Error: ' + (data.error || 'Failed to delete conversation'));
             }
