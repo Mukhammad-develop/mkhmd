@@ -369,6 +369,7 @@
     let currentSessionId = null;
     let isLoading = false;
     let pollInterval = null;
+    const isAdmin = {{ is_admin|yesno:"true,false" }};
 
     window.addEventListener('DOMContentLoaded', () => {
         // Auto-resize textarea
@@ -425,6 +426,27 @@
         }
     }
 
+    async function loadChatMessages(sessionId) {
+        // Helper function to reload messages without changing active chat
+        try {
+            const response = await fetch(`/api/support-chat/messages/?session_id=${sessionId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+                
+                data.messages.forEach(msg => {
+                    addMessageToUI(msg.message, msg.is_from_admin ? 'admin' : 'user', msg.created_at);
+                });
+                
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+        }
+    }
+
     async function loadChat(sessionId) {
         try {
             const response = await fetch(`/api/support-chat/messages/?session_id=${sessionId}`);
@@ -474,7 +496,7 @@
             }
         }
 
-        addMessageToUI(message, 'user');
+        // Clear input immediately for better UX
         input.value = '';
         input.style.height = 'auto';
 
@@ -493,8 +515,13 @@
 
             const data = await response.json();
             if (data.success) {
-                // Message sent, admin will respond
-                startPolling();
+                // Reload messages from server to get the correct order
+                await loadChatMessages(currentSessionId);
+                
+                if (!isAdmin) {
+                    // If regular user, start polling for admin response
+                    startPolling();
+                }
             } else {
                 alert('Error: ' + data.error);
             }
