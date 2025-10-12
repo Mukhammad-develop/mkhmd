@@ -22,7 +22,7 @@ import tempfile
 
 # Import models
 from accounts.models import User, TurnitinSubmission
-from .models import Project, ChatSession, ChatMessage
+from .models import Project, ChatSession, ChatMessage, AIChat, AIChatMessage
 
 # Turnitin Settings
 TURNITIN_TEST_MODE = getattr(settings, 'TURNITIN_TEST_MODE', True)
@@ -2147,6 +2147,264 @@ def chat_get_messages(request):
                 'success': True,
                 'messages': messages
             })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+# ===========================
+# AI CHAT VIEWS (GPT-2 API)
+# ===========================
+
+AI_API_URL = "https://language-ai-api-atnpjnu3rq-nw.a.run.app/generate"
+
+@login_required
+def ai_chat(request):
+    """Main AI Chat page - only accessible to logged-in users"""
+    # Get user's chat conversations
+    user_chats = AIChat.objects.filter(user=request.user).order_by('-updated_at')
+    
+    context = {
+        'title': 'AI Chat Assistant',
+        'name': 'Abdurakhmon',
+        'user_chats': user_chats,
+    }
+    
+    return render(request, 'website/ai_chat.html', context)
+
+
+@login_required
+@csrf_exempt
+def ai_chat_init(request):
+    """Initialize or resume an AI chat conversation"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            chat_id = data.get('chat_id')
+            
+            if chat_id:
+                # Resume existing chat
+                try:
+                    chat = AIChat.objects.get(id=chat_id, user=request.user)
+                    # Get all messages
+                    messages = []
+                    for msg in chat.ai_messages.all():
+                        messages.append({
+                            'id': msg.id,
+                            'prompt': msg.prompt,
+                            'response': msg.response,
+                            'created_at': msg.created_at.isoformat()
+                        })
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'chat_id': chat.id,
+                        'title': chat.title,
+                        'messages': messages
+                    })
+                except AIChat.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
+            else:
+                # Create new chat
+                chat = AIChat.objects.create(
+                    user=request.user,
+                    title="New Conversation"
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'chat_id': chat.id,
+                    'title': chat.title,
+                    'messages': []
+                })
+                
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def ai_chat_send(request):
+    """Send a message to the AI and get a response"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            chat_id = data.get('chat_id')
+            prompt = data.get('prompt', '').strip()
+            temperature = float(data.get('temperature', 0.7))
+            max_tokens = int(data.get('max_tokens', 150))
+            
+            if not chat_id or not prompt:
+                return JsonResponse({'success': False, 'error': 'Missing chat_id or prompt'}, status=400)
+            
+            # Get chat
+            try:
+                chat = AIChat.objects.get(id=chat_id, user=request.user)
+            except AIChat.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
+            
+            # Build conversation context (last 5 messages)
+            recent_messages = chat.ai_messages.order_by('-created_at')[:5]
+            conversation_history = []
+            for msg in reversed(list(recent_messages)):
+                conversation_history.append(f"User: {msg.prompt}")
+                conversation_history.append(f"Assistant: {msg.response}")
+            
+            # Add current prompt
+            conversation_history.append(f"User: {prompt}")
+            conversation_history.append("Assistant:")
+            
+            # Build the full prompt
+            full_prompt = "\n".join(conversation_history)
+            
+            # Call the AI API
+            start_time = time.time()
+            
+            try:
+                response = requests.post(
+                    AI_API_URL,
+                    json={
+                        'prompt': full_prompt,
+                        'max_tokens': max_tokens,
+                        'temperature': temperature,
+                        'top_k': 50,
+                        'top_p': 0.95,
+                        'num_sequences': 1
+                    },
+                    timeout=60
+                )
+                response.raise_for_status()
+                
+                response_time_ms = int((time.time() - start_time) * 1000)
+                
+                result = response.json()
+                ai_response = result['generated_texts'][0]
+                
+                # Extract just the assistant's response
+                ai_response = ai_response.split('Assistant:')[-1].strip()
+                ai_response = ai_response.split('User:')[0].strip()
+                
+                # If response is empty or too short, provide a fallback
+                if len(ai_response) < 10:
+                    ai_response = "I'm processing your request. Could you please rephrase or provide more details?"
+                
+            except requests.exceptions.Timeout:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'The AI model is taking too long to respond. Please try again.'
+                }, status=504)
+            except requests.exceptions.RequestException as e:
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Failed to connect to AI service: {str(e)}'
+                }, status=503)
+            
+            # Save the message
+            message = AIChatMessage.objects.create(
+                chat=chat,
+                prompt=prompt,
+                response=ai_response,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_time_ms=response_time_ms
+            )
+            
+            # Update chat title from first message if still "New Conversation"
+            if chat.title == "New Conversation" and chat.ai_messages.count() == 1:
+                # Generate title from first prompt (first 50 chars)
+                chat.title = prompt[:50] + "..." if len(prompt) > 50 else prompt
+                chat.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': {
+                    'id': message.id,
+                    'prompt': message.prompt,
+                    'response': message.response,
+                    'created_at': message.created_at.isoformat(),
+                    'response_time_ms': message.response_time_ms
+                },
+                'chat_title': chat.title
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def ai_chat_get_history(request):
+    """Get chat history for a specific conversation"""
+    if request.method == 'GET':
+        try:
+            chat_id = request.GET.get('chat_id')
+            
+            if not chat_id:
+                return JsonResponse({'success': False, 'error': 'Missing chat_id'}, status=400)
+            
+            # Get chat
+            try:
+                chat = AIChat.objects.get(id=chat_id, user=request.user)
+            except AIChat.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
+            
+            # Get all messages
+            messages = []
+            for msg in chat.ai_messages.all():
+                messages.append({
+                    'id': msg.id,
+                    'prompt': msg.prompt,
+                    'response': msg.response,
+                    'created_at': msg.created_at.isoformat(),
+                    'temperature': msg.temperature,
+                    'max_tokens': msg.max_tokens,
+                    'response_time_ms': msg.response_time_ms
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'chat': {
+                    'id': chat.id,
+                    'title': chat.title,
+                    'created_at': chat.created_at.isoformat(),
+                    'updated_at': chat.updated_at.isoformat(),
+                    'message_count': chat.message_count
+                },
+                'messages': messages
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def ai_chat_delete(request):
+    """Delete a chat conversation"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            chat_id = data.get('chat_id')
+            
+            if not chat_id:
+                return JsonResponse({'success': False, 'error': 'Missing chat_id'}, status=400)
+            
+            # Get and delete chat
+            try:
+                chat = AIChat.objects.get(id=chat_id, user=request.user)
+                chat.delete()
+                
+                return JsonResponse({'success': True, 'message': 'Chat deleted successfully'})
+            except AIChat.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
             
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)

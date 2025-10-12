@@ -20,8 +20,15 @@ urlpatterns = [
     path('turnitin/check-status/', views.check_submissions_status, name='check_submissions_status'),
     path('api/github-projects/', views.github_projects, name='github_projects'),
     
-    # Chat API endpoints
+    # Chat API endpoints (support chat)
     path('api/chat/init/', views.chat_init, name='chat_init'),
     path('api/chat/send/', views.chat_send_message, name='chat_send_message'),
     path('api/chat/messages/', views.chat_get_messages, name='chat_get_messages'),
+    
+    # AI Chat endpoints (GPT-2)
+    path('ai-chat/', views.ai_chat, name='ai_chat'),
+    path('api/ai-chat/init/', views.ai_chat_init, name='ai_chat_init'),
+    path('api/ai-chat/send/', views.ai_chat_send, name='ai_chat_send'),
+    path('api/ai-chat/history/', views.ai_chat_get_history, name='ai_chat_get_history'),
+    path('api/ai-chat/delete/', views.ai_chat_delete, name='ai_chat_delete'),
 ] 

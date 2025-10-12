@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
-from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage
+from django.db import models
+from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage, AIChat, AIChatMessage
 
 
 @admin.register(Project)
@@ -338,3 +339,160 @@ class ChatMessageAdmin(admin.ModelAdmin):
     def message_preview(self, obj):
         return obj.message[:100] + '...' if len(obj.message) > 100 else obj.message
     message_preview.short_description = 'Message'
+
+
+class AIChatMessageInline(admin.TabularInline):
+    model = AIChatMessage
+    extra = 0
+    fields = ('prompt_preview', 'response_preview', 'temperature', 'max_tokens', 'response_time_ms', 'created_at')
+    readonly_fields = ('prompt_preview', 'response_preview', 'temperature', 'max_tokens', 'response_time_ms', 'created_at')
+    can_delete = False
+    
+    def prompt_preview(self, obj):
+        return obj.prompt[:80] + '...' if len(obj.prompt) > 80 else obj.prompt
+    prompt_preview.short_description = 'User Prompt'
+    
+    def response_preview(self, obj):
+        return obj.response[:100] + '...' if len(obj.response) > 100 else obj.response
+    response_preview.short_description = 'AI Response'
+
+
+@admin.register(AIChat)
+class AIChatAdmin(admin.ModelAdmin):
+    list_display = ('user_info', 'title', 'message_count_display', 'last_activity', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__email', 'title')
+    readonly_fields = ('created_at', 'updated_at', 'conversation_stats', 'message_count')
+    inlines = [AIChatMessageInline]
+    actions = ['mark_as_inactive', 'mark_as_active', 'export_conversation']
+    
+    fieldsets = (
+        ('Conversation Overview', {
+            'fields': ('conversation_stats',),
+            'classes': ('wide',)
+        }),
+        ('Chat Info', {
+            'fields': ('user', 'title', 'is_active', 'message_count')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def user_info(self, obj):
+        return format_html(
+            '<strong>{}</strong><br><small>📧 {}</small>', 
+            obj.user.username, 
+            obj.user.email
+        )
+    user_info.short_description = 'User'
+    
+    def message_count_display(self, obj):
+        count = obj.message_count
+        return format_html(
+            '<span style="background: #3b82f6; color: white; padding: 4px 12px; '
+            'border-radius: 12px; font-weight: 600;">{} messages</span>',
+            count
+        )
+    message_count_display.short_description = 'Messages'
+    
+    def last_activity(self, obj):
+        last_msg = obj.last_message
+        if last_msg:
+            return format_html(
+                '<small>{}</small>',
+                last_msg.created_at.strftime("%b %d, %Y %H:%M")
+            )
+        return format_html('<small style="color: #6b7280;">No messages</small>')
+    last_activity.short_description = 'Last Activity'
+    
+    def conversation_stats(self, obj):
+        messages = obj.ai_messages.all()
+        total = messages.count()
+        avg_temp = messages.aggregate(models.Avg('temperature'))['temperature__avg'] or 0
+        avg_tokens = messages.aggregate(models.Avg('max_tokens'))['max_tokens__avg'] or 0
+        avg_response_time = messages.aggregate(models.Avg('response_time_ms'))['response_time_ms__avg'] or 0
+        
+        html = f'''
+        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h3 style="margin-top: 0; color: #3b82f6;">🤖 AI Chat Statistics</h3>
+            <p><strong>User:</strong> {obj.user.username} ({obj.user.email})</p>
+            <p><strong>Conversation Title:</strong> {obj.title}</p>
+            <p><strong>Total Messages:</strong> {total}</p>
+            <p><strong>Average Temperature:</strong> {avg_temp:.2f}</p>
+            <p><strong>Average Max Tokens:</strong> {avg_tokens:.0f}</p>
+            <p><strong>Average Response Time:</strong> {avg_response_time:.0f}ms</p>
+            <p><strong>Status:</strong> {'🟢 Active' if obj.is_active else '🔴 Inactive'}</p>
+            <p><strong>Started:</strong> {obj.created_at.strftime("%B %d, %Y at %H:%M")}</p>
+            <p><strong>Last Updated:</strong> {obj.updated_at.strftime("%B %d, %Y at %H:%M")}</p>
+        </div>
+        '''
+        return format_html(html)
+    conversation_stats.short_description = 'Conversation Overview'
+    
+    def mark_as_inactive(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} conversation(s) marked as inactive.')
+    mark_as_inactive.short_description = "🔒 Mark selected as Inactive"
+    
+    def mark_as_active(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} conversation(s) marked as active.')
+    mark_as_active.short_description = "✅ Mark selected as Active"
+    
+    def export_conversation(self, request, queryset):
+        # Future enhancement: export to JSON/TXT
+        self.message_user(request, "Export feature coming soon!")
+    export_conversation.short_description = "📥 Export conversations"
+
+
+@admin.register(AIChatMessage)
+class AIChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('chat_info', 'user_prompt_preview', 'ai_response_preview', 'temperature', 'max_tokens', 'response_time_display', 'created_at')
+    list_filter = ('created_at', 'temperature')
+    search_fields = ('prompt', 'response', 'chat__user__username')
+    readonly_fields = ('chat', 'prompt', 'response', 'temperature', 'max_tokens', 'response_time_ms', 'created_at')
+    
+    fieldsets = (
+        ('Conversation', {
+            'fields': ('chat',)
+        }),
+        ('Exchange', {
+            'fields': ('prompt', 'response')
+        }),
+        ('Generation Parameters', {
+            'fields': ('temperature', 'max_tokens', 'response_time_ms'),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def chat_info(self, obj):
+        return format_html(
+            '<strong>{}</strong><br><small>{}</small>',
+            obj.chat.user.username,
+            obj.chat.title
+        )
+    chat_info.short_description = 'Chat'
+    
+    def user_prompt_preview(self, obj):
+        return obj.prompt[:100] + '...' if len(obj.prompt) > 100 else obj.prompt
+    user_prompt_preview.short_description = 'User Message'
+    
+    def ai_response_preview(self, obj):
+        return obj.response[:100] + '...' if len(obj.response) > 100 else obj.response
+    ai_response_preview.short_description = 'AI Response'
+    
+    def response_time_display(self, obj):
+        if obj.response_time_ms:
+            seconds = obj.response_time_ms / 1000
+            if seconds < 1:
+                return format_html('<span style="color: #10b981;">{:.0f}ms</span>', obj.response_time_ms)
+            else:
+                return format_html('<span style="color: #f59e0b;">{:.2f}s</span>', seconds)
+        return format_html('<span style="color: #6b7280;">N/A</span>')
+    response_time_display.short_description = 'Response Time'

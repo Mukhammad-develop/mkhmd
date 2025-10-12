@@ -266,3 +266,55 @@ class ChatMessage(models.Model):
     def __str__(self):
         sender = "Admin" if self.is_from_admin else "Visitor"
         return f"{sender}: {self.message[:50]}"
+
+
+class AIChat(models.Model):
+    """Model for AI chat conversations using the Language Model API"""
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_chats')
+    title = models.CharField(max_length=200, default="New Conversation", help_text="Chat title (auto-generated from first message)")
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True, help_text="Is this conversation still active?")
+    
+    class Meta:
+        ordering = ['-updated_at']
+        verbose_name = 'AI Chat Conversation'
+        verbose_name_plural = 'AI Chat Conversations'
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
+    
+    @property
+    def message_count(self):
+        """Get total number of messages in this chat"""
+        return self.ai_messages.count()
+    
+    @property
+    def last_message(self):
+        """Get the last message in this chat"""
+        return self.ai_messages.order_by('-created_at').first()
+
+
+class AIChatMessage(models.Model):
+    """Model for individual AI chat messages"""
+    
+    chat = models.ForeignKey(AIChat, on_delete=models.CASCADE, related_name='ai_messages')
+    prompt = models.TextField(help_text="User's message/prompt")
+    response = models.TextField(help_text="AI's response")
+    
+    # Generation parameters used
+    temperature = models.FloatField(default=0.7, help_text="Temperature used for generation")
+    max_tokens = models.IntegerField(default=150, help_text="Max tokens used for generation")
+    
+    # Metadata
+    created_at = models.DateTimeField(default=timezone.now)
+    response_time_ms = models.IntegerField(null=True, blank=True, help_text="API response time in milliseconds")
+    
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'AI Chat Message'
+        verbose_name_plural = 'AI Chat Messages'
+    
+    def __str__(self):
+        return f"User: {self.prompt[:50]}... | AI: {self.response[:50]}..."
