@@ -1,0 +1,250 @@
+{% extends 'website/base.html' %}
+
+{% block content %}
+<style>
+    .chat-hub-container {
+        max-width: 1000px;
+        margin: 120px auto 50px;
+        padding: 0 2rem;
+    }
+
+    .chat-hub-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .chat-hub-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--primary-purple) 0%, var(--deep-purple) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .chat-hub-header p {
+        font-size: 1.1rem;
+        color: var(--text-gray);
+    }
+
+    .chat-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .chat-option {
+        background: var(--charcoal);
+        border: 2px solid var(--border-gray);
+        border-radius: 16px;
+        padding: 2.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .chat-option::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, var(--primary-purple) 0%, var(--deep-purple) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 0;
+    }
+
+    .chat-option:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-purple);
+        box-shadow: 0 12px 40px rgba(139, 92, 246, 0.3);
+    }
+
+    .chat-option:hover::before {
+        opacity: 0.1;
+    }
+
+    .chat-option-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .chat-option-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        display: inline-block;
+    }
+
+    .chat-option-icon.ai {
+        color: var(--primary-purple);
+    }
+
+    .chat-option-icon.human {
+        color: #10b981;
+    }
+
+    .chat-option h2 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        color: var(--pure-white);
+    }
+
+    .chat-option p {
+        color: var(--text-gray);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .chat-option-features {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+
+    .chat-option-features li {
+        padding: 0.5rem 0;
+        color: var(--text-gray);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chat-option-features li i {
+        color: var(--primary-purple);
+        font-size: 0.85rem;
+    }
+
+    .chat-btn {
+        display: inline-block;
+        padding: 1rem 2.5rem;
+        background: var(--primary-purple);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .chat-btn:hover {
+        background: var(--deep-purple);
+        transform: scale(1.05);
+    }
+
+    .chat-btn.secondary {
+        background: transparent;
+        border: 2px solid var(--primary-purple);
+        color: var(--primary-purple);
+    }
+
+    .chat-btn.secondary:hover {
+        background: var(--primary-purple);
+        color: white;
+    }
+
+    /* Badge */
+    .badge {
+        display: inline-block;
+        background: var(--primary-purple);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        text-transform: uppercase;
+    }
+
+    .badge.new {
+        background: #10b981;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .chat-options {
+            grid-template-columns: 1fr;
+        }
+
+        .chat-hub-header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="chat-hub-container">
+    <div class="chat-hub-header">
+        <h1><i class="fas fa-comments"></i> Choose Your Chat</h1>
+        <p>Get instant help from AI or talk directly with Abdurakhmon</p>
+    </div>
+
+    <div class="chat-options">
+        <!-- AI Chat Option -->
+        <div class="chat-option" onclick="window.location.href='{% url 'website:ai_chat' %}'">
+            <div class="chat-option-content">
+                <div class="chat-option-icon ai">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h2>AI Assistant<span class="badge">Powered by Mistral 7B</span></h2>
+                <p>Chat with an intelligent AI assistant powered by advanced language models. Get instant answers 24/7.</p>
+                
+                <ul class="chat-option-features">
+                    <li><i class="fas fa-check-circle"></i> Instant responses (2-5 seconds)</li>
+                    <li><i class="fas fa-check-circle"></i> Available 24/7</li>
+                    <li><i class="fas fa-check-circle"></i> Conversation history saved</li>
+                    <li><i class="fas fa-check-circle"></i> Multiple conversations</li>
+                    <li><i class="fas fa-check-circle"></i> Smart context awareness</li>
+                </ul>
+
+                <a href="{% url 'website:ai_chat' %}" class="chat-btn" onclick="event.stopPropagation()">
+                    <i class="fas fa-robot"></i> Chat with AI
+                </a>
+            </div>
+        </div>
+
+        <!-- Support Chat Option -->
+        <div class="chat-option" onclick="openSupportChat()">
+            <div class="chat-option-content">
+                <div class="chat-option-icon human">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h2>Talk to Abdurakhmon<span class="badge new">Live Support</span></h2>
+                <p>Get personalized help directly from Abdurakhmon. Perfect for project discussions and consultations.</p>
+                
+                <ul class="chat-option-features">
+                    <li><i class="fas fa-check-circle"></i> Direct human conversation</li>
+                    <li><i class="fas fa-check-circle"></i> Project discussions</li>
+                    <li><i class="fas fa-check-circle"></i> Technical consultations</li>
+                    <li><i class="fas fa-check-circle"></i> Custom solutions</li>
+                    <li><i class="fas fa-check-circle"></i> Real-time responses</li>
+                </ul>
+
+                <button class="chat-btn secondary" onclick="event.stopPropagation(); openSupportChat()">
+                    <i class="fas fa-comments"></i> Start Live Chat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openSupportChat() {
+        // This will trigger the existing chat widget
+        const chatBtn = document.querySelector('.chat-widget-btn');
+        if (chatBtn) {
+            chatBtn.click();
+        } else {
+            alert('Chat widget is loading...');
+        }
+    }
+</script>
+{% endblock %}
+

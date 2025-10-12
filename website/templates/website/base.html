@@ -602,8 +602,8 @@
                 <li><a href="{% url 'website:projects' %}" {% if request.resolver_match.url_name in 'projects,resources,turnitin' %}class="active"{% endif %}>Projects</a></li>
                 
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'website:ai_chat' %}" {% if request.resolver_match.url_name == 'ai_chat' %}class="active"{% endif %}>
-                        <i class="fas fa-robot"></i> AI Chat
+                    <li><a href="{% url 'website:chat_hub' %}" {% if request.resolver_match.url_name in 'chat_hub,ai_chat' %}class="active"{% endif %}>
+                        <i class="fas fa-comments"></i> Chat
                     </a></li>
                     <li><a href="{% url 'accounts:profile' %}" {% if 'accounts' in request.resolver_match.namespace %}class="active"{% endif %}>
                         <i class="fas fa-user"></i> {{ user.get_short_name }}

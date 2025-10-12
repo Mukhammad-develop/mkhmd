@@ -2162,6 +2162,16 @@ AI_API_URL = "https://language-ai-api-atnpjnu3rq-nw.a.run.app/generate"
 SYSTEM_PROMPT = "You are a helpful AI assistant. Be friendly, informative, and concise. Provide clear and accurate responses."
 
 @login_required
+def chat_hub(request):
+    """Chat hub - choose between AI chat and support chat"""
+    context = {
+        'title': 'Chat',
+        'name': 'Abdurakhmon',
+    }
+    return render(request, 'website/chat_hub.html', context)
+
+
+@login_required
 def ai_chat(request):
     """Main AI Chat page - only accessible to logged-in users"""
     # Get user's chat conversations

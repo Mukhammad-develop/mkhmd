@@ -25,7 +25,10 @@ urlpatterns = [
     path('api/chat/send/', views.chat_send_message, name='chat_send_message'),
     path('api/chat/messages/', views.chat_get_messages, name='chat_get_messages'),
     
-    # AI Chat endpoints (GPT-2)
+    # Chat Hub (choose AI or Support)
+    path('chat/', views.chat_hub, name='chat_hub'),
+    
+    # AI Chat endpoints (Mistral 7B)
     path('ai-chat/', views.ai_chat, name='ai_chat'),
     path('api/ai-chat/init/', views.ai_chat_init, name='ai_chat_init'),
     path('api/ai-chat/send/', views.ai_chat_send, name='ai_chat_send'),
