@@ -2155,10 +2155,11 @@ def chat_get_messages(request):
 
 
 # ===========================
-# AI CHAT VIEWS (GPT-2 API)
+# AI CHAT VIEWS (Mistral 7B API)
 # ===========================
 
 AI_API_URL = "https://language-ai-api-atnpjnu3rq-nw.a.run.app/generate"
+SYSTEM_PROMPT = "You are a helpful AI assistant. Be friendly, informative, and concise. Provide clear and accurate responses."
 
 @login_required
 def ai_chat(request):
@@ -2235,8 +2236,9 @@ def ai_chat_send(request):
             data = json.loads(request.body)
             chat_id = data.get('chat_id')
             prompt = data.get('prompt', '').strip()
+            # Mistral 7B optimal settings
             temperature = float(data.get('temperature', 0.7))
-            max_tokens = int(data.get('max_tokens', 150))
+            max_tokens = int(data.get('max_tokens', 200))  # Increased for better responses
             
             if not chat_id or not prompt:
                 return JsonResponse({'success': False, 'error': 'Missing chat_id or prompt'}, status=400)
@@ -2247,14 +2249,18 @@ def ai_chat_send(request):
             except AIChat.DoesNotExist:
                 return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
             
-            # Build conversation context (last 5 messages)
-            recent_messages = chat.ai_messages.order_by('-created_at')[:5]
-            conversation_history = []
+            # Build conversation context (last 10 messages for better context)
+            recent_messages = chat.ai_messages.order_by('-created_at')[:10]
+            
+            # Start with system prompt
+            conversation_history = [SYSTEM_PROMPT, ""]
+            
+            # Add conversation history
             for msg in reversed(list(recent_messages)):
                 conversation_history.append(f"User: {msg.prompt}")
                 conversation_history.append(f"Assistant: {msg.response}")
             
-            # Add current prompt
+            # Add current user message
             conversation_history.append(f"User: {prompt}")
             conversation_history.append("Assistant:")
             
@@ -2284,13 +2290,21 @@ def ai_chat_send(request):
                 result = response.json()
                 ai_response = result['generated_texts'][0]
                 
-                # Extract just the assistant's response
-                ai_response = ai_response.split('Assistant:')[-1].strip()
-                ai_response = ai_response.split('User:')[0].strip()
+                # Extract just the assistant's response (Mistral 7B format)
+                # Split by "Assistant:" and take the last part
+                if 'Assistant:' in ai_response:
+                    ai_response = ai_response.split('Assistant:')[-1].strip()
+                
+                # Remove any trailing "User:" prompts
+                if 'User:' in ai_response:
+                    ai_response = ai_response.split('User:')[0].strip()
+                
+                # Clean up any extra whitespace or newlines
+                ai_response = ' '.join(ai_response.split())
                 
                 # If response is empty or too short, provide a fallback
-                if len(ai_response) < 10:
-                    ai_response = "I'm processing your request. Could you please rephrase or provide more details?"
+                if len(ai_response) < 5:
+                    ai_response = "I apologize, but I couldn't generate a proper response. Could you please rephrase your question?"
                 
             except requests.exceptions.Timeout:
                 return JsonResponse({

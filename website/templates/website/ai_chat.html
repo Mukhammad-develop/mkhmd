@@ -384,9 +384,10 @@
                 </select>
                 <label>Length:</label>
                 <select id="maxTokensSelect">
-                    <option value="50">Short</option>
-                    <option value="150" selected>Medium</option>
-                    <option value="300">Long</option>
+                    <option value="100">Short</option>
+                    <option value="200" selected>Medium</option>
+                    <option value="400">Long</option>
+                    <option value="600">Very Long</option>
                 </select>
                 <button class="delete-chat-btn" id="deleteChatBtn" onclick="deleteCurrentChat()" style="display: none;">
                     <i class="fas fa-trash"></i> Delete
@@ -398,7 +399,7 @@
             <div class="empty-state">
                 <i class="fas fa-comments"></i>
                 <h2>Start a Conversation</h2>
-                <p>Ask me anything! I'm powered by GPT-2 and ready to help.</p>
+                <p>Ask me anything! I'm powered by Mistral 7B Instruct (GPU-accelerated) and ready to help.</p>
             </div>
         </div>
 
@@ -459,7 +460,7 @@
                     <div class="empty-state">
                         <i class="fas fa-comments"></i>
                         <h2>Start a Conversation</h2>
-                        <p>Ask me anything! I'm powered by GPT-2 and ready to help.</p>
+                        <p>Ask me anything! I'm powered by Mistral 7B and ready to help.</p>
                     </div>
                 `;
                 document.getElementById('chatInput').value = '';

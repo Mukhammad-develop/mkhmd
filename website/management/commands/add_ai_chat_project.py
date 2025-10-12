@@ -15,16 +15,17 @@ class Command(BaseCommand):
         project = Project.objects.create(
             title='AI Language Model Chat',
             slug='ai-language-model',
-            description='Interactive AI-powered chat application using GPT-2 language model deployed on Google Cloud Run',
+            description='Interactive AI-powered chat application using Mistral 7B Instruct model deployed on Google Cloud Run with GPU acceleration',
             detailed_description='''A full-featured ChatGPT-like application that allows registered users to have intelligent 
-            conversations with an AI assistant. The system maintains conversation history, supports adjustable creativity levels, 
-            and provides real-time responses. Administrators can view all chat histories and statistics through the Django admin panel.
+            conversations with an advanced AI assistant. The system maintains conversation history, supports adjustable creativity levels, 
+            and provides real-time responses with superior quality compared to older models. Administrators can view all chat histories 
+            and statistics through the Django admin panel.
             
-            The AI backend is powered by GPT-2 (124M parameters) and is deployed on Google Cloud Run, providing scalable and reliable 
-            AI text generation capabilities.''',
+            The AI backend is powered by Mistral 7B Instruct (7 billion parameters) via HuggingFace Inference API with GPU acceleration, 
+            deployed on Google Cloud Run, providing scalable, fast, and high-quality AI text generation capabilities.''',
             category='machine_learning',
             status='live',
-            technologies='Python, Django, GPT-2, Google Cloud Run, JavaScript, REST API, AJAX',
+            technologies='Python, Django, Mistral 7B, HuggingFace, Google Cloud Run, JavaScript, REST API, AJAX, GPU Computing',
             features='''Real-time AI conversation with context awareness
 User authentication and authorization
 Conversation history management
