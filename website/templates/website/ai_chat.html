@@ -581,10 +581,11 @@
                 // Update chat title
                 document.getElementById('chatTitle').textContent = data.chat_title;
                 
-                // Reload page to update sidebar (optional)
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
+                // Update sidebar title if it changed
+                const activeSidebarItem = document.querySelector('.chat-history-item.active h4');
+                if (activeSidebarItem && data.chat_title !== 'New Conversation') {
+                    activeSidebarItem.textContent = data.chat_title;
+                }
             } else {
                 alert('Error: ' + data.error);
             }
