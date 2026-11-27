@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-ihgqr9*-%z1=@8-3_c(4mj^r126ih8-=6tx^0uh%!f#ca(o*cv"
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-ihgqr9*-%z1=@8-3_c(4mj^r126ih8-=6tx^0uh%!f#ca(o*cv",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ['www.mkhmd.uk', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['mkhmd.uk', 'www.mkhmd.uk', '127.0.0.1', 'localhost']
+CSRF_TRUSTED_ORIGINS = ['https://mkhmd.uk', 'https://www.mkhmd.uk']
 
 
 # Application definition
@@ -143,7 +148,7 @@ EMAIL_HOST = 'smtp.livemail.co.uk'  # Your Livemail SMTP server
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'no-reply@mkhmd.uk'  # Your Livemail email
-EMAIL_HOST_PASSWORD = 'idontwanttoreply'  # Your Livemail password
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'idontwanttoreply')  # Your Livemail password
 DEFAULT_FROM_EMAIL = 'MKHMD <no-reply@mkhmd.uk>'
 
 # Default primary key field type
@@ -155,9 +160,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 TURNITIN_TEST_MODE = False  # Set to False for production with real browser automation
 TURNITIN_CHROME_PATH = None  # Auto-detect, or set specific path like '/usr/bin/chromium'
 
-# default static files settings for PythonAnywhere.
-# see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
-MEDIA_ROOT = '/home/abdurakhmon70/mkhmd/media'
-MEDIA_URL = '/media/'
-STATIC_ROOT = '/home/abdurakhmon70/mkhmd/static'
+# Static/media locations. On the server, set STATIC_ROOT / MEDIA_ROOT env vars to
+# folders inside the domain's document root so Apache serves them directly.
 STATIC_URL = '/static/'
+STATIC_ROOT = os.environ.get('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', str(BASE_DIR / 'media'))
