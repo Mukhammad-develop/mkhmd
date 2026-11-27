@@ -1,0 +1,13 @@
+<a href="{{ repo.github_url }}" target="_blank" rel="noopener noreferrer" class="repo-card card" data-language="{{ repo.language|default:'Other' }}">
+    <div class="repo-card-top">
+        <i class="fab fa-github repo-card-icon"></i>
+        <span class="repo-card-arrow"><i class="fas fa-arrow-up-right-from-square"></i></span>
+    </div>
+    <h3 class="repo-card-title">{{ repo.title }}</h3>
+    <p class="repo-card-desc">{% if repo.description %}{{ repo.description|truncatewords:18 }}{% else %}{{ repo.language|default:"Code" }} project on GitHub{% endif %}</p>
+    <div class="repo-card-meta">
+        {% if repo.language %}<span><span class="lang-dot"></span>{{ repo.language }}</span>{% endif %}
+        {% if repo.stars %}<span><i class="fas fa-star"></i> {{ repo.stars }}</span>{% endif %}
+        {% if repo.updated %}<span>Updated {{ repo.updated|date:"M Y" }}</span>{% endif %}
+    </div>
+</a>

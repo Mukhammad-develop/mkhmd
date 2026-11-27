@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ name }} - {{ title }}</title>
+    <title>{% block page_title %}{{ name|default:"Abdurakhmon" }}{% if title %} - {{ title }}{% endif %}{% endblock %}</title>
+    {% with desc="Abdurakhmon is a software developer and web-scraping engineer building automation tools, data extraction pipelines and web apps with Python and Django." %}
+    <meta name="description" content="{% block meta_description %}{{ desc }}{% endblock %}">
+    <meta name="theme-color" content="#000000">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Abdurakhmon">
+    <meta property="og:title" content="{{ name|default:'Abdurakhmon' }}{% if title %} - {{ title }}{% endif %}">
+    <meta property="og:description" content="{{ desc }}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="https://avatars.githubusercontent.com/u/115652500?v=4">
+    <meta name="twitter:card" content="summary">
+    {% endwith %}
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%238b5cf6'/%3E%3Ctext x='32' y='42' font-family='monospace' font-size='26' font-weight='700' fill='white' text-anchor='middle'%3E%26lt;/%26gt;%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="https://avatars.githubusercontent.com/u/115652500?v=4">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
@@ -18,7 +32,7 @@
             --pure-white: #ffffff;
             --off-white: #fafafa;
             --light-gray: #f5f5f5;
-            --text-gray: #888888;
+            --text-gray: #a1a1aa;
             --border-gray: #2a2a2a;
         }
 
@@ -30,6 +44,7 @@
 
         html {
             scroll-behavior: smooth;
+            overflow-x: hidden;
         }
 
         body {
@@ -136,8 +151,9 @@
         }
 
         .nav-links a.active {
-            background: var(--primary-purple);
-            color: var(--pure-white);
+            color: var(--light-purple);
+            background: rgba(139, 92, 246, 0.12);
+            font-weight: 500;
         }
 
         .nav-links .signup-btn {
@@ -197,8 +213,7 @@
         /* Floating orbs background */
         .floating-orbs {
             position: fixed;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             overflow: hidden;
             pointer-events: none;
             z-index: -1;
@@ -349,53 +364,106 @@
             font-size: 0.9rem;
         }
 
-        /* Responsive */
+        /* Footer layout */
+        .footer-inner {
+            max-width: 1400px;
+            margin: 0 auto 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            text-align: left;
+        }
+
+        .footer-brand p {
+            margin-top: 0.5rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a,
+        .footer-social a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover,
+        .footer-social a:hover {
+            color: var(--light-purple);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1.25rem;
+            font-size: 1.25rem;
+        }
+
+        .footer-copy {
+            border-top: 1px solid var(--border-gray);
+            padding-top: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Keep important content clear of the floating chat button */
+        footer {
+            padding-bottom: 6rem;
+        }
+
+        /* Scroll reveal (only hides content when JS is running) */
+        .reveal {
+            transition: opacity 0.45s ease, transform 0.45s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .js .reveal:not(.revealed) {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .js .reveal:not(.revealed) { opacity: 1; transform: none; }
+        }
+
         @media (max-width: 768px) {
-            .nav-container {
-                padding: 1rem 1.5rem;
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .nav-links {
-                gap: 1rem;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .nav-links a {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.8rem;
-            }
-
-            .section {
-                padding: 3rem 1.5rem;
-            }
-
-            .section-title {
-                font-size: 2rem;
-            }
-
-            .grid-2,
-            .grid-3,
-            .grid-4 {
-                grid-template-columns: 1fr;
-            }
-
             .page-content {
-                padding-top: 140px;
+                padding-top: 100px;
+            }
+
+            footer {
+                padding: 2.5rem 1.5rem 6rem;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
             }
         }
 
         /* Page transition animations */
         .page-enter {
-            animation: pageEnter 0.6s ease-out;
+            animation: pageEnter 0.3s ease-out;
         }
 
         @keyframes pageEnter {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(8px);
             }
             to {
                 opacity: 1;
@@ -436,9 +504,9 @@
                 top: 70px;
                 left: 0;
                 right: 0;
-                background: rgba(0, 0, 0, 0.98);
-                backdrop-filter: blur(10px);
+                background: #050505;
                 flex-direction: column;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
                 padding: 2rem;
                 transform: translateY(-100%);
                 opacity: 0;
@@ -591,8 +659,8 @@
 
     <nav class="navbar">
         <div class="nav-container">
-            <a href="{% url 'website:home' %}" class="logo">&lt;{{ name|lower }}/&gt;</a>
-            <button class="mobile-menu-toggle" id="mobile-menu-toggle" style="display: none; background: none; border: none; color: var(--pure-white); font-size: 1.5rem; cursor: pointer; padding: 0.5rem;">
+            <a href="{% url 'website:home' %}" class="logo">&lt;{{ name|default:"Abdurakhmon"|lower }}/&gt;</a>
+            <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Open menu" aria-controls="nav-links" style="display: none; background: none; border: none; color: var(--pure-white); font-size: 1.5rem; cursor: pointer; padding: 0.5rem;">
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="nav-links" id="nav-links">
@@ -622,10 +690,30 @@
     </main>
 
     <footer>
-        <p>&copy; 2025 {{ name }}. Crafted with precision and passion.</p>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="{% url 'website:home' %}" class="logo">&lt;abdurakhmon/&gt;</a>
+                <p>Software developer &amp; web-scraping engineer</p>
+            </div>
+            <nav class="footer-links" aria-label="Footer">
+                <a href="{% url 'website:home' %}">Home</a>
+                <a href="{% url 'website:portfolio' %}">Portfolio</a>
+                <a href="{% url 'website:projects' %}">Projects</a>
+                <a href="{% url 'website:schedule' %}">Schedule</a>
+                {% if user.is_authenticated %}<a href="{% url 'website:chat_hub' %}">Chat</a>{% else %}<a href="{% url 'accounts:login' %}">Login</a>{% endif %}
+            </nav>
+            <div class="footer-social">
+                <a href="https://github.com/mukhammad-develop" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://linkedin.com/in/abdurakhmon-dev" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="mailto:abdurakhmon@mkhmd.uk" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+        <p class="footer-copy">&copy; {% now "Y" %} Abdurakhmon. Crafted with precision and passion.</p>
     </footer>
 
     <script>
+        document.documentElement.classList.add('js');
+
         // Mobile Menu Toggle
         document.addEventListener('DOMContentLoaded', function() {
             const mobileToggle = document.getElementById('mobile-menu-toggle');
@@ -714,25 +802,30 @@
             }
         });
 
-        // Add entrance animations
-        const animateOnScroll = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
+        // Entrance animations: quick, and never leave content hidden
+        (function () {
+            const targets = document.querySelectorAll('.card, .reveal');
+            if (!('IntersectionObserver' in window)) return;
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+            targets.forEach(el => {
+                el.classList.add('reveal');
+                observer.observe(el);
             });
-        }, { threshold: 0.1 });
+            // Safety net: show everything after 1.5s no matter what
+            setTimeout(() => targets.forEach(el => el.classList.add('revealed')), 1500);
+        })();
 
-        document.querySelectorAll('.card').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'all 0.6s ease';
-            animateOnScroll.observe(el);
-        });
-
-        // Toggle trail effect on key press (T key)
+        // Toggle trail effect on key press (T key), but not while typing
         document.addEventListener('keydown', (e) => {
+            const tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
             if (e.key.toLowerCase() === 't') {
                 trailActive = !trailActive;
                 console.log('Mouse trail:', trailActive ? 'ON' : 'OFF');

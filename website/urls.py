@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'website'
@@ -6,14 +7,15 @@ app_name = 'website'
 urlpatterns = [
     path('', views.home, name='home'),
     path('portfolio/', views.portfolio, name='portfolio'),
-    path('achievements/', views.achievements, name='achievements'),
-    path('blog/', views.blog, name='blog'),
+    # Placeholder pages (sample content) redirect to the real pages for now
+    path('achievements/', RedirectView.as_view(pattern_name='website:portfolio'), name='achievements'),
+    path('blog/', RedirectView.as_view(pattern_name='website:home'), name='blog'),
     path('schedule/', views.schedule, name='schedule'),
     path('schedule/book/', views.book_appointment, name='book_appointment'),
-    path('metrics/', views.metrics, name='metrics'),
-    path('booking/', views.booking, name='booking'),
+    path('metrics/', RedirectView.as_view(pattern_name='website:portfolio'), name='metrics'),
+    path('booking/', RedirectView.as_view(pattern_name='website:schedule'), name='booking'),
     path('projects/', views.projects, name='projects'),
-    path('resources/', views.resources, name='resources'),
+    path('resources/', RedirectView.as_view(pattern_name='website:projects'), name='resources'),
     path('turnitin/', views.turnitin, name='turnitin'),
     path('turnitin/results/', views.turnitin_results, name='turnitin_results'),
     path('turnitin/check/', views.check_turnitin_result, name='check_turnitin_result'),

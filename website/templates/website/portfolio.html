@@ -1,6 +1,7 @@
 {% extends 'website/base.html' %}
 
 {% block extra_css %}
+{% include 'website/partials/repo_card_css.html' %}
 <style>
     /* Portfolio Responsive Design */
     .filter-tabs {
@@ -341,305 +342,116 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Portfolio overrides */
+    @media (max-width: 480px) {
+        .portfolio-stats { grid-template-columns: repeat(2, 1fr) !important; }
+        .filter-tabs { flex-direction: row !important; flex-wrap: wrap; max-width: none !important; justify-content: center; }
+        .filter-tab { width: auto !important; padding: 0.5rem 1rem !important; font-size: 0.8rem !important; }
+    }
+    .stat-hint { font-size: 0.75rem; color: var(--text-gray); margin-top: 0.25rem; }
+    .db-project .project-content { padding: 1.5rem; }
+    .db-project .project-image { font-size: 2rem; color: var(--primary-purple); padding: 1.5rem 1.5rem 0; }
+    .portfolio-empty { text-align: center; color: var(--text-gray); padding: 3rem 1rem; }
+</style>
 <div class="section">
     <div class="section-header">
-        <h1 class="section-title">Portfolio Showcase</h1>
-        <p class="section-subtitle">Discover my development projects and business ventures across different domains</p>
+        <h1 class="section-title">Portfolio</h1>
+        <p class="section-subtitle">Things I've built: automation tools, scrapers, bots and web apps. Every card links to the real code.</p>
     </div>
 
-    <!-- Portfolio Stats -->
+    <!-- Real stats, pulled from GitHub -->
     <div class="portfolio-stats">
         <div class="stat-card">
-            <div class="stat-number">50+</div>
-            <div class="stat-label">Projects Completed</div>
+            <div class="stat-number">{{ stats.public_repos }}</div>
+            <div class="stat-label">Public Repositories</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number">1M+</div>
-            <div class="stat-label">Users Served</div>
+            <div class="stat-number">{{ stats.language_count }}</div>
+            <div class="stat-label">Languages Used</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number">$10M+</div>
-            <div class="stat-label">Revenue Generated</div>
+            <div class="stat-number">{{ stats.total_stars }}</div>
+            <div class="stat-label">GitHub Stars</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number">99.9%</div>
-            <div class="stat-label">Uptime Average</div>
+            <div class="stat-number">{% if stats.years %}{{ stats.years }}+{% else %}&mdash;{% endif %}</div>
+            <div class="stat-label">Years on GitHub</div>
         </div>
     </div>
 
-    <!-- Filter Tabs -->
-    <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all">
-            <i class="fas fa-th"></i> All Projects
-        </button>
-        <button class="filter-tab" data-filter="developer">
-            <i class="fas fa-code"></i> Development
-        </button>
-        <button class="filter-tab" data-filter="business">
-            <i class="fas fa-briefcase"></i> Business
-        </button>
-    </div>
-
-    <!-- Developer Projects -->
-    <div id="developer-projects" class="grid-3">
-        {% for project in dev_projects %}
-        <div class="project-card card" data-category="developer" data-project="{{ forloop.counter }}">
-            <div class="project-image">
-                <i class="{{ project.icon }}"></i>
-            </div>
-            <div class="project-content">
+    {% if all_projects %}
+    <h2 class="section-title" style="font-size: 1.6rem; text-align: left; margin: 1rem 0 1.5rem;">Highlighted Work</h2>
+    <div class="repo-grid" style="margin-bottom: 3rem;">
+        {% for project in all_projects %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <i class="{{ project.icon }}" style="font-size: 1.5rem; color: var(--primary-purple);"></i>
                 <span class="project-status {{ project.status|lower }}">{{ project.get_status_display }}</span>
-                <h3 class="project-title">{{ project.title }}</h3>
-                <p class="project-description">{{ project.description|truncatewords:25 }}</p>
-                
-                <div class="tech-stack">
-                    {% for tech in project.get_technologies_list %}
-                    <span class="tech-tag">{{ tech }}</span>
-                    {% endfor %}
-                </div>
-                
-                <div class="project-links">
-                    {% if project.github_url %}
-                    <a href="{{ project.github_url }}" class="project-link" target="_blank">
-                        <i class="fab fa-github"></i> Code
-                    </a>
-                    {% endif %}
-                    {% if project.demo_url %}
-                    <a href="{{ project.demo_url }}" class="project-link" target="_blank">
-                        <i class="fas fa-external-link-alt"></i> Demo
-                    </a>
-                    {% endif %}
-                </div>
+            </div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">{{ project.title }}</h3>
+            <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 1rem;">{{ project.description|truncatewords:25 }}</p>
+            <div class="tech-stack">
+                {% for tech in project.get_technologies_list|slice:":5" %}<span class="tech-tag">{{ tech }}</span>{% endfor %}
+            </div>
+            <div class="project-links" style="margin-top: 1rem;">
+                {% if project.github_url %}<a href="{{ project.github_url }}" class="project-link" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> Code</a>{% endif %}
+                {% if project.demo_url %}<a href="{{ project.demo_url }}" class="project-link" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Demo</a>{% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Scraping Projects -->
-    <div id="business-projects" class="grid-3" style="margin-top: 3rem;">
-        {% for project in scraping_projects %}
-        <div class="project-card card" data-category="business" data-project="{{ forloop.counter }}">
-            <div class="project-image">
-                <i class="{{ project.icon }}"></i>
-            </div>
-            <div class="project-content">
-                <span class="project-status {{ project.status|lower }}">{{ project.get_status_display }}</span>
-                <h3 class="project-title">{{ project.title }}</h3>
-                <p class="project-description">{{ project.description|truncatewords:25 }}</p>
-                
-                <div class="tech-stack">
-                    {% for tech in project.get_technologies_list|slice:":4" %}
-                    <span class="tech-tag">{{ tech }}</span>
-                    {% endfor %}
-                </div>
-                
-                <div class="project-links">
-                    {% if project.github_url %}
-                    <a href="{{ project.github_url }}" class="project-link" target="_blank">
-                        <i class="fab fa-github"></i> Code
-                    </a>
-                    {% endif %}
-                    {% if project.demo_url %}
-                    <a href="{{ project.demo_url }}" class="project-link" target="_blank">
-                        <i class="fas fa-external-link-alt"></i> Demo
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    {% if github_repos %}
+    <h2 class="section-title" style="font-size: 1.6rem; text-align: left; margin: 1rem 0 1.5rem;">Open Source on GitHub</h2>
+
+    {% if stats.languages %}
+    <div class="filter-tabs" role="tablist" aria-label="Filter by language">
+        <button class="filter-tab active" data-filter="all"><i class="fas fa-th"></i> All</button>
+        {% for lang in stats.languages %}
+        <button class="filter-tab" data-filter="{{ lang }}">{{ lang }}</button>
         {% endfor %}
     </div>
-</div>
+    {% endif %}
 
-<!-- Project Modal -->
-<div class="project-modal" id="projectModal">
-    <div class="modal-content">
-        <button class="modal-close" onclick="closeModal()">&times;</button>
-        <div id="modalContent">
-            <!-- Dynamic content will be loaded here -->
-        </div>
+    <div class="repo-grid" id="repoGrid">
+        {% for repo in github_repos %}
+            {% include 'website/partials/repo_card.html' %}
+        {% endfor %}
     </div>
+    <p class="portfolio-empty" id="noMatches" hidden>No repositories in this language yet.</p>
+    <div style="text-align: center; margin-top: 2.5rem;">
+        <a href="https://github.com/mukhammad-develop" target="_blank" rel="noopener noreferrer" class="btn btn-secondary"><i class="fab fa-github"></i> See everything on GitHub</a>
+    </div>
+    {% elif not all_projects %}
+    <div class="portfolio-empty">
+        <p>Projects are loading from GitHub. <a href="https://github.com/mukhammad-develop" target="_blank" rel="noopener noreferrer" style="color: var(--light-purple);">View them on GitHub</a> in the meantime.</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Filter functionality
-    const filterTabs = document.querySelectorAll('.filter-tab');
-    const projectCards = document.querySelectorAll('.project-card');
-
-    filterTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const filter = tab.dataset.filter;
-            
-            // Update active tab
-            filterTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            // Filter projects with animation
-            projectCards.forEach(card => {
-                const category = card.dataset.category;
-                
-                if (filter === 'all' || category === filter) {
-                    card.style.display = 'block';
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 100);
-                } else {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(-20px)';
-                    
-                    setTimeout(() => {
-                        card.style.display = 'none';
-                    }, 300);
-                }
+    // Filter repositories by language
+    (function () {
+        const tabs = document.querySelectorAll('.filter-tab');
+        const cards = document.querySelectorAll('#repoGrid .repo-card');
+        const empty = document.getElementById('noMatches');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const filter = tab.dataset.filter;
+                tabs.forEach(t => t.classList.toggle('active', t === tab));
+                let shown = 0;
+                cards.forEach(card => {
+                    const match = filter === 'all' || card.dataset.language === filter;
+                    card.style.display = match ? '' : 'none';
+                    if (match) shown++;
+                });
+                if (empty) empty.hidden = shown !== 0;
             });
-            
-            // Create filter effect particles
-            createFilterEffect(tab);
         });
-    });
-
-    function createFilterEffect(tab) {
-        const rect = tab.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        for (let i = 0; i < 8; i++) {
-            setTimeout(() => {
-                createFilterParticle(centerX, centerY, i);
-            }, i * 30);
-        }
-    }
-
-    function createFilterParticle(x, y, index) {
-        const particle = document.createElement('div');
-        const angle = (Math.PI * 2 * index) / 8;
-        const distance = 25 + Math.random() * 15;
-        
-        particle.style.position = 'fixed';
-        particle.style.left = x + 'px';
-        particle.style.top = y + 'px';
-        particle.style.width = '4px';
-        particle.style.height = '4px';
-        particle.style.background = 'var(--primary-purple)';
-        particle.style.borderRadius = '50%';
-        particle.style.pointerEvents = 'none';
-        particle.style.zIndex = '10000';
-        particle.style.opacity = '1';
-        particle.style.boxShadow = '0 0 8px var(--primary-purple)';
-        particle.style.transition = 'all 0.6s ease-out';
-        
-        document.body.appendChild(particle);
-        
-        requestAnimationFrame(() => {
-            const endX = x + Math.cos(angle) * distance;
-            const endY = y + Math.sin(angle) * distance;
-            
-            particle.style.left = endX + 'px';
-            particle.style.top = endY + 'px';
-            particle.style.opacity = '0';
-            particle.style.transform = 'scale(0)';
-        });
-        
-        setTimeout(() => particle.remove(), 600);
-    }
-
-    // Project card click handlers
-    projectCards.forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (e.target.closest('a')) return; // Don't trigger modal on link clicks
-            
-            const projectId = card.dataset.project;
-            const category = card.dataset.category;
-            openProjectModal(projectId, category);
-        });
-    });
-
-    function openProjectModal(projectId, category) {
-        const modal = document.getElementById('projectModal');
-        const modalContent = document.getElementById('modalContent');
-        
-        // Create skeleton content for demo
-        modalContent.innerHTML = `
-            <div style="padding: 2rem;">
-                <h2 style="color: var(--primary-purple); margin-bottom: 1rem;">Project Details</h2>
-                <div style="background: var(--charcoal); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
-                    <h3>🚧 Coming Soon</h3>
-                    <p style="color: var(--text-gray); margin-top: 1rem;">
-                        Detailed project information, screenshots, technical deep-dive, 
-                        and case study will be available here soon.
-                    </p>
-                </div>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <div class="btn btn-primary">
-                        <i class="fab fa-github"></i> View Code
-                    </div>
-                    <div class="btn btn-secondary">
-                        <i class="fas fa-external-link-alt"></i> Live Demo
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        modal.style.display = 'flex';
-        modal.style.opacity = '0';
-        
-        requestAnimationFrame(() => {
-            modal.style.opacity = '1';
-        });
-    }
-
-    function closeModal() {
-        const modal = document.getElementById('projectModal');
-        modal.style.opacity = '0';
-        
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
-    }
-
-    // Close modal on backdrop click
-    document.getElementById('projectModal').addEventListener('click', (e) => {
-        if (e.target.classList.contains('project-modal')) {
-            closeModal();
-        }
-    });
-
-    // Animated counter for stats
-    function animateCounter(element, target) {
-        let current = 0;
-        const increment = target / 50;
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) {
-                current = target;
-                clearInterval(timer);
-            }
-            element.textContent = Math.floor(current) + (element.textContent.includes('+') ? '+' : (element.textContent.includes('%') ? '%' : ''));
-        }, 30);
-    }
-
-    // Start counters when stats come into view
-    const statsObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const number = entry.target.querySelector('.stat-number');
-                const text = number.textContent;
-                const value = parseInt(text.replace(/[^\d]/g, ''));
-                
-                animateCounter(number, value);
-                statsObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    document.querySelectorAll('.stat-card').forEach(card => {
-        statsObserver.observe(card);
-    });
+    })();
 </script>
-{% endblock %} 
+{% endblock %}

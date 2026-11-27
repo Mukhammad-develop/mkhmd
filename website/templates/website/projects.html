@@ -1,16 +1,20 @@
 {% extends 'website/base.html' %}
 
+{% block extra_css %}
+{% include 'website/partials/repo_card_css.html' %}
+{% endblock %}
+
 {% block content %}
 <style>
     .projects-hero {
         background: linear-gradient(135deg, var(--pure-black) 0%, var(--charcoal) 100%);
-        padding: 8rem 3rem 4rem;
+        padding: 3rem 3rem 3rem;
         text-align: center;
         border-bottom: 1px solid var(--border-gray);
     }
 
     .projects-title {
-        font-size: 3.5rem;
+        font-size: clamp(2.2rem, 6vw, 3.5rem);
         font-weight: 700;
         margin-bottom: 1rem;
         background: linear-gradient(135deg, var(--primary-purple), var(--light-purple));
@@ -53,7 +57,7 @@
 
     .tools-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
         gap: 2rem;
         margin-bottom: 4rem;
     }
@@ -191,17 +195,17 @@
 
 <div class="projects-hero">
     <h1 class="projects-title">Projects & Tools</h1>
-    <p class="projects-subtitle">Free resources, automation tools, and innovative solutions for developers and entrepreneurs</p>
+    <p class="projects-subtitle">Automation tools, scrapers, bots and web apps I've built and maintain</p>
 </div>
 
 <!-- All Projects Section -->
+{% if all_projects %}
 <section class="section">
     <div class="section-header">
-        <h2 class="section-title">All Projects</h2>
-        <p class="section-description">Explore all my current projects and ongoing work</p>
+        <h2 class="section-title">Highlighted Projects</h2>
+        <p class="section-description">Selected work with more detail</p>
     </div>
-    
-    {% if all_projects %}
+
     <div class="tools-grid">
         {% for project in all_projects %}
         <div class="tool-card">
@@ -242,12 +246,27 @@
         </div>
         {% endfor %}
     </div>
-    {% else %}
-    <div style="text-align: center; padding: 3rem; color: var(--text-gray);">
-        <i class="fas fa-rocket" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary-purple);"></i>
-        <p>No projects yet. Add them from the admin panel!</p>
+</section>
+{% endif %}
+
+<!-- Live GitHub repositories -->
+<section class="section">
+    <div class="section-header">
+        <h2 class="section-title">On GitHub</h2>
+        <p class="section-description">My public repositories, most recently updated first</p>
     </div>
+    {% if github_projects %}
+    <div class="repo-grid">
+        {% for repo in github_projects %}
+            {% include 'website/partials/repo_card.html' %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="text-align: center; color: var(--text-gray);">Couldn't load repositories right now.</p>
     {% endif %}
+    <div style="text-align: center; margin-top: 2.5rem;">
+        <a href="https://github.com/mukhammad-develop" target="_blank" rel="noopener noreferrer" class="btn btn-secondary"><i class="fab fa-github"></i> Visit my GitHub profile</a>
+    </div>
 </section>
 
 <!-- Turnitin Automation Section -->

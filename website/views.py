@@ -237,6 +237,9 @@ def home(request):
         is_featured=False,
         status__in=['development', 'planning', 'research']
     )[:3]
+
+    github_repos = fetch_github_projects('mukhammad-develop')
+    github_profile = get_github_profile('mukhammad-develop')
     
     context = {
         'title': 'Software Developer & Web-Scraper Engineer',
@@ -250,6 +253,19 @@ def home(request):
         # Dynamic Projects
         'featured_project': featured_project,
         'coming_soon_projects': coming_soon_projects,
+        'github_repos': github_repos[:6],
+        'github_profile': github_profile,
+        'github_stats': github_summary(github_repos, github_profile),
+        'skills': [
+            {'name': 'Python', 'icon': 'fab fa-python'},
+            {'name': 'Django', 'icon': 'fas fa-server'},
+            {'name': 'Selenium', 'icon': 'fas fa-robot'},
+            {'name': 'Web Scraping', 'icon': 'fas fa-spider'},
+            {'name': 'TypeScript', 'icon': 'fab fa-js'},
+            {'name': 'Telegram Bots', 'icon': 'fab fa-telegram'},
+            {'name': 'REST APIs', 'icon': 'fas fa-plug'},
+            {'name': 'Automation', 'icon': 'fas fa-cogs'},
+        ],
     }
     return render(request, 'website/home.html', context)
 
@@ -264,6 +280,9 @@ def portfolio(request):
     scraping_projects = all_portfolio_projects.filter(category='web_scraping')
     automation_projects = all_portfolio_projects.filter(category='automation')
     
+    live_repos = fetch_github_projects('mukhammad-develop')
+    live_profile = get_github_profile('mukhammad-develop')
+
     # Get GitHub projects from database (projects with GitHub URLs)
     github_projects_db = all_portfolio_projects.filter(
         github_url__isnull=False
@@ -293,6 +312,10 @@ def portfolio(request):
         
         # GitHub Projects from Database
         'github_projects': github_projects,
+
+        # Live GitHub repositories and real stats
+        'github_repos': live_repos,
+        'stats': github_summary(live_repos, live_profile),
         
         # GitHub Integration
         'github_stats': {
@@ -823,7 +846,7 @@ def projects(request):
         'turnitin_project': turnitin_project,
         
         # Live GitHub Projects
-        'github_projects': github_projects,
+        'github_projects': github_projects[:12],
         
         # GitHub Stats
         'github_stats': {
@@ -1935,8 +1958,71 @@ def save_downloaded_files_to_submission(submission, download_results):
         print(f"Error saving files for submission {submission.submission_id}: {e}")
         return False
 
+def get_github_profile(username='mukhammad-develop'):
+    """Fetch the public GitHub profile (cached for an hour)."""
+    from django.core.cache import cache
+    cache_key = f'github_profile_{username}'
+    profile = cache.get(cache_key)
+    if profile is not None:
+        return profile
+    profile = {}
+    try:
+        response = requests.get(f'https://api.github.com/users/{username}', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            profile = {
+                'avatar_url': data.get('avatar_url', ''),
+                'public_repos': data.get('public_repos', 0),
+                'followers': data.get('followers', 0),
+                'created_at': data.get('created_at', ''),
+                'html_url': data.get('html_url', ''),
+            }
+    except Exception as e:
+        print(f"Error fetching GitHub profile: {e}")
+    cache.set(cache_key, profile, 3600 if profile else 300)
+    return profile
+
+
+def github_summary(repos, profile):
+    """Real, verifiable numbers for stat cards."""
+    from collections import Counter
+    languages = Counter(r['language'] for r in repos if r.get('language') and r['language'] != 'Unknown')
+    years = None
+    if profile.get('created_at'):
+        try:
+            years = max(1, timezone.now().year - int(profile['created_at'][:4]))
+        except ValueError:
+            years = None
+    return {
+        'public_repos': profile.get('public_repos') or len(repos),
+        'total_stars': sum(r.get('stars', 0) for r in repos),
+        'languages': [name for name, _ in languages.most_common(6)],
+        'language_count': len(languages),
+        'years': years,
+    }
+
+
 def fetch_github_projects(username='mukhammad-develop'):
-    """Fetch GitHub projects dynamically using GitHub API"""
+    """Fetch GitHub projects dynamically using GitHub API (cached for an hour)"""
+    from django.core.cache import cache
+    cache_key = f'github_repos_{username}'
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    projects = _fetch_github_projects_uncached(username)
+    cache.set(cache_key, projects, 3600 if projects else 300)
+    return projects
+
+
+def _parse_github_date(value):
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(value.replace('Z', '+00:00')) if value else None
+    except ValueError:
+        return None
+
+
+def _fetch_github_projects_uncached(username):
     try:
         # GitHub API endpoint for user repositories
         url = f'https://api.github.com/users/{username}/repos'
@@ -1945,11 +2031,11 @@ def fetch_github_projects(username='mukhammad-develop'):
         params = {
             'sort': 'updated',
             'direction': 'desc',
-            'per_page': 20,
+            'per_page': 100,
             'type': 'public'
         }
         
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         
         if response.status_code == 200:
             repos = response.json()
@@ -1959,14 +2045,15 @@ def fetch_github_projects(username='mukhammad-develop'):
             for repo in repos:
                 if not repo.get('fork', False):  # Skip forked repositories
                     project = {
-                        'title': repo.get('name', '').replace('-', ' ').title(),
-                        'description': repo.get('description', 'No description available'),
+                        'title': repo.get('name', '').replace('-', ' ').replace('_', ' ').title(),
+                        'description': repo.get('description') or '',
                         'github_url': repo.get('html_url', ''),
                         'homepage': repo.get('homepage', ''),
-                        'language': repo.get('language', 'Unknown'),
+                        'language': repo.get('language') or '',
                         'stars': repo.get('stargazers_count', 0),
                         'forks': repo.get('forks_count', 0),
                         'updated_at': repo.get('updated_at', ''),
+                        'updated': _parse_github_date(repo.get('pushed_at') or repo.get('updated_at')),
                         'created_at': repo.get('created_at', ''),
                         'topics': repo.get('topics', []),
                         'size': repo.get('size', 0),
@@ -1974,7 +2061,7 @@ def fetch_github_projects(username='mukhammad-develop'):
                     }
                     github_projects.append(project)
             
-            return github_projects[:12]  # Return top 12 projects
+            return github_projects
         else:
             print(f"GitHub API error: {response.status_code}")
             return []
