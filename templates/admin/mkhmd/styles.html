@@ -1,0 +1,363 @@
+<style>
+/* ==========================================================================
+   mkhmd.uk admin theme
+   App-style layout: fixed top bar, left sidebar (drawer on mobile), cards.
+   Works with Django's light / dark / auto theme switch.
+   ========================================================================== */
+
+:root,
+html[data-theme="light"] {
+    --mk-bg: #f6f5fb;
+    --mk-surface: #ffffff;
+    --mk-surface-2: #faf9fe;
+    --mk-border: #e8e5f2;
+    --mk-text: #1c1b22;
+    --mk-muted: #6b6880;
+    --mk-hover: #f2effb;
+    --mk-accent: #7c3aed;
+    --mk-accent-2: #6d28d9;
+    --mk-accent-soft: #efe9fe;
+    --mk-accent-text: #6d28d9;
+    --mk-shadow: 0 1px 2px rgba(20, 10, 40, .04), 0 4px 16px rgba(20, 10, 40, .05);
+    --mk-bubble-them: #f1eff7;
+    --mk-success: #059669; --mk-success-soft: #d1fae5;
+    --mk-warning: #b45309; --mk-warning-soft: #fef3c7;
+    --mk-danger: #dc2626;  --mk-danger-soft: #fee2e2;
+}
+
+html[data-theme="dark"] {
+    --mk-bg: #0c0b10;
+    --mk-surface: #15131c;
+    --mk-surface-2: #1a1823;
+    --mk-border: #272430;
+    --mk-text: #ecebf3;
+    --mk-muted: #9c98ad;
+    --mk-hover: #1e1b28;
+    --mk-accent: #8b5cf6;
+    --mk-accent-2: #7c3aed;
+    --mk-accent-soft: #241a3d;
+    --mk-accent-text: #c4b5fd;
+    --mk-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    --mk-bubble-them: #221f2c;
+    --mk-success: #34d399; --mk-success-soft: #0f2e25;
+    --mk-warning: #fbbf24; --mk-warning-soft: #33260b;
+    --mk-danger: #f87171;  --mk-danger-soft: #3a1717;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme]),
+    html[data-theme="auto"] {
+        --mk-bg: #0c0b10;
+        --mk-surface: #15131c;
+        --mk-surface-2: #1a1823;
+        --mk-border: #272430;
+        --mk-text: #ecebf3;
+        --mk-muted: #9c98ad;
+        --mk-hover: #1e1b28;
+        --mk-accent: #8b5cf6;
+        --mk-accent-2: #7c3aed;
+        --mk-accent-soft: #241a3d;
+        --mk-accent-text: #c4b5fd;
+        --mk-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+        --mk-bubble-them: #221f2c;
+        --mk-success: #34d399; --mk-success-soft: #0f2e25;
+        --mk-warning: #fbbf24; --mk-warning-soft: #33260b;
+        --mk-danger: #f87171;  --mk-danger-soft: #3a1717;
+    }
+}
+
+/* Map Django's own variables onto ours so built-in pages match. */
+:root, html[data-theme] {
+    --primary: var(--mk-accent);
+    --secondary: var(--mk-accent-2);
+    --accent: var(--mk-accent-text);
+    --primary-fg: #fff;
+    --body-fg: var(--mk-text);
+    --body-bg: var(--mk-surface);
+    --body-quiet-color: var(--mk-muted);
+    --body-loud-color: var(--mk-text);
+    --header-color: var(--mk-text);
+    --header-branding-color: var(--mk-text);
+    --header-bg: var(--mk-surface);
+    --header-link-color: var(--mk-text);
+    --breadcrumbs-fg: var(--mk-muted);
+    --breadcrumbs-link-fg: var(--mk-accent-text);
+    --breadcrumbs-bg: transparent;
+    --link-fg: var(--mk-accent-text);
+    --link-hover-color: var(--mk-accent);
+    --link-selected-fg: var(--mk-accent);
+    --hairline-color: var(--mk-border);
+    --border-color: var(--mk-border);
+    --darkened-bg: var(--mk-surface-2);
+    --selected-bg: var(--mk-hover);
+    --selected-row: var(--mk-accent-soft);
+    --button-fg: #fff;
+    --button-bg: var(--mk-accent);
+    --button-hover-bg: var(--mk-accent-2);
+    --default-button-bg: var(--mk-accent-2);
+    --default-button-hover-bg: var(--mk-accent);
+    --close-button-bg: var(--mk-muted);
+    --close-button-hover-bg: var(--mk-text);
+    --object-tools-fg: #fff;
+    --object-tools-bg: var(--mk-accent);
+    --object-tools-hover-bg: var(--mk-accent-2);
+    --font-family-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body { background: var(--mk-bg); }
+body { overflow-x: clip; }
+body { color: var(--mk-text); font-size: 14px; -webkit-font-smoothing: antialiased; }
+a:link, a:visited { color: var(--mk-accent-text); }
+.mk-ico { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+/* ---------- Top bar ---------- */
+.mk-topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 900;
+    display: flex; align-items: center; gap: 12px; padding: 0 20px;
+    background: color-mix(in srgb, var(--mk-surface) 88%, transparent);
+    backdrop-filter: saturate(180%) blur(12px); -webkit-backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--mk-border);
+}
+.mk-brand, .mk-brand:link, .mk-brand:visited {
+    display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--mk-text);
+    font-weight: 700; font-size: 15px; letter-spacing: -.2px; white-space: nowrap;
+}
+.mk-logo {
+    width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #8b5cf6, #5b21b6); color: #fff;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; font-weight: 700;
+}
+.mk-brand em { font-style: normal; font-weight: 500; color: var(--mk-muted); }
+.mk-spacer { flex: 1; }
+.mk-top-actions { display: flex; align-items: center; gap: 6px; }
+.mk-icon-btn, .mk-icon-btn:link, .mk-icon-btn:visited {
+    position: relative; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: var(--mk-muted); background: none; border: 0; cursor: pointer; text-decoration: none;
+}
+.mk-icon-btn:hover { background: var(--mk-hover); color: var(--mk-text); }
+.mk-count {
+    position: absolute; top: 0; right: -2px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+    background: var(--mk-danger); color: #fff; font-size: 10px; font-weight: 700; line-height: 17px; text-align: center;
+    border: 2px solid var(--mk-surface);
+}
+.mk-burger { display: none; }
+.mk-topbar .theme-toggle { width: 38px; height: 38px; border-radius: 10px; margin: 0; display: flex; align-items: center; justify-content: center; }
+.mk-topbar .theme-toggle:hover { background: var(--mk-hover); }
+.mk-topbar .theme-toggle svg { width: 18px; height: 18px; fill: var(--mk-muted); }
+
+.mk-user { position: relative; }
+.mk-user summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 4px; border-radius: 999px; }
+.mk-user summary::-webkit-details-marker { display: none; }
+.mk-user summary:hover { background: var(--mk-hover); }
+.mk-avatar {
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--mk-accent-soft); color: var(--mk-accent-text); font-weight: 700; font-size: 12px; flex-shrink: 0;
+}
+.mk-user-name { font-weight: 600; font-size: 13px; color: var(--mk-text); }
+.mk-menu {
+    position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px; padding: 6px;
+    background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 12px; box-shadow: var(--mk-shadow);
+}
+.mk-menu a, .mk-menu button {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 8px;
+    color: var(--mk-text) !important; text-decoration: none; background: none; border: 0; font: inherit; font-size: 13px; cursor: pointer; text-align: left;
+}
+.mk-menu a:hover, .mk-menu button:hover { background: var(--mk-hover); }
+.mk-menu hr { border: 0; border-top: 1px solid var(--mk-border); margin: 6px 0; }
+.mk-menu form { margin: 0; }
+
+/* ---------- Sidebar ---------- */
+#container { padding-top: 60px; min-width: 0 !important; width: 100%; box-sizing: border-box; }
+.main { min-width: 0; }
+.main > .content, #content-start { flex: 1 1 auto; min-width: 0; }
+body.mk-with-sidebar #container { padding-left: 252px; }
+.mk-sidebar {
+    position: fixed; top: 60px; left: 0; bottom: 0; width: 252px; z-index: 800; overflow-y: auto; box-sizing: border-box;
+    padding: 16px 12px 24px; background: var(--mk-surface); border-right: 1px solid var(--mk-border);
+}
+.mk-nav-group { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mk-muted); padding: 18px 10px 6px; }
+.mk-nav-item, .mk-nav-item:link, .mk-nav-item:visited {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin: 1px 0; border-radius: 9px;
+    color: var(--mk-text); text-decoration: none; font-weight: 500; font-size: 13.5px;
+}
+.mk-nav-item .mk-ico { color: var(--mk-muted); }
+.mk-nav-item:hover { background: var(--mk-hover); }
+.mk-nav-item.active { background: var(--mk-accent-soft); color: var(--mk-accent-text); font-weight: 600; }
+.mk-nav-item.active .mk-ico { color: var(--mk-accent-text); }
+.mk-nav-item .mk-pill { margin-left: auto; }
+.mk-nav-primary { padding-bottom: 6px; border-bottom: 1px solid var(--mk-border); }
+.mk-backdrop { display: none; }
+
+/* ---------- Content area ---------- */
+.breadcrumbs { background: transparent !important; color: var(--mk-muted); padding: 18px 32px 0; font-size: 13px; border: 0; }
+.breadcrumbs a { color: var(--mk-accent-text) !important; }
+.main { display: block; }
+.main > .content, #content-start { max-width: 100%; }
+#content { padding: 18px 32px 40px; max-width: 1400px; }
+#content h1 { font-size: 24px; font-weight: 700; color: var(--mk-text); margin: 0 0 18px; letter-spacing: -.3px; }
+#content h2 { color: var(--mk-text); }
+#footer { display: none; }
+
+ul.messagelist { padding: 18px 32px 0; margin: 0; }
+ul.messagelist li {
+    border-radius: 10px; margin: 0 0 10px; padding: 12px 16px 12px 44px; font-size: 13.5px;
+    background-color: var(--mk-success-soft); color: var(--mk-text); background-position: 16px center;
+}
+ul.messagelist li.warning { background-color: var(--mk-warning-soft); }
+ul.messagelist li.error { background-color: var(--mk-danger-soft); }
+
+/* Cards / modules */
+.module, fieldset.module, .inline-group, #changelist-filter {
+    background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 14px; box-shadow: var(--mk-shadow); overflow: hidden;
+}
+fieldset.module { margin-bottom: 18px; padding: 0; }
+.module h2, .module caption, .inline-group h2 {
+    background: transparent; color: var(--mk-text); font-size: 14px; font-weight: 700; text-transform: none; letter-spacing: 0;
+    padding: 14px 18px; border-bottom: 1px solid var(--mk-border);
+}
+fieldset.collapsed h2 { border-bottom: 0; }
+fieldset .description, fieldset.module > .description {
+    margin: 0; padding: 10px 18px; background: var(--mk-accent-soft); color: var(--mk-text);
+    font-size: 13px; line-height: 1.5; border: 0;
+}
+.form-row { padding: 14px 18px; border-bottom: 1px solid var(--mk-border); }
+.form-row:last-child { border-bottom: 0; }
+.aligned label { color: var(--mk-text); font-weight: 600; }
+div.help, p.help, .help { color: var(--mk-muted); font-size: 12px; }
+.collapse-toggle, a.collapse-toggle:link { color: var(--mk-accent-text) !important; }
+
+/* Inputs */
+input[type=text], input[type=password], input[type=email], input[type=url], input[type=number], input[type=tel],
+input[type=search], textarea, select, .vTextField, .vURLField, .vIntegerField, .vDateField, .vTimeField {
+    border: 1px solid var(--mk-border); border-radius: 9px; padding: 8px 11px; background: var(--mk-surface);
+    color: var(--mk-text); font-size: 14px; transition: border-color .15s, box-shadow .15s;
+}
+select { padding-right: 28px; }
+input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--mk-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mk-accent) 22%, transparent);
+}
+
+/* Buttons */
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    border-radius: 9px; padding: 9px 16px; font-weight: 600; font-size: 13px; letter-spacing: 0; text-transform: none; height: auto;
+}
+.submit-row {
+    background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 14px; padding: 12px 14px; margin: 18px 0;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.submit-row a.deletelink, .submit-row a.deletelink:link { border-radius: 9px; padding: 9px 14px; height: auto; background: var(--mk-danger-soft); color: var(--mk-danger) !important; }
+.object-tools a, .object-tools a:link { border-radius: 999px; padding: 7px 14px; font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 12.5px; }
+
+/* Change lists */
+#changelist .changelist-form-container { gap: 18px; }
+#changelist #toolbar { background: transparent; border: 0; padding: 0 0 12px; }
+#changelist #toolbar form input[type="text"] { border-radius: 9px; padding: 8px 11px; min-width: 240px; }
+#changelist .actions { background: var(--mk-surface-2); border: 0; border-bottom: 1px solid var(--mk-border); padding: 10px 14px; }
+#changelist .results { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+#result_list { width: 100%; }
+#result_list thead th { background: var(--mk-surface-2); color: var(--mk-muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; border-bottom: 1px solid var(--mk-border); padding: 10px 12px; }
+#result_list thead th a { color: var(--mk-muted) !important; }
+#result_list td, #result_list th { padding: 12px; border-bottom: 1px solid var(--mk-border); vertical-align: middle; }
+#result_list tbody tr:hover td, #result_list tbody tr:hover th { background: var(--mk-hover); }
+#changelist .paginator { padding: 12px 14px; border-top: 0; color: var(--mk-muted); }
+#changelist-filter { padding-bottom: 8px; }
+#changelist-filter h2 { border-radius: 0; }
+#changelist-filter h3 { color: var(--mk-text); font-weight: 700; }
+#changelist-filter li.selected a { color: var(--mk-accent-text) !important; }
+.change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull { width: auto; }
+.date-hierarchy { padding: 4px 0 12px; }
+.paginator a:link, .paginator a:visited { border-radius: 8px; background: var(--mk-accent); }
+
+/* Login page */
+html:has(body.login), body.login { min-height: 100vh; background: radial-gradient(1200px 600px at 50% -10%, color-mix(in srgb, var(--mk-accent) 25%, transparent), transparent), var(--mk-bg); background-attachment: fixed; }
+body.login #container { width: calc(100% - 32px) !important; }
+body.login #container { padding-top: 0; max-width: 400px; margin: 9vh auto 0; background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 18px; box-shadow: var(--mk-shadow); overflow: hidden; }
+body.login .mk-topbar { position: static; justify-content: center; border-bottom: 1px solid var(--mk-border); height: 72px; background: transparent; backdrop-filter: none; }
+body.login #content { padding: 24px 28px 28px; }
+body.login .submit-row { border: 0; padding: 0; margin: 18px 0 0; background: none; }
+body.login .submit-row input { width: 100%; padding: 11px; font-size: 14px; }
+body.login .form-row { border: 0; padding: 8px 0; }
+body.login .form-row input { width: 100%; box-sizing: border-box; padding: 10px 12px; }
+
+/* Shared building blocks for custom pages */
+.mk-card { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 16px; box-shadow: var(--mk-shadow); }
+.mk-card-pad { padding: 20px; }
+.mk-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--mk-border); }
+.mk-card-head h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--mk-text); background: none; padding: 0; text-transform: none; letter-spacing: 0; display: flex; align-items: center; gap: 8px; }
+.mk-card-head a { font-size: 13px; font-weight: 600; text-decoration: none; }
+.mk-btn, .mk-btn:link, .mk-btn:visited {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px; border-radius: 10px;
+    background: var(--mk-accent); color: #fff !important; font-weight: 600; font-size: 13px; text-decoration: none; border: 0; cursor: pointer; white-space: nowrap;
+}
+.mk-btn:hover { background: var(--mk-accent-2); }
+.mk-btn.ghost, .mk-btn.ghost:link, .mk-btn.ghost:visited { background: var(--mk-surface); color: var(--mk-text) !important; border: 1px solid var(--mk-border); }
+.mk-btn.ghost:hover { border-color: var(--mk-accent); background: var(--mk-hover); }
+.mk-btn.sm { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
+.mk-btn[disabled] { opacity: .55; cursor: not-allowed; }
+.mk-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--mk-accent-soft); color: var(--mk-accent-text); }
+.mk-pill.red { background: var(--mk-danger); color: #fff; }
+.mk-pill.green { background: var(--mk-success-soft); color: var(--mk-success); }
+.mk-pill.amber { background: var(--mk-warning-soft); color: var(--mk-warning); }
+.mk-pill.grey { background: var(--mk-hover); color: var(--mk-muted); }
+.mk-muted { color: var(--mk-muted); }
+.mk-empty { padding: 28px 20px; text-align: center; color: var(--mk-muted); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+    body.mk-with-sidebar #container { padding-left: 0; }
+    .mk-burger { display: flex; }
+    .mk-sidebar { transform: translateX(-100%); transition: transform .22s ease; box-shadow: none; width: 280px; }
+    body.mk-nav-open .mk-sidebar { transform: none; box-shadow: 20px 0 60px rgba(0,0,0,.25); }
+    body.mk-nav-open .mk-backdrop { display: block; position: fixed; inset: 60px 0 0 0; background: rgba(10, 6, 20, .45); z-index: 790; }
+    body.mk-nav-open { overflow: hidden; }
+}
+@media (max-width: 767px) {
+    .mk-topbar { padding: 0 10px; gap: 6px; }
+    .mk-brand em, .mk-user-name { display: none; }
+    .mk-brand > span:last-child { font-size: 14px; }
+    .mk-top-actions { gap: 2px; }
+    .mk-icon-btn, .mk-topbar .theme-toggle { width: 34px; height: 34px; }
+    #content { padding: 14px 14px 32px; }
+    .breadcrumbs { padding: 12px 14px 0; }
+    ul.messagelist { padding: 12px 14px 0; }
+    #content h1 { font-size: 20px; }
+    .form-row { padding: 12px 14px; }
+    .aligned .form-row, .aligned .form-row > div { display: block; }
+    .aligned label { display: block; width: auto; padding: 0 0 6px; float: none; }
+    .aligned .help, .aligned p.help, .aligned div.help { margin-left: 0 !important; padding-left: 0 !important; }
+    input[type=text], input[type=email], input[type=url], input[type=password], input[type=number], textarea, select, .vTextField, .vURLField {
+        width: 100% !important; box-sizing: border-box; font-size: 16px; /* stops iOS zoom */
+    }
+    .submit-row { position: sticky; bottom: 0; z-index: 10; margin: 18px -14px -32px; border-radius: 0; border-left: 0; border-right: 0; }
+    .submit-row input { flex: 1 1 auto; }
+    #changelist #toolbar form input[type="text"] { min-width: 0; width: 100%; }
+    #changelist .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .object-tools { float: none; margin: -6px 0 12px; }
+}
+
+/* Higher-specificity overrides: Django's responsive.css loads after this file. */
+fieldset, #changelist, #changelist .changelist-form-container, #changelist-form, #changelist .module { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.object-tools a.addlink, .object-tools a.addlink:link { padding-right: 34px !important; background-position: right 12px center; }
+#changelist-search > div { display: flex; gap: 8px; align-items: center; }
+#changelist-search label img { opacity: .55; }
+html body #toolbar form #searchbar { height: auto; padding: 8px 11px; }
+@media (max-width: 767px) {
+    html body #content { padding: 14px 14px 32px; }
+    html body div.breadcrumbs { padding: 12px 14px 0; }
+    html body .form-row { padding: 12px 14px; }
+    html body .aligned .form-row, html body .aligned .form-row > div { max-width: 100%; min-width: 0; box-sizing: border-box; }
+    html body .aligned .form-row > div > div { max-width: 100%; }
+    html body .aligned .form-row input,
+    html body .aligned .form-row select,
+    html body .aligned .form-row textarea { width: 100%; box-sizing: border-box; }
+    html body form > div > .submit-row:first-child { display: none; } /* keep only the bottom save bar */
+    html body .submit-row { flex-direction: row; flex-wrap: wrap; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); gap: 8px; }
+    html body .submit-row input { flex: 1 1 140px; margin: 0; }
+    html body .submit-row a.deletelink { flex: 0 0 auto; margin: 0; }
+    html body #toolbar { padding: 0 0 12px; }
+    html body #changelist-search > div { max-width: none; }
+    html body #toolbar form #searchbar { margin: 0; width: auto; flex: 1 1 auto; }
+    html body #changelist-filter { margin-top: 16px; }
+    html body .object-tools li + li { margin-left: 8px; }
+}
+</style>

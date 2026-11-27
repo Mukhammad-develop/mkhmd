@@ -18,6 +18,11 @@ urlpatterns = [
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/delete/', views.delete_account_view, name='delete_account'),
     
+    # Notifications
+    path('notifications/', views.notifications_page, name='notifications'),
+    path('api/notifications/', views.notifications_api, name='notifications_api'),
+    path('api/notifications/read/', views.notifications_mark_read, name='notifications_read'),
+
     # API URLs
     path('api/check-email/', views.check_email_availability, name='check_email'),
 ] 

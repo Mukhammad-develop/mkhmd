@@ -3,93 +3,93 @@
 
 {% block extrastyle %}{{ block.super }}
 <style>
-    .dash { max-width: 1200px; }
-    .dash-hello { margin: 0 0 4px; font-size: 1.6rem; font-weight: 600; color: var(--body-fg); }
-    .dash-sub { color: var(--body-quiet-color); margin: 0 0 24px; font-size: 0.95rem; }
-    .dash h2.dash-h { font-size: 1rem; font-weight: 600; color: var(--body-fg); margin: 28px 0 12px; text-transform: none; letter-spacing: 0; }
-    .dash-card {
-        background: var(--body-bg);
-        border: 1px solid var(--hairline-color);
-        border-radius: 12px;
-        padding: 18px 20px;
-    }
-    .dash-grid { display: grid; gap: 16px; }
-    .dash-grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
-    .dash-grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-    .dash-grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    body.dashboard #content { width: auto !important; max-width: 1400px; }
+    .dash { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .dash-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+    .dash-hero h1 { margin: 0 !important; font-size: 26px !important; }
+    .dash-hero p { margin: 4px 0 0; color: var(--mk-muted); font-size: 14px; }
+    .dash-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    /* Needs attention */
-    .attention { border-left: 4px solid #f59e0b; }
-    .attention.ok { border-left-color: #10b981; }
-    .attention-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--hairline-color); }
-    .attention-row:last-child { border-bottom: 0; }
-    .attention-count { min-width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; background: #fef3c7; color: #92400e; }
-    .attention-text { flex: 1; color: var(--body-fg); }
-    .dash a.dash-btn, .dash a.dash-btn:link, .dash a.dash-btn:visited {
-        display: inline-block; padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 0.8125rem;
-        background: var(--primary); color: #fff; text-decoration: none; white-space: nowrap;
-    }
-    .dash a.dash-btn:hover { background: var(--secondary); }
-    .dash a.dash-btn.ghost { background: transparent; color: var(--link-fg); border: 1px solid var(--hairline-color); }
-    .dash a.dash-btn.ghost:hover { border-color: var(--primary); }
-    .all-good { display: flex; align-items: center; gap: 12px; color: var(--body-fg); }
-    .all-good span { font-size: 1.6rem; }
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .kpi, .kpi:link, .kpi:visited { display: block; padding: 18px; text-decoration: none; color: var(--mk-text); transition: border-color .15s, transform .15s; }
+    .kpi:hover { border-color: var(--mk-accent); transform: translateY(-1px); }
+    .kpi-top { display: flex; justify-content: space-between; align-items: center; color: var(--mk-muted); font-size: 13px; font-weight: 600; }
+    .kpi-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--mk-accent-soft); color: var(--mk-accent-text); }
+    .kpi-value { font-size: 30px; font-weight: 700; letter-spacing: -1px; margin-top: 10px; line-height: 1; }
+    .kpi-sub { font-size: 12px; color: var(--mk-muted); margin-top: 6px; }
 
-    /* Checklist */
-    .check-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--hairline-color); }
-    .check-row:last-child { border-bottom: 0; }
-    .check-icon { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; border: 2px solid var(--hairline-color); margin-top: 1px; }
-    .check-row.done .check-icon { background: #10b981; border-color: #10b981; color: #fff; }
-    .check-row.done .check-label { text-decoration: line-through; color: var(--body-quiet-color); }
-    .check-label { font-weight: 600; color: var(--body-fg); }
-    .check-help { color: var(--body-quiet-color); font-size: 0.8125rem; margin-top: 2px; }
-    .check-body { flex: 1; }
+    .cols { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
 
-    /* Stats */
-    .dash a.stat, .dash a.stat:link, .dash a.stat:visited { display: block; text-decoration: none; color: inherit; transition: border-color .15s; }
-    .dash a.stat:hover { border-color: var(--primary); }
-    .stat-value { font-size: 1.9rem; font-weight: 700; color: var(--link-fg); line-height: 1.1; }
-    .stat-label { font-weight: 600; color: var(--body-fg); margin-top: 4px; }
-    .stat-sub { font-size: 0.75rem; color: var(--body-quiet-color); }
+    .attn-row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--mk-border); }
+    .attn-row:last-child { border-bottom: 0; }
+    .attn-num { min-width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; background: var(--mk-warning-soft); color: var(--mk-warning); }
+    .attn-text { flex: 1; font-weight: 500; }
+    .all-good { display: flex; gap: 14px; align-items: center; padding: 18px 20px; }
+    .all-good .kpi-icon { background: var(--mk-success-soft); color: var(--mk-success); width: 42px; height: 42px; border-radius: 12px; }
 
-    /* Meetings + quick actions */
-    .meeting { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline-color); }
-    .meeting:last-child { border-bottom: 0; }
-    .meeting-date { min-width: 54px; text-align: center; border-radius: 8px; background: var(--darkened-bg); padding: 4px 0; }
-    .meeting-date b { display: block; font-size: 1.1rem; color: var(--body-fg); }
-    .meeting-date small { font-size: 0.7rem; text-transform: uppercase; color: var(--body-quiet-color); }
-    .meeting-info { flex: 1; min-width: 0; }
-    .meeting-info a { font-weight: 600; }
-    .meeting-info div { color: var(--body-quiet-color); font-size: 0.8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .pill { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
-    .pill.pending { background: #fef3c7; color: #92400e; }
-    .pill.confirmed { background: #d1fae5; color: #065f46; }
-    .empty { color: var(--body-quiet-color); padding: 6px 0; }
-    .actions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .dash a.action, .dash a.action:link, .dash a.action:visited {
-        display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px;
-        border: 1px solid var(--hairline-color); color: var(--body-fg); text-decoration: none; font-weight: 500;
-    }
-    .dash a.action:hover { border-color: var(--primary); background: var(--darkened-bg); }
-    .action-icon { font-size: 1.2rem; }
+    .chat-row, .chat-row:link, .chat-row:visited { display: flex; gap: 12px; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--mk-border); text-decoration: none; color: var(--mk-text); }
+    .chat-row:last-child { border-bottom: 0; }
+    .chat-row:hover { background: var(--mk-hover); }
+    .chat-meta { flex: 1; min-width: 0; }
+    .chat-name { font-weight: 600; display: flex; gap: 8px; align-items: center; }
+    .chat-last { color: var(--mk-muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-time { color: var(--mk-muted); font-size: 12px; align-self: flex-start; padding-top: 2px; }
+    .chat-row.unread .chat-last { color: var(--mk-text); font-weight: 500; }
 
-    /* Sections */
-    .section-card h3 { margin: 0; font-size: 1.05rem; color: var(--body-fg); display: flex; gap: 8px; align-items: center; }
-    .section-card > p { color: var(--body-quiet-color); margin: 4px 0 12px; font-size: 0.8125rem; }
-    .model-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--hairline-color); }
-    .model-text { flex: 1; min-width: 0; }
-    .model-text a { font-weight: 600; font-size: 0.9rem; }
-    .model-text div { color: var(--body-quiet-color); font-size: 0.78rem; margin-top: 2px; }
-    .model-buttons { display: flex; gap: 6px; }
+    .meet { display: flex; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--mk-border); align-items: center; }
+    .meet:last-child { border-bottom: 0; }
+    .meet-date { width: 48px; text-align: center; border-radius: 10px; background: var(--mk-surface-2); border: 1px solid var(--mk-border); padding: 5px 0; flex-shrink: 0; }
+    .meet-date small { display: block; font-size: 10px; font-weight: 700; color: var(--mk-accent-text); text-transform: uppercase; }
+    .meet-date b { font-size: 18px; }
+    .meet-info { flex: 1; min-width: 0; }
+    .meet-info a { font-weight: 600; text-decoration: none; }
+    .meet-info div { color: var(--mk-muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Recent */
-    .recent li { padding: 6px 0; border-bottom: 1px solid var(--hairline-color); list-style: none; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
+    .action, .action:link, .action:visited { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 12px; border: 1px solid var(--mk-border); text-decoration: none; color: var(--mk-text); font-weight: 600; font-size: 13px; transition: border-color .15s, background .15s; }
+    .action:hover { border-color: var(--mk-accent); background: var(--mk-hover); }
+    .action .kpi-icon { width: 32px; height: 32px; }
+
+    .check { display: flex; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--mk-border); align-items: flex-start; }
+    .check:last-child { border-bottom: 0; }
+    .check-box { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--mk-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .check.done .check-box { background: var(--mk-success); border-color: var(--mk-success); color: #fff; }
+    .check.done .check-title { text-decoration: line-through; color: var(--mk-muted); }
+    .check-title { font-weight: 600; }
+    .check-help { color: var(--mk-muted); font-size: 12.5px; margin-top: 2px; }
+    .progress { height: 6px; border-radius: 3px; background: var(--mk-hover); overflow: hidden; margin: 0 20px 4px; }
+    .progress span { display: block; height: 100%; background: var(--mk-accent); border-radius: 3px; }
+
+    .recent li { list-style: none; display: flex; gap: 10px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--mk-border); font-size: 13px; }
+    .recent li:last-child { border-bottom: 0; }
     .recent ul { margin: 0; padding: 0; }
-    .recent .mini { color: var(--body-quiet-color); }
+    .recent .mk-muted { font-size: 12px; }
+    .recent .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot.add { background: var(--mk-success); } .dot.change { background: var(--mk-accent); } .dot.delete { background: var(--mk-danger); }
 
-    @media (max-width: 600px) {
-        .actions-grid { grid-template-columns: 1fr; }
-        .attention-row { flex-wrap: wrap; }
+    .sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .section-card h3 { margin: 0 0 2px; font-size: 14px; display: flex; gap: 10px; align-items: center; color: var(--mk-text); }
+    .section-card > p { color: var(--mk-muted); font-size: 12.5px; margin: 0 0 10px; padding: 0; }
+    .model-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin: 0 -10px; border-radius: 10px; }
+    .model-main, .model-main:link, .model-main:visited { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--mk-text); }
+    .model-link:hover { background: var(--mk-hover); }
+    .model-link .mk-ico { color: var(--mk-muted); }
+    .model-link b { font-weight: 600; font-size: 13px; display: block; }
+    .model-link small { color: var(--mk-muted); font-size: 12px; display: block; line-height: 1.35; }
+    .model-link .add { margin-left: auto; opacity: .0; transition: opacity .15s; }
+    .model-link:hover .add { opacity: 1; }
+
+    @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cols { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 520px) {
+        .dash { gap: 14px; }
+        .kpis { gap: 10px; }
+        .kpi { padding: 14px; }
+        .kpi-value { font-size: 24px; }
+        .dash-hero-actions { width: 100%; }
+        .dash-hero-actions .mk-btn { flex: 1; }
+        .actions { grid-template-columns: 1fr 1fr; padding: 12px; }
+        .model-link .add { opacity: 1; }
     }
 </style>
 {% endblock %}
@@ -97,123 +97,167 @@
 {% block coltype %}colM{% endblock %}
 {% block bodyclass %}{{ block.super }} dashboard{% endblock %}
 {% block nav-breadcrumbs %}{% endblock %}
-{% block nav-sidebar %}{% endblock %}
 {% block content_title %}{% endblock %}
 
 {% block content %}
-<div id="content-main" class="dash">
-    <p class="dash-hello">Hi {{ greeting_name }} 👋</p>
-    <p class="dash-sub">Here's what's happening on mkhmd.uk. Anything that needs you is at the top.</p>
-
-    <!-- Needs attention -->
-    <div class="dash-card attention {% if not attention_total %}ok{% endif %}">
-        {% if attention_total %}
-            {% for item in attention %}{% if item.count %}
-            <div class="attention-row">
-                <div class="attention-count">{{ item.count }}</div>
-                <div class="attention-text">{{ item.label|capfirst }}</div>
-                {% if item.url %}<a class="dash-btn" href="{{ item.url }}">{{ item.action }} →</a>{% endif %}
-            </div>
-            {% endif %}{% endfor %}
-        {% else %}
-            <div class="all-good"><span>✅</span><div><strong>You're all caught up.</strong><br><span style="font-size:.85rem;color:var(--body-quiet-color)">No meeting requests, unread chats or running Turnitin checks.</span></div></div>
-        {% endif %}
-    </div>
-
-    {% if not checklist_done %}
-    <h2 class="dash-h">Finish setting up your site</h2>
-    <div class="dash-card">
-        {% for item in checklist %}
-        <div class="check-row {% if item.done %}done{% endif %}">
-            <div class="check-icon">{% if item.done %}✓{% endif %}</div>
-            <div class="check-body">
-                <div class="check-label">{{ item.label }}</div>
-                <div class="check-help">{{ item.help }}</div>
-            </div>
-            {% if not item.done and item.url %}<a class="dash-btn ghost" href="{{ item.url }}">Do it →</a>{% endif %}
+<div class="dash">
+    <!-- Greeting -->
+    <div class="dash-hero">
+        <div>
+            <h1>Hi {{ greeting_name }} 👋</h1>
+            <p>{% now "l, j F" %} · here's what's happening on mkhmd.uk</p>
         </div>
-        {% endfor %}
+        <div class="dash-hero-actions">
+            <a class="mk-btn ghost" href="{% url 'admin:mkhmd_notifications' %}"><svg class="mk-ico"><use href="#i-send"/></svg> Notify users</a>
+            <a class="mk-btn" href="{% url 'admin:mkhmd_inbox' %}"><svg class="mk-ico"><use href="#i-chat"/></svg> Open inbox</a>
+        </div>
     </div>
-    {% endif %}
 
-    <!-- Stats -->
-    <h2 class="dash-h">At a glance</h2>
-    <div class="dash-grid cols-4">
+    <!-- KPIs -->
+    <div class="kpis">
         {% for s in stats %}
-        <a class="dash-card stat" href="{{ s.url|default:'#' }}">
-            <div class="stat-value">{{ s.value }}</div>
-            <div class="stat-label">{{ s.label }}</div>
-            <div class="stat-sub">{{ s.sub }}</div>
+        <a class="mk-card kpi" href="{{ s.url|default:'#' }}">
+            <div class="kpi-top">{{ s.label }}
+                <span class="kpi-icon"><svg class="mk-ico"><use href="#i-{% cycle 'users' 'folder' 'calendar' 'chat' %}"/></svg></span>
+            </div>
+            <div class="kpi-value">{{ s.value }}</div>
+            <div class="kpi-sub">{{ s.sub }}</div>
         </a>
         {% endfor %}
     </div>
 
-    <!-- Meetings + actions -->
-    <div class="dash-grid cols-2" style="margin-top: 16px;">
-        <div class="dash-card">
-            <h2 class="dash-h" style="margin-top:0">📅 Meetings in the next 7 days</h2>
-            {% for b in upcoming_bookings %}
-            <div class="meeting">
-                <div class="meeting-date"><small>{{ b.date|date:"M" }}</small><b>{{ b.date|date:"j" }}</b></div>
-                <div class="meeting-info">
-                    <a href="{% url 'admin:website_booking_change' b.pk %}">{{ b.name }}</a>
-                    <span class="pill {{ b.status }}">{{ b.get_status_display }}</span>
-                    <div>{{ b.date|date:"D" }} {{ b.start_time|time:"H:i" }}–{{ b.end_time|time:"H:i" }} UTC · {{ b.subject }}</div>
-                </div>
+    <div class="cols">
+        <!-- Left column -->
+        <div class="stack">
+            <div class="mk-card">
+                <div class="mk-card-head"><h2><svg class="mk-ico"><use href="#i-alert"/></svg> Needs your attention</h2></div>
+                {% if attention_total %}
+                    {% for item in attention %}{% if item.count %}
+                    <div class="attn-row">
+                        <div class="attn-num">{{ item.count }}</div>
+                        <div class="attn-text">{{ item.label|capfirst }}</div>
+                        {% if item.url %}<a class="mk-btn sm" href="{{ item.url }}">{{ item.action }}</a>{% endif %}
+                    </div>
+                    {% endif %}{% endfor %}
+                {% else %}
+                    <div class="all-good">
+                        <span class="kpi-icon"><svg class="mk-ico"><use href="#i-check"/></svg></span>
+                        <div><b>You're all caught up</b><div class="mk-muted" style="font-size:13px;">No meeting requests, unread chats or running Turnitin checks.</div></div>
+                    </div>
+                {% endif %}
             </div>
-            {% empty %}
-            <p class="empty">No meetings booked for the next 7 days.</p>
-            {% endfor %}
-        </div>
-        <div class="dash-card">
-            <h2 class="dash-h" style="margin-top:0">⚡ Quick actions</h2>
-            <div class="actions-grid">
-                {% for a in quick_actions %}
-                <a class="action" href="{{ a.url }}"><span class="action-icon">{{ a.icon }}</span>{{ a.label }}</a>
+
+            <div class="mk-card">
+                <div class="mk-card-head">
+                    <h2><svg class="mk-ico"><use href="#i-chat"/></svg> Latest messages</h2>
+                    <a href="{% url 'admin:mkhmd_inbox' %}">Open inbox →</a>
+                </div>
+                {% for c in recent_chats %}
+                <a class="chat-row {% if c.unread %}unread{% endif %}" href="{% url 'admin:mkhmd_inbox' %}?chat={{ c.id }}">
+                    <span class="mk-avatar">{{ c.initials }}</span>
+                    <div class="chat-meta">
+                        <div class="chat-name">{{ c.name }} {% if c.unread %}<span class="mk-pill red">{{ c.unread }}</span>{% endif %}</div>
+                        <div class="chat-last">{{ c.last_message }}</div>
+                    </div>
+                    <span class="chat-time">{{ c.last_at }}</span>
+                </a>
+                {% empty %}
+                <div class="mk-empty">No conversations yet. Messages from the chat bubble on your site appear here.</div>
+                {% endfor %}
+            </div>
+
+            <div class="mk-card">
+                <div class="mk-card-head">
+                    <h2><svg class="mk-ico"><use href="#i-calendar"/></svg> Meetings this week</h2>
+                    <a href="{% url 'admin:website_booking_changelist' %}">All requests →</a>
+                </div>
+                {% for b in upcoming_bookings %}
+                <div class="meet">
+                    <div class="meet-date"><small>{{ b.date|date:"M" }}</small><b>{{ b.date|date:"j" }}</b></div>
+                    <div class="meet-info">
+                        <a href="{% url 'admin:website_booking_change' b.pk %}">{{ b.name }}</a>
+                        <div>{{ b.date|date:"D" }} {{ b.start_time|time:"H:i" }}–{{ b.end_time|time:"H:i" }} UTC · {{ b.subject }}</div>
+                    </div>
+                    <span class="mk-pill {% if b.status == 'confirmed' %}green{% else %}amber{% endif %}">{{ b.get_status_display }}</span>
+                </div>
+                {% empty %}
+                <div class="mk-empty">No meetings in the next 7 days.</div>
                 {% endfor %}
             </div>
         </div>
+
+        <!-- Right column -->
+        <div class="stack">
+            <div class="mk-card">
+                <div class="mk-card-head"><h2><svg class="mk-ico"><use href="#i-zap"/></svg> Quick actions</h2></div>
+                <div class="actions">
+                    {% for a in quick_actions %}
+                    <a class="action" href="{{ a.url }}" {% if a.url == '/' %}target="_blank" rel="noopener"{% endif %}>
+                        <span class="kpi-icon"><svg class="mk-ico"><use href="#i-{{ a.icon }}"/></svg></span>
+                        {{ a.label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if not checklist_done %}
+            <div class="mk-card">
+                <div class="mk-card-head"><h2>🚀 Finish setting up</h2></div>
+                {% for item in checklist %}
+                <div class="check {% if item.done %}done{% endif %}">
+                    <div class="check-box">{% if item.done %}<svg class="mk-ico" style="width:12px;height:12px;stroke-width:3"><use href="#i-check"/></svg>{% endif %}</div>
+                    <div style="flex:1">
+                        <div class="check-title">{{ item.label }}</div>
+                        <div class="check-help">{{ item.help }}</div>
+                    </div>
+                    {% if not item.done and item.url %}<a class="mk-btn sm ghost" href="{{ item.url }}">Do it</a>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mk-card recent">
+                <div class="mk-card-head"><h2><svg class="mk-ico"><use href="#i-edit"/></svg> Your recent changes</h2></div>
+                {% get_admin_log 6 as admin_log for_user user %}
+                {% if not admin_log %}
+                    <div class="mk-empty">Nothing yet. Edits you make will be listed here.</div>
+                {% else %}
+                <ul>
+                    {% for entry in admin_log %}
+                    <li>
+                        <span class="dot {% if entry.is_addition %}add{% elif entry.is_change %}change{% else %}delete{% endif %}"></span>
+                        <div style="min-width:0;flex:1;">
+                            {% if entry.is_deletion or not entry.get_admin_url %}{{ entry.object_repr|truncatechars:40 }}{% else %}<a href="{{ entry.get_admin_url }}">{{ entry.object_repr|truncatechars:40 }}</a>{% endif %}
+                            <div class="mk-muted">{% if entry.content_type %}{{ entry.content_type.name|capfirst }} · {% endif %}{{ entry.action_time|timesince }} ago</div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
-    <!-- Everything you can manage -->
-    <h2 class="dash-h">Everything you can manage</h2>
-    <div class="dash-grid cols-3">
-        {% for app in app_list %}
-        <div class="dash-card section-card">
-            <h3><span>{{ app.icon }}</span> {{ app.name }}</h3>
-            <p>{{ app.description }}</p>
-            {% for model in app.models %}
-            <div class="model-row">
-                <div class="model-text">
-                    {% if model.admin_url %}<a href="{{ model.admin_url }}">{{ model.name }}</a>{% else %}{{ model.name }}{% endif %}
-                    {% if model.description %}<div>{{ model.description }}</div>{% endif %}
+    <!-- Everything -->
+    <div>
+        <h2 style="font-size:15px;font-weight:700;margin:6px 0 12px;">Everything you can manage</h2>
+        <div class="sections">
+            {% for app in app_list %}
+            <div class="mk-card mk-card-pad section-card">
+                <h3><span class="kpi-icon" style="width:30px;height:30px;"><svg class="mk-ico" style="width:16px;height:16px"><use href="#i-{{ app.icon }}"/></svg></span> {{ app.name }}</h3>
+                <p>{{ app.description }}</p>
+                {% for model in app.models %}
+                <div class="model-link">
+                    <a class="model-main" href="{{ model.admin_url }}">
+                        <svg class="mk-ico"><use href="#i-{{ model.icon }}"/></svg>
+                        <span style="min-width:0"><b>{{ model.name }}</b>{% if model.description %}<small>{{ model.description }}</small>{% endif %}</span>
+                    </a>
+                    {% if model.add_url %}<a class="mk-btn sm ghost add" href="{{ model.add_url }}" aria-label="Add {{ model.name }}">+ Add</a>{% endif %}
                 </div>
-                <div class="model-buttons">
-                    {% if model.add_url %}<a class="dash-btn ghost" href="{{ model.add_url }}" title="Add new">+ Add</a>{% endif %}
-                </div>
+                {% endfor %}
             </div>
             {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-
-    <!-- Recent -->
-    <h2 class="dash-h">Your recent changes</h2>
-    <div class="dash-card recent">
-        {% get_admin_log 8 as admin_log for_user user %}
-        {% if not admin_log %}
-            <p class="empty">Nothing yet. Changes you make here will be listed.</p>
-        {% else %}
-        <ul>
-            {% for entry in admin_log %}
-            <li>
-                {% if entry.is_addition %}➕{% elif entry.is_change %}✏️{% else %}🗑️{% endif %}
-                {% if entry.is_deletion or not entry.get_admin_url %}{{ entry.object_repr }}{% else %}<a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>{% endif %}
-                <span class="mini">· {% if entry.content_type %}{{ entry.content_type.name|capfirst }}{% endif %} · {{ entry.action_time|timesince }} ago</span>
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

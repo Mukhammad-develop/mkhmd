@@ -256,3 +256,60 @@ def check_email_availability(request):
         return JsonResponse({'available': True})
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# ---------------------------------------------------------------------------
+# Notifications (bell icon)
+# ---------------------------------------------------------------------------
+from django.views.decorators.http import require_POST
+from django.utils.timesince import timesince
+
+
+def _notification_dict(n):
+    return {
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'link': n.link,
+        'level': n.level,
+        'is_read': n.is_read,
+        'when': timesince(n.created_at).split(',')[0] + ' ago',
+    }
+
+
+@login_required
+def notifications_page(request):
+    items = list(request.user.notifications.all()[:100])
+    unread_ids = [n.id for n in items if not n.is_read]
+    response = render(request, 'accounts/notifications.html', {
+        'title': 'Notifications',
+        'name': 'Abdurakhmon',
+        'items': items,
+        'unread_ids': unread_ids,
+    })
+    if unread_ids:
+        request.user.notifications.filter(id__in=unread_ids).update(is_read=True)
+    return response
+
+
+@login_required
+def notifications_api(request):
+    qs = request.user.notifications.all()
+    return JsonResponse({
+        'unread': qs.filter(is_read=False).count(),
+        'items': [_notification_dict(n) for n in qs[:8]],
+    })
+
+
+@login_required
+@require_POST
+def notifications_mark_read(request):
+    try:
+        data = json.loads(request.body or '{}')
+    except ValueError:
+        data = {}
+    qs = request.user.notifications.filter(is_read=False)
+    if data.get('id'):
+        qs = qs.filter(id=data['id'])
+    qs.update(is_read=True)
+    return JsonResponse({'success': True, 'unread': request.user.notifications.filter(is_read=False).count()})

@@ -173,6 +173,46 @@
 
 
 
+        /* Navbar actions: bell + mobile menu button */
+        .nav-actions { display: flex; align-items: center; gap: 0.5rem; }
+        .mobile-menu-toggle { display: none; background: none; border: none; color: var(--pure-white); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; }
+        .notif-wrap { position: relative; }
+        .notif-bell {
+            position: relative; background: none; border: 1px solid var(--border-gray); color: var(--pure-white);
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1rem;
+            display: flex; align-items: center; justify-content: center; transition: border-color .2s, color .2s;
+        }
+        .notif-bell:hover, .notif-bell[aria-expanded="true"] { border-color: var(--primary-purple); color: var(--light-purple); }
+        .notif-badge {
+            position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
+            border-radius: 9px; background: #ef4444; color: #fff; font-size: 0.68rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; border: 2px solid #000;
+        }
+        .notif-badge[hidden] { display: none; }
+        .notif-panel {
+            position: absolute; right: 0; top: calc(100% + 12px); width: 360px; max-height: 70vh;
+            background: #0d0d0f; border: 1px solid var(--border-gray); border-radius: 14px;
+            box-shadow: 0 24px 60px rgba(0,0,0,.6); display: flex; flex-direction: column; overflow: hidden; z-index: 1100;
+        }
+        .notif-panel[hidden] { display: none; }
+        .notif-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-gray); }
+        .notif-panel-head button { background: none; border: none; color: var(--light-purple); cursor: pointer; font-size: 0.8rem; }
+        .notif-list { overflow-y: auto; }
+        .notif-row { display: flex; gap: 0.75rem; padding: 0.85rem 1rem; border-bottom: 1px solid #1c1c20; color: inherit; text-decoration: none; }
+        a.notif-row:hover { background: #15151a; }
+        .notif-row.unread { background: #150f22; }
+        .notif-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 0.45rem; flex-shrink: 0; background: transparent; }
+        .notif-row.unread .notif-dot { background: var(--primary-purple); }
+        .notif-row-title { font-size: 0.88rem; font-weight: 600; }
+        .notif-row-msg { font-size: 0.8rem; color: var(--text-gray); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .notif-row-when { font-size: 0.72rem; color: #71717a; margin-top: 0.2rem; }
+        .notif-empty-sm { padding: 2rem 1rem; text-align: center; color: var(--text-gray); font-size: 0.85rem; }
+        .notif-all { display: block; text-align: center; padding: 0.8rem; font-size: 0.85rem; color: var(--light-purple); text-decoration: none; border-top: 1px solid var(--border-gray); }
+        .notif-all:hover { background: #15151a; }
+        @media (max-width: 768px) {
+            .notif-panel { position: fixed; left: 0.75rem; right: 0.75rem; top: 72px; width: auto; }
+        }
+
         /* Page specific content */
         .page-content {
             min-height: 100vh;
@@ -499,6 +539,8 @@
                 display: block !important;
             }
 
+            .nav-container { position: relative; }
+
             .nav-links {
                 position: fixed;
                 top: 70px;
@@ -660,9 +702,6 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{% url 'website:home' %}" class="logo">&lt;{{ name|default:"Abdurakhmon"|lower }}/&gt;</a>
-            <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Open menu" aria-controls="nav-links" style="display: none; background: none; border: none; color: var(--pure-white); font-size: 1.5rem; cursor: pointer; padding: 0.5rem;">
-                <i class="fas fa-bars"></i>
-            </button>
             <ul class="nav-links" id="nav-links">
                 <li><a href="{% url 'website:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
                 <li><a href="{% url 'website:portfolio' %}" {% if request.resolver_match.url_name in 'portfolio,achievements,blog' %}class="active"{% endif %}>Portfolio</a></li>
@@ -673,7 +712,7 @@
                     <li><a href="{% url 'website:chat_hub' %}" {% if request.resolver_match.url_name in 'chat_hub,ai_chat' %}class="active"{% endif %}>
                         <i class="fas fa-comments"></i> Chat
                     </a></li>
-                    <li><a href="{% url 'accounts:profile' %}" {% if 'accounts' in request.resolver_match.namespace %}class="active"{% endif %}>
+                    <li><a href="{% url 'accounts:profile' %}" {% if 'accounts' in request.resolver_match.namespace and request.resolver_match.url_name != 'notifications' %}class="active"{% endif %}>
                         <i class="fas fa-user"></i> {{ user.get_short_name }}
                     </a></li>
                 {% else %}
@@ -681,6 +720,28 @@
                     <li><a href="{% url 'accounts:signup' %}" class="signup-btn">Sign Up</a></li>
                 {% endif %}
             </ul>
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+                <div class="notif-wrap">
+                    <button class="notif-bell" id="notifBell" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+                        <i class="far fa-bell"></i>
+                        <span class="notif-badge" id="notifBadge" {% if not unread_notifications %}hidden{% endif %}>{{ unread_notifications }}</span>
+                    </button>
+                    <div class="notif-panel" id="notifPanel" hidden>
+                        <div class="notif-panel-head">
+                            <strong>Notifications</strong>
+                            <button type="button" id="notifMarkAll">Mark all read</button>
+                        </div>
+                        <div class="notif-list" id="notifList"><div class="notif-empty-sm">Loading…</div></div>
+                        <a class="notif-all" href="{% url 'accounts:notifications' %}">See all notifications</a>
+                    </div>
+                    <input type="hidden" id="notifCsrf" value="{{ csrf_token }}">
+                </div>
+                {% endif %}
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Open menu" aria-controls="nav-links">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -750,6 +811,86 @@
             }
         });
         
+        // Notifications bell
+        (function () {
+            const bell = document.getElementById('notifBell');
+            if (!bell) return;
+            const panel = document.getElementById('notifPanel');
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            const csrf = document.getElementById('notifCsrf').value;
+
+            function setBadge(n) {
+                badge.textContent = n > 9 ? '9+' : n;
+                badge.hidden = !n;
+            }
+            function el(tag, cls, text) {
+                const e = document.createElement(tag);
+                if (cls) e.className = cls;
+                if (text) e.textContent = text;
+                return e;
+            }
+            function render(items) {
+                list.innerHTML = '';
+                if (!items.length) {
+                    list.appendChild(el('div', 'notif-empty-sm', "You're all caught up. Nothing new yet."));
+                    return;
+                }
+                items.forEach(n => {
+                    const row = el(n.link ? 'a' : 'div', 'notif-row' + (n.is_read ? '' : ' unread'));
+                    if (n.link) row.href = n.link;
+                    row.appendChild(el('span', 'notif-dot'));
+                    const body = el('div');
+                    body.appendChild(el('div', 'notif-row-title', n.title));
+                    if (n.message) body.appendChild(el('div', 'notif-row-msg', n.message));
+                    body.appendChild(el('div', 'notif-row-when', n.when));
+                    row.appendChild(body);
+                    row.addEventListener('click', () => markRead(n.id));
+                    list.appendChild(row);
+                });
+            }
+            async function load() {
+                try {
+                    const r = await fetch('{% url "accounts:notifications_api" %}', { credentials: 'same-origin' });
+                    const d = await r.json();
+                    setBadge(d.unread);
+                    if (!panel.hidden) render(d.items);
+                    return d;
+                } catch (e) { return null; }
+            }
+            async function markRead(id) {
+                const r = await fetch('{% url "accounts:notifications_read" %}', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                    body: JSON.stringify(id ? { id } : {})
+                });
+                const d = await r.json();
+                setBadge(d.unread);
+            }
+            bell.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const open = panel.hidden;
+                panel.hidden = !open;
+                bell.setAttribute('aria-expanded', String(open));
+                if (open) {
+                    const d = await load();
+                    if (d) render(d.items);
+                }
+            });
+            document.getElementById('notifMarkAll').addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await markRead(null);
+                list.querySelectorAll('.unread').forEach(r => r.classList.remove('unread'));
+            });
+            document.addEventListener('click', (e) => {
+                if (!panel.hidden && !panel.contains(e.target)) {
+                    panel.hidden = true;
+                    bell.setAttribute('aria-expanded', 'false');
+                }
+            });
+            setInterval(load, 60000);
+        })();
+
         // Enhanced mouse trail effects
         let mouseTrail = [];
         let trailActive = true;

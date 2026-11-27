@@ -2,7 +2,7 @@ from django.contrib import admin
 from mkhmd.admin_site import FriendlyAdminMixin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
-from .models import User, EmailVerification, UserProfile, TurnitinSubmission
+from .models import User, EmailVerification, UserProfile, TurnitinSubmission, Notification
 
 @admin.register(User)
 class UserAdmin(FriendlyAdminMixin, BaseUserAdmin):
@@ -130,3 +130,16 @@ class TurnitinSubmissionAdmin(FriendlyAdminMixin, admin.ModelAdmin):
 
 # Add UserProfile inline to User admin
 UserAdmin.inlines = [UserProfileInline]
+
+
+@admin.register(Notification)
+class NotificationAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    list_display = ('title', 'user', 'level', 'is_read', 'emailed', 'created_at')
+    list_filter = ('level', 'is_read', 'emailed', 'created_at')
+    search_fields = ('title', 'message', 'user__email', 'user__username')
+    readonly_fields = ('batch', 'sent_by', 'created_at', 'emailed')
+    date_hierarchy = 'created_at'
+
+    def has_add_permission(self, request):
+        # Use the "Send a notification" page instead.
+        return False

@@ -139,3 +139,31 @@ class TurnitinSubmission(models.Model):
     def is_completed(self):
         """Check if submission is completed"""
         return self.submission_status
+
+
+class Notification(models.Model):
+    """A message for one user, shown under the bell icon on the website."""
+
+    LEVEL_CHOICES = [
+        ('info', 'Info'),
+        ('success', 'Good news'),
+        ('warning', 'Important'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=150)
+    message = models.TextField(blank=True)
+    link = models.CharField(max_length=300, blank=True, help_text="Optional page to open, e.g. /projects/")
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='info')
+    is_read = models.BooleanField(default=False)
+    emailed = models.BooleanField(default=False)
+    batch = models.UUIDField(null=True, blank=True, db_index=True,
+                             help_text="Notifications sent together share a batch id")
+    sent_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} → {self.user.email}"

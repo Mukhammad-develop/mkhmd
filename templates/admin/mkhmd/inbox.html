@@ -1,0 +1,313 @@
+{% extends "admin/base_site.html" %}
+
+{% block bodyclass %}{{ block.super }} mk-inbox-page{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+    body.mk-inbox-page #content { padding: 0; max-width: none; }
+    body.mk-inbox-page ul.messagelist { display: none; }
+    .inbox { display: grid; grid-template-columns: 360px minmax(0, 1fr); height: calc(100vh - 60px); height: calc(100dvh - 60px); background: var(--mk-surface); }
+
+    /* List pane */
+    .ib-list { border-right: 1px solid var(--mk-border); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+    .ib-list-head { padding: 16px 16px 10px; border-bottom: 1px solid var(--mk-border); }
+    .ib-list-head h1 { font-size: 20px !important; margin: 0 0 12px !important; display: flex; align-items: center; gap: 8px; }
+    .ib-search { position: relative; }
+    .ib-search .mk-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--mk-muted); width: 16px; height: 16px; }
+    .ib-search input { width: 100%; box-sizing: border-box; padding-left: 34px !important; background: var(--mk-surface-2) !important; }
+    .ib-tabs { display: flex; gap: 6px; margin-top: 10px; }
+    .ib-tab { border: 1px solid var(--mk-border); background: none; color: var(--mk-muted); border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    .ib-tab.active { background: var(--mk-accent-soft); color: var(--mk-accent-text); border-color: transparent; }
+    .ib-items { overflow-y: auto; flex: 1; }
+    .ib-item { display: flex; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--mk-border); cursor: pointer; position: relative; }
+    .ib-item:hover { background: var(--mk-hover); }
+    .ib-item.active { background: var(--mk-accent-soft); }
+    .ib-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--mk-accent); }
+    .ib-item .mk-avatar { width: 40px; height: 40px; font-size: 13px; }
+    .ib-item-body { flex: 1; min-width: 0; }
+    .ib-item-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .ib-item-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ib-item-time { font-size: 11.5px; color: var(--mk-muted); flex-shrink: 0; }
+    .ib-item-last { color: var(--mk-muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .ib-item.unread .ib-item-last { color: var(--mk-text); font-weight: 600; }
+    .ib-item-badges { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+
+    /* Conversation pane */
+    .ib-convo { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--mk-bg); }
+    .ib-convo-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: var(--mk-surface); border-bottom: 1px solid var(--mk-border); min-height: 64px; box-sizing: border-box; }
+    .ib-back { display: none; }
+    .ib-who { flex: 1; min-width: 0; }
+    .ib-who b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ib-who span { color: var(--mk-muted); font-size: 12.5px; }
+    .ib-head-actions { display: flex; gap: 6px; }
+    .ib-messages { flex: 1; overflow-y: auto; padding: 20px clamp(14px, 3vw, 40px); display: flex; flex-direction: column; gap: 6px; }
+    .ib-day { align-self: center; font-size: 11.5px; color: var(--mk-muted); background: var(--mk-surface); border: 1px solid var(--mk-border); padding: 3px 10px; border-radius: 999px; margin: 10px 0; }
+    .ib-msg { max-width: min(620px, 78%); padding: 9px 13px; border-radius: 16px; font-size: 14px; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word; position: relative; }
+    .ib-msg .t { display: block; font-size: 10.5px; opacity: .65; margin-top: 3px; text-align: right; }
+    .ib-msg.them { align-self: flex-start; background: var(--mk-surface); border: 1px solid var(--mk-border); border-bottom-left-radius: 5px; }
+    .ib-msg.me { align-self: flex-end; background: var(--mk-accent); color: #fff; border-bottom-right-radius: 5px; }
+    .ib-msg.pending { opacity: .6; }
+    .ib-composer { background: var(--mk-surface); border-top: 1px solid var(--mk-border); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+    .ib-compose-row { display: flex; gap: 10px; align-items: flex-end; }
+    .ib-composer textarea { flex: 1; resize: none; min-height: 44px; max-height: 180px; box-sizing: border-box; border-radius: 12px !important; padding: 11px 14px !important; line-height: 1.4; font-family: inherit; }
+    .ib-send { width: 44px; height: 44px; padding: 0 !important; border-radius: 12px !important; }
+    .ib-compose-opts { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--mk-muted); flex-wrap: wrap; }
+    .ib-compose-opts label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; color: var(--mk-muted); font-weight: 500; }
+    .ib-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--mk-muted); padding: 30px; gap: 10px; }
+    .ib-placeholder .kpi-icon { width: 64px; height: 64px; border-radius: 20px; background: var(--mk-accent-soft); color: var(--mk-accent-text); display: flex; align-items: center; justify-content: center; }
+    .ib-placeholder .kpi-icon .mk-ico { width: 28px; height: 28px; }
+    .ib-closed-note { text-align: center; font-size: 12px; color: var(--mk-muted); padding: 6px; }
+    .ib-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--mk-text); color: var(--mk-surface); padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: var(--mk-shadow); z-index: 1000; opacity: 0; transition: opacity .2s; pointer-events: none; }
+    .ib-toast.show { opacity: 1; }
+
+    @media (max-width: 860px) {
+        .inbox { grid-template-columns: minmax(0, 1fr); }
+        .ib-hint { display: none; }
+        .ib-who span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ib-convo { display: none; }
+        .inbox.show-convo .ib-list { display: none; }
+        .inbox.show-convo .ib-convo { display: flex; }
+        .ib-back { display: flex; }
+        .ib-msg { max-width: 86%; }
+        .ib-head-actions .label { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inbox" id="inbox">
+    <!-- Conversation list -->
+    <section class="ib-list" aria-label="Conversations">
+        <div class="ib-list-head">
+            <h1><svg class="mk-ico"><use href="#i-chat"/></svg> Chat inbox</h1>
+            <div class="ib-search">
+                <svg class="mk-ico"><use href="#i-search"/></svg>
+                <input type="search" id="ibSearch" placeholder="Search names, emails, messages…" autocomplete="off">
+            </div>
+            <div class="ib-tabs" role="tablist">
+                <button class="ib-tab active" data-filter="" type="button">All</button>
+                <button class="ib-tab" data-filter="unread" type="button">Unread <span id="ibUnreadTab"></span></button>
+            </div>
+        </div>
+        <div class="ib-items" id="ibItems"><div class="mk-empty">Loading conversations…</div></div>
+    </section>
+
+    <!-- Conversation -->
+    <section class="ib-convo" id="ibConvo" aria-label="Conversation">
+        <div class="ib-placeholder" id="ibPlaceholder">
+            <div class="kpi-icon"><svg class="mk-ico"><use href="#i-chat"/></svg></div>
+            <b style="color:var(--mk-text);font-size:15px;">Pick a conversation</b>
+            <div>Messages from the chat bubble on mkhmd.uk show up on the left.<br>Registered users get a 🔔 notification when you reply.</div>
+        </div>
+        <div id="ibThread" style="display:none; flex-direction:column; flex:1; min-height:0;">
+            <div class="ib-convo-head">
+                <button class="mk-icon-btn ib-back" id="ibBack" type="button" aria-label="Back to conversations"><svg class="mk-ico"><use href="#i-back"/></svg></button>
+                <span class="mk-avatar" id="ibAvatar"></span>
+                <div class="ib-who"><b id="ibName"></b><span id="ibContact"></span></div>
+                <div class="ib-head-actions">
+                    <button class="mk-btn sm ghost" id="ibToggle" type="button"><svg class="mk-ico"><use href="#i-lock"/></svg> <span class="label">Close chat</span></button>
+                    <a class="mk-btn sm ghost" id="ibRecord" href="#" title="Open raw record"><svg class="mk-ico"><use href="#i-external"/></svg></a>
+                </div>
+            </div>
+            <div class="ib-messages" id="ibMessages"></div>
+            <div class="ib-composer">
+                <div class="ib-compose-row">
+                    <textarea id="ibInput" rows="1" placeholder="Write a reply…" aria-label="Reply"></textarea>
+                    <button class="mk-btn ib-send" id="ibSend" type="button" aria-label="Send"><svg class="mk-ico"><use href="#i-send"/></svg></button>
+                </div>
+                <div class="ib-compose-opts">
+                    <label><input type="checkbox" id="ibEmail"> <span id="ibEmailLabel">Also send by email</span></label>
+                    <span class="ib-hint">Enter to send · Shift+Enter for a new line</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<div class="ib-toast" id="ibToast" role="status" aria-live="polite"></div>
+{% csrf_token %}
+
+<script>
+(function () {
+    const URLS = {
+        sessions: '{% url "admin:mkhmd_inbox_sessions" %}',
+        session: (id) => '{% url "admin:mkhmd_inbox_session" 0 %}'.replace('/0/', '/' + id + '/'),
+        send: (id) => '{% url "admin:mkhmd_inbox_send" 0 %}'.replace('/0/', '/' + id + '/'),
+        toggle: (id) => '{% url "admin:mkhmd_inbox_toggle" 0 %}'.replace('/0/', '/' + id + '/'),
+    };
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const $ = (id) => document.getElementById(id);
+    const inbox = $('inbox'), items = $('ibItems'), msgsEl = $('ibMessages'), input = $('ibInput');
+    let state = { filter: '', q: '', active: null, lastId: 0, lastDay: '', sending: false, session: null };
+
+    function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function toast(text) { const t = $('ibToast'); t.textContent = text; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
+    async function getJSON(url) { const r = await fetch(url, { credentials: 'same-origin' }); if (!r.ok) throw new Error(r.status); return r.json(); }
+    async function postJSON(url, body) {
+        const r = await fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }, body: JSON.stringify(body || {}) });
+        return r.json();
+    }
+
+    // ---------- List ----------
+    function renderList(data) {
+        const tabCount = $('ibUnreadTab');
+        tabCount.textContent = data.total_unread ? '(' + data.total_unread + ')' : '';
+        const top = document.getElementById('mkTopUnread');
+        if (top) { top.textContent = data.total_unread; top.style.display = data.total_unread ? '' : 'none'; }
+        items.innerHTML = '';
+        if (!data.sessions.length) {
+            items.appendChild(el('div', 'mk-empty', state.q || state.filter ? 'Nothing matches.' : 'No conversations yet.'));
+            return;
+        }
+        data.sessions.forEach(s => {
+            const row = el('div', 'ib-item' + (s.unread ? ' unread' : '') + (s.id === state.active ? ' active' : ''));
+            row.tabIndex = 0;
+            row.setAttribute('role', 'button');
+            row.appendChild(el('span', 'mk-avatar', s.initials));
+            const body = el('div', 'ib-item-body');
+            const top = el('div', 'ib-item-top');
+            top.appendChild(el('span', 'ib-item-name', s.name));
+            top.appendChild(el('span', 'ib-item-time', s.last_at));
+            body.appendChild(top);
+            body.appendChild(el('div', 'ib-item-last', s.last_message));
+            const badges = el('div', 'ib-item-badges');
+            if (s.unread) badges.appendChild(el('span', 'mk-pill red', s.unread + ' new'));
+            badges.appendChild(el('span', 'mk-pill ' + (s.is_user ? '' : 'grey'), s.is_user ? 'User' : 'Visitor'));
+            if (!s.is_active) badges.appendChild(el('span', 'mk-pill grey', 'Closed'));
+            body.appendChild(badges);
+            row.appendChild(body);
+            row.addEventListener('click', () => open(s.id));
+            row.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(s.id); });
+            items.appendChild(row);
+        });
+    }
+    async function loadList() {
+        const params = new URLSearchParams({ q: state.q, filter: state.filter });
+        try { renderList(await getJSON(URLS.sessions + '?' + params)); } catch (e) { /* keep last list */ }
+    }
+
+    // ---------- Thread ----------
+    function addMessage(m, pending) {
+        if (m.day !== state.lastDay) {
+            msgsEl.appendChild(el('div', 'ib-day', m.day));
+            state.lastDay = m.day;
+        }
+        const b = el('div', 'ib-msg ' + (m.mine ? 'me' : 'them') + (pending ? ' pending' : ''));
+        b.appendChild(document.createTextNode(m.text));
+        b.appendChild(el('span', 't', m.time));
+        msgsEl.appendChild(b);
+        if (!pending && m.id) state.lastId = Math.max(state.lastId, m.id);
+        return b;
+    }
+    function scrollDown() { msgsEl.scrollTop = msgsEl.scrollHeight; }
+    function renderHeader(s) {
+        state.session = s;
+        $('ibAvatar').textContent = s.initials;
+        $('ibName').textContent = s.name;
+        $('ibContact').textContent = (s.contact || 'No email left') + ' · ' + (s.is_user ? 'Registered user' : 'Website visitor') + ' · started ' + s.started;
+        $('ibRecord').href = s.admin_url;
+        $('ibToggle').querySelector('.label').textContent = s.is_active ? 'Close chat' : 'Reopen chat';
+        const canEmail = s.is_user || !!s.contact;
+        $('ibEmail').disabled = !canEmail;
+        $('ibEmail').checked = false;
+        $('ibEmailLabel').textContent = canEmail ? 'Also send by email' : 'Email not available (no address)';
+    }
+    async function open(id) {
+        state.active = id; state.lastId = 0; state.lastDay = '';
+        $('ibPlaceholder').style.display = 'none';
+        $('ibThread').style.display = 'flex';
+        inbox.classList.add('show-convo');
+        msgsEl.innerHTML = '';
+        msgsEl.appendChild(el('div', 'mk-empty', 'Loading…'));
+        document.querySelectorAll('.ib-item').forEach(r => r.classList.remove('active'));
+        history.replaceState(null, '', '?chat=' + id);
+        try {
+            const data = await getJSON(URLS.session(id));
+            if (state.active !== id) return;
+            msgsEl.innerHTML = '';
+            renderHeader(data.session);
+            data.messages.forEach(m => addMessage(m));
+            if (!data.messages.length) msgsEl.appendChild(el('div', 'mk-empty', 'No messages yet.'));
+            scrollDown();
+            if (window.matchMedia('(min-width: 861px)').matches) input.focus();
+            loadList();
+        } catch (e) {
+            msgsEl.innerHTML = '';
+            msgsEl.appendChild(el('div', 'mk-empty', 'Could not load this conversation.'));
+        }
+    }
+    async function poll() {
+        if (!state.active || state.sending) return;
+        try {
+            const data = await getJSON(URLS.session(state.active) + '?after=' + state.lastId);
+            if (data.messages.length) {
+                const nearBottom = msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 120;
+                data.messages.forEach(m => addMessage(m));
+                if (nearBottom) scrollDown();
+            }
+        } catch (e) { /* ignore */ }
+    }
+    async function send() {
+        const text = input.value.trim();
+        if (!text || state.sending || !state.active) return;
+        state.sending = true;
+        $('ibSend').disabled = true;
+        const now = new Date();
+        const bubble = addMessage({ text, mine: true, time: now.toTimeString().slice(0, 5), day: state.lastDay }, true);
+        input.value = ''; autosize(); scrollDown();
+        try {
+            const res = await postJSON(URLS.send(state.active), { message: text, email: $('ibEmail').checked });
+            if (!res.success) throw new Error(res.error || 'Failed');
+            bubble.classList.remove('pending');
+            state.lastId = Math.max(state.lastId, res.message.id);
+            if (res.emailed) toast('Sent, and emailed ✓');
+            else if (res.notified) toast('Sent. They got a 🔔 notification');
+            else toast('Sent ✓');
+            $('ibEmail').checked = false;
+            loadList();
+        } catch (e) {
+            bubble.remove();
+            input.value = text; autosize();
+            toast('Could not send. Please try again.');
+        } finally {
+            state.sending = false;
+            $('ibSend').disabled = false;
+        }
+    }
+    function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 180) + 'px'; }
+
+    // ---------- Events ----------
+    $('ibSend').addEventListener('click', send);
+    input.addEventListener('input', autosize);
+    input.addEventListener('keydown', (e) => {
+        const touch = window.matchMedia('(pointer: coarse)').matches;
+        if (e.key === 'Enter' && !e.shiftKey && !touch) { e.preventDefault(); send(); }
+    });
+    $('ibBack').addEventListener('click', () => { inbox.classList.remove('show-convo'); state.active = null; history.replaceState(null, '', location.pathname); loadList(); });
+    $('ibToggle').addEventListener('click', async () => {
+        if (!state.active) return;
+        const res = await postJSON(URLS.toggle(state.active));
+        if (res.success) {
+            state.session.is_active = res.is_active;
+            renderHeader(state.session);
+            toast(res.is_active ? 'Chat reopened' : 'Chat closed');
+            loadList();
+        }
+    });
+    let searchTimer;
+    $('ibSearch').addEventListener('input', (e) => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.q = e.target.value.trim(); loadList(); }, 250); });
+    document.querySelectorAll('.ib-tab').forEach(tab => tab.addEventListener('click', () => {
+        document.querySelectorAll('.ib-tab').forEach(t => t.classList.toggle('active', t === tab));
+        state.filter = tab.dataset.filter; loadList();
+    }));
+
+    // ---------- Start ----------
+    loadList();
+    const startId = parseInt(new URLSearchParams(location.search).get('chat') || '{{ open_id|default:"" }}', 10);
+    if (startId) open(startId);
+    setInterval(poll, 4000);
+    setInterval(loadList, 15000);
+})();
+</script>
+{% endblock %}

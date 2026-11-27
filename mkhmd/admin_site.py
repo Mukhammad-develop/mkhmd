@@ -4,8 +4,10 @@ Custom admin site: a friendly dashboard with plain-English sections,
 """
 from datetime import timedelta
 
+from functools import partial, update_wrapper
+
 from django.contrib.admin import AdminSite
-from django.urls import NoReverseMatch, reverse
+from django.urls import NoReverseMatch, path, reverse
 from django.utils import timezone
 
 
@@ -14,7 +16,7 @@ from django.utils import timezone
 ADMIN_SECTIONS = [
     {
         'title': 'Website content',
-        'icon': '🌐',
+        'icon': 'globe',
         'description': 'What visitors see on mkhmd.uk.',
         'models': [
             ('website', 'Project', 'Projects', 'Projects shown on the homepage, Portfolio and Projects pages.'),
@@ -23,7 +25,7 @@ ADMIN_SECTIONS = [
     },
     {
         'title': 'Meetings',
-        'icon': '📅',
+        'icon': 'calendar',
         'description': 'Meeting requests from the Schedule page.',
         'models': [
             ('website', 'Booking', 'Meeting requests', 'Confirm, complete or cancel meeting requests.'),
@@ -31,25 +33,26 @@ ADMIN_SECTIONS = [
     },
     {
         'title': 'Messages',
-        'icon': '💬',
+        'icon': 'chat',
         'description': 'Conversations with visitors and users.',
         'models': [
-            ('website', 'ChatSession', 'Support chats', 'Chats started from the chat bubble. Reply on the Support Chat page.'),
+            ('website', 'ChatSession', 'Chat records', 'Raw chat list. Use the Chat inbox to read and reply.'),
             ('website', 'AIChat', 'AI chats', "Users' conversations with the AI assistant (read-only history)."),
         ],
     },
     {
         'title': 'People',
-        'icon': '👥',
+        'icon': 'users',
         'description': 'Accounts registered on the site.',
         'models': [
             ('accounts', 'User', 'Users', 'Accounts, passwords, admin access and Turnitin credits.'),
             ('accounts', 'UserProfile', 'User profiles', 'Extra details users filled in on their profile.'),
+            ('accounts', 'Notification', 'Sent notifications', 'Every notification delivered to each user.'),
         ],
     },
     {
         'title': 'Turnitin',
-        'icon': '📄',
+        'icon': 'file',
         'description': 'Plagiarism-check service.',
         'models': [
             ('accounts', 'TurnitinSubmission', 'Submissions', 'Documents users submitted and their results.'),
@@ -57,7 +60,7 @@ ADMIN_SECTIONS = [
     },
     {
         'title': 'Advanced',
-        'icon': '⚙️',
+        'icon': 'sliders',
         'description': 'Low-level records. You rarely need these.',
         'models': [
             ('website', 'ChatMessage', 'Individual chat messages', None),
@@ -67,6 +70,13 @@ ADMIN_SECTIONS = [
         ],
     },
 ]
+
+
+MODEL_ICONS = {
+    'Project': 'folder', 'TimeSlot': 'clock', 'Booking': 'calendar',
+    'ChatSession': 'chat', 'AIChat': 'sparkle', 'User': 'users', 'UserProfile': 'user',
+    'Notification': 'bell', 'TurnitinSubmission': 'file',
+}
 
 
 def _url(name, *args, query=''):
@@ -81,6 +91,32 @@ class MkhmdAdminSite(AdminSite):
     site_title = 'mkhmd.uk admin'
     index_title = 'Dashboard'
     site_url = '/'
+
+    def get_urls(self):
+        from . import admin_views as v
+
+        def view(func, cacheable=False):
+            wrapped = self.admin_view(partial(func, self), cacheable=cacheable)
+            return update_wrapper(wrapped, func)
+
+        custom = [
+            path('inbox/', view(v.inbox), name='mkhmd_inbox'),
+            path('inbox/api/sessions/', view(v.inbox_sessions), name='mkhmd_inbox_sessions'),
+            path('inbox/api/unread/', view(v.inbox_unread_count), name='mkhmd_inbox_unread'),
+            path('inbox/api/<int:session_id>/', view(v.inbox_session), name='mkhmd_inbox_session'),
+            path('inbox/api/<int:session_id>/send/', view(v.inbox_send), name='mkhmd_inbox_send'),
+            path('inbox/api/<int:session_id>/toggle/', view(v.inbox_toggle), name='mkhmd_inbox_toggle'),
+            path('notifications/', view(v.notifications), name='mkhmd_notifications'),
+        ]
+        return custom + super().get_urls()
+
+    def each_context(self, request):
+        context = super().each_context(request)
+        if request.user.is_authenticated and request.user.is_staff:
+            from website.models import ChatSession
+            context['inbox_unread'] = ChatSession.objects.filter(
+                messages__is_from_admin=False, messages__is_read=False).distinct().count()
+        return context
 
     def get_app_list(self, request, app_label=None):
         # App-specific pages keep Django's default behaviour.
@@ -102,7 +138,8 @@ class MkhmdAdminSite(AdminSite):
                 if not model:
                     continue
                 used.add((app_label_, object_name))
-                models.append(dict(model, name=name, description=description))
+                models.append(dict(model, name=name, description=description,
+                                   icon=MODEL_ICONS.get(object_name, 'sliders')))
             if models:
                 sections.append(self._section(section, models))
 
@@ -110,8 +147,8 @@ class MkhmdAdminSite(AdminSite):
         leftovers = [m for key, m in available.items() if key not in used]
         if leftovers:
             sections.append(self._section(
-                {'title': 'Other', 'icon': '📦', 'description': ''},
-                [dict(m, description=None) for m in leftovers],
+                {'title': 'Other', 'icon': 'folder', 'description': ''},
+                [dict(m, description=None, icon='folder') for m in leftovers],
             ))
         return sections
 
@@ -143,7 +180,7 @@ class MkhmdAdminSite(AdminSite):
         upcoming = Booking.objects.filter(
             status__in=['pending', 'confirmed'], date__gte=today, date__lte=today + timedelta(days=7)
         ).order_by('date', 'start_time')[:5]
-        unread_chats = ChatSession.objects.filter(is_read_by_admin=False, messages__is_from_admin=False).distinct()
+        unread_chats = ChatSession.objects.filter(messages__is_from_admin=False, messages__is_read=False).distinct()
         ongoing_turnitin = TurnitinSubmission.objects.filter(submission_status=False)
 
         attention = [
@@ -155,8 +192,8 @@ class MkhmdAdminSite(AdminSite):
             },
             {
                 'count': unread_chats.count(),
-                'label': 'support chats with unread messages',
-                'url': _url('website:support_chat'),
+                'label': 'chats with unread messages',
+                'url': _url('admin:mkhmd_inbox'),
                 'action': 'Reply',
             },
             {
@@ -206,15 +243,20 @@ class MkhmdAdminSite(AdminSite):
         ]
 
         quick_actions = [
-            {'icon': '➕', 'label': 'Add a project', 'url': _url('admin:website_project_add')},
-            {'icon': '🕘', 'label': 'Add available hours', 'url': _url('admin:website_timeslot_add')},
-            {'icon': '💬', 'label': 'Reply to chats', 'url': _url('website:support_chat')},
-            {'icon': '📅', 'label': 'All meeting requests', 'url': _url('admin:website_booking_changelist')},
-            {'icon': '🎟️', 'label': 'Give Turnitin credits', 'url': _url('admin:accounts_user_changelist')},
-            {'icon': '🌐', 'label': 'Open the website', 'url': '/'},
+            {'icon': 'plus', 'label': 'Add a project', 'url': _url('admin:website_project_add')},
+            {'icon': 'clock', 'label': 'Add available hours', 'url': _url('admin:website_timeslot_add')},
+            {'icon': 'chat', 'label': 'Open chat inbox', 'url': _url('admin:mkhmd_inbox')},
+            {'icon': 'bell', 'label': 'Send a notification', 'url': _url('admin:mkhmd_notifications')},
+            {'icon': 'calendar', 'label': 'All meeting requests', 'url': _url('admin:website_booking_changelist')},
+            {'icon': 'key', 'label': 'Give Turnitin credits', 'url': _url('admin:accounts_user_changelist')},
+            {'icon': 'globe', 'label': 'Open the website', 'url': '/'},
         ]
 
+        from .admin_views import _session_dict, _sessions_queryset
+        recent_chats = [_session_dict(s) for s in _sessions_queryset()[:4]]
+
         return {
+            'recent_chats': recent_chats,
             'attention': attention,
             'attention_total': sum(item['count'] for item in attention),
             'upcoming_bookings': upcoming,

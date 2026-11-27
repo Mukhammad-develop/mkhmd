@@ -1,57 +1,116 @@
 {% extends "admin/base.html" %}
+{% load i18n %}
 
 {% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
 {% block extrastyle %}{{ block.super }}
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%238b5cf6'/%3E%3Ctext x='32' y='42' font-family='monospace' font-size='26' font-weight='700' fill='white' text-anchor='middle'%3E%26lt;/%26gt;%3C/text%3E%3C/svg%3E">
-<style>
-    /* mkhmd.uk purple theme for the admin (light + dark) */
-    :root, html[data-theme="light"], html[data-theme="dark"], html[data-theme="auto"] {
-        --primary: #7c3aed;
-        --secondary: #5b21b6;
-        --accent: #c4b5fd;
-        --primary-fg: #fff;
-        --header-bg: #0b0613;
-        --header-color: #e9e4ff;
-        --header-branding-color: #fff;
-        --header-link-color: #e9e4ff;
-        --breadcrumbs-bg: #6d28d9;
-        --breadcrumbs-fg: #ede9fe;
-        --breadcrumbs-link-fg: #fff;
-        --link-fg: #7c3aed;
-        --link-hover-color: #5b21b6;
-        --link-selected-fg: #6d28d9;
-        --button-bg: #7c3aed;
-        --button-hover-bg: #6d28d9;
-        --default-button-bg: #5b21b6;
-        --default-button-hover-bg: #4c1d95;
-        --object-tools-bg: #7c3aed;
-        --object-tools-hover-bg: #5b21b6;
-    }
-    @media (prefers-color-scheme: dark) {
-        html:not([data-theme="light"]) { --link-fg: #a78bfa; --link-hover-color: #c4b5fd; --link-selected-fg: #c4b5fd; --selected-row: #2e1065; }
-    }
-    html[data-theme="dark"] { --link-fg: #a78bfa; --link-hover-color: #c4b5fd; --link-selected-fg: #c4b5fd; --selected-row: #2e1065; }
-
-    #header { border-bottom: 1px solid #2a1f45; }
-    #site-name a { font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: -0.3px; }
-    #site-name a::before { content: "</>"; color: #a78bfa; margin-right: 0.5rem; }
-    .module h2, .module caption, .inline-group h2 { background: var(--primary); }
-    fieldset .description, .help, div.help { color: var(--body-quiet-color); }
-    fieldset.module > .description {
-        background: color-mix(in srgb, var(--primary) 8%, transparent);
-        border-left: 3px solid var(--primary);
-        padding: 8px 12px; margin: 0; font-size: 0.8125rem;
-    }
-    .submit-row input, .button, a.button { border-radius: 6px; }
-    #nav-sidebar .module caption a { font-weight: 600; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#7c3aed">
+{% include "admin/mkhmd/styles.html" %}
 {% endblock %}
 
-{% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
-{% if user.is_anonymous %}
-  {% include "admin/color_theme_toggle.html" %}
+{% block bodyclass %}{% if has_permission and not is_popup %}mk-with-sidebar{% endif %}{% endblock %}
+
+{% block header %}
+{% include "admin/mkhmd/icons.html" %}
+<header class="mk-topbar">
+    {% if has_permission %}
+    <button class="mk-icon-btn mk-burger" id="mkBurger" type="button" aria-label="Open menu" aria-controls="mkSidebar" aria-expanded="false">
+        <svg class="mk-ico"><use href="#i-menu"/></svg>
+    </button>
+    {% endif %}
+    <a class="mk-brand" href="{% url 'admin:index' %}">
+        <span class="mk-logo">&lt;/&gt;</span>
+        <span>mkhmd.uk <em>admin</em></span>
+    </a>
+    <div class="mk-spacer"></div>
+    {% if has_permission %}
+    <div class="mk-top-actions">
+        <a class="mk-icon-btn" href="{% url 'admin:mkhmd_inbox' %}" title="Chat inbox" aria-label="Chat inbox">
+            <svg class="mk-ico"><use href="#i-chat"/></svg>
+            {% if inbox_unread %}<span class="mk-count" id="mkTopUnread">{{ inbox_unread }}</span>{% endif %}
+        </a>
+        <a class="mk-icon-btn" href="{% url 'admin:mkhmd_notifications' %}" title="Send a notification" aria-label="Send a notification">
+            <svg class="mk-ico"><use href="#i-bell"/></svg>
+        </a>
+        {% include "admin/color_theme_toggle.html" %}
+        <details class="mk-user">
+            <summary>
+                <span class="mk-avatar">{% firstof user.first_name|slice:":1"|upper user.username|slice:":2"|upper %}</span>
+                <span class="mk-user-name">{% firstof user.get_short_name user.get_username %}</span>
+            </summary>
+            <div class="mk-menu">
+                <div style="padding:8px 10px 10px;">
+                    <div style="font-weight:600;">{% firstof user.get_full_name user.get_username %}</div>
+                    <div class="mk-muted" style="font-size:12px;">{{ user.email }}</div>
+                </div>
+                <hr>
+                {% if site_url %}<a href="{{ site_url }}" target="_blank" rel="noopener"><svg class="mk-ico"><use href="#i-globe"/></svg> View website</a>{% endif %}
+                {% if user.has_usable_password %}<a href="{% url 'admin:password_change' %}"><svg class="mk-ico"><use href="#i-key"/></svg> Change password</a>{% endif %}
+                <hr>
+                <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit"><svg class="mk-ico"><use href="#i-logout"/></svg> Log out</button>
+                </form>
+            </div>
+        </details>
+    </div>
+    {% endif %}
+</header>
+{% endblock %}
+
+{% block nav-sidebar %}
+{% if has_permission %}
+{% url 'admin:index' as dashboard_url %}
+{% url 'admin:mkhmd_inbox' as inbox_url %}
+{% url 'admin:mkhmd_notifications' as notify_url %}
+<nav class="mk-sidebar" id="mkSidebar" aria-label="Admin menu">
+    <div class="mk-nav-primary">
+        <a class="mk-nav-item {% if request.path == dashboard_url %}active{% endif %}" href="{{ dashboard_url }}">
+            <svg class="mk-ico"><use href="#i-home"/></svg> Dashboard
+        </a>
+        <a class="mk-nav-item {% if inbox_url in request.path %}active{% endif %}" href="{{ inbox_url }}">
+            <svg class="mk-ico"><use href="#i-chat"/></svg> Chat inbox
+            {% if inbox_unread %}<span class="mk-pill red">{{ inbox_unread }}</span>{% endif %}
+        </a>
+        <a class="mk-nav-item {% if notify_url in request.path %}active{% endif %}" href="{{ notify_url }}">
+            <svg class="mk-ico"><use href="#i-send"/></svg> Send notification
+        </a>
+    </div>
+    {% for app in available_apps %}
+        <div class="mk-nav-group">{{ app.name }}</div>
+        {% for model in app.models %}
+            {% if model.admin_url %}
+            <a class="mk-nav-item {% if model.admin_url in request.path %}active{% endif %}" href="{{ model.admin_url }}">
+                <svg class="mk-ico"><use href="#i-{{ model.icon|default:'folder' }}"/></svg> {{ model.name }}
+            </a>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    <div class="mk-nav-group">Website</div>
+    <a class="mk-nav-item" href="/" target="_blank" rel="noopener">
+        <svg class="mk-ico"><use href="#i-external"/></svg> Open mkhmd.uk
+    </a>
+</nav>
+<div class="mk-backdrop" id="mkBackdrop"></div>
+<script>
+(function () {
+    var body = document.body, burger = document.getElementById('mkBurger'), backdrop = document.getElementById('mkBackdrop');
+    function setOpen(open) {
+        body.classList.toggle('mk-nav-open', open);
+        if (burger) burger.setAttribute('aria-expanded', String(open));
+    }
+    if (burger) burger.addEventListener('click', function () { setOpen(!body.classList.contains('mk-nav-open')); });
+    if (backdrop) backdrop.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    // Close the user menu when clicking elsewhere
+    document.addEventListener('click', function (e) {
+        document.querySelectorAll('details.mk-user[open]').forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute('open'); });
+    });
+})();
+</script>
 {% endif %}
 {% endblock %}
 
