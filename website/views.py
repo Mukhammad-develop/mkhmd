@@ -250,7 +250,7 @@ def career_summary():
 
 
 def home(request):
-    """Software Engineer & Web-Scraping Specialist Landing page"""
+    """Software Engineer landing page"""
     
     # Get featured project (only one featured project for home page)
     featured_project = Project.objects.filter(is_featured=True, is_active=True).first()
@@ -270,9 +270,9 @@ def home(request):
     context = {
         'years_experience': career['years_experience'],
         'location': 'London, UK',
-        'title': 'Software Engineer & Web-Scraping Specialist',
+        'title': 'Software Engineer',
         'name': 'Abdurohman',
-        'tagline': 'Software Engineer & Web-Scraping Specialist',
+        'tagline': 'Software Engineer',
         'description': 'Building innovative software solutions and extracting valuable data through advanced web-scraping techniques',
         'email': 'abdurakhmon@mkhmd.uk',
         'github': 'https://github.com/mukhammad-develop',

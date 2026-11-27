@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block page_title %}{{ name|default:"Abdurohman" }}{% if title %} - {{ title }}{% endif %}{% endblock %}</title>
-    {% with desc="Abdurohman is a software engineer specialising in web scraping and automation, building automation tools, data extraction pipelines and web apps with Python and Django." %}
+    {% with desc="Abdurohman is a software engineer building automation tools, data extraction pipelines and web apps with Python and Django." %}
     <meta name="description" content="{% block meta_description %}{{ desc }}{% endblock %}">
     <meta name="theme-color" content="#000000">
     <meta property="og:type" content="website">
@@ -754,7 +754,7 @@
         <div class="footer-inner">
             <div class="footer-brand">
                 <a href="{% url 'website:home' %}" class="logo">&lt;abdurohman/&gt;</a>
-                <p>Software engineer &amp; web-scraping specialist</p>
+                <p>Software engineer</p>
             </div>
             <nav class="footer-links" aria-label="Footer">
                 <a href="{% url 'website:home' %}">Home</a>
