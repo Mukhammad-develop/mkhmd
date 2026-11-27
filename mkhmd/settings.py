@@ -153,13 +153,18 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Email Configuration
+# cPanel mail server (Secure SSL/TLS settings). The password lives only in the
+# server's private .env file as EMAIL_HOST_PASSWORD, never in git.
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.livemail.co.uk'  # Your Livemail SMTP server
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'no-reply@mkhmd.uk'  # Your Livemail email
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'idontwanttoreply')  # Your Livemail password
-DEFAULT_FROM_EMAIL = 'MKHMD <no-reply@mkhmd.uk>'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mkhmd.uk')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True') == 'True'
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'no-reply@mkhmd.uk')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT = 20  # seconds; stops sign-up hanging if the mail server is slow
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'mkhmd.uk <no-reply@mkhmd.uk>')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

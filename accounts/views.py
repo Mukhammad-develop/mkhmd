@@ -215,32 +215,38 @@ def delete_account_view(request):
 
 # Helper functions
 def send_verification_email(email, code):
-    """Send verification email with code"""
-    subject = 'MKHMD - Email Verification Code'
-    message = f"""
-    Hello!
-    
-    Your verification code for MKHMD is: {code}
-    
-    This code will expire in 10 minutes.
-    
-    If you didn't request this code, please ignore this email.
-    
-    Best regards,
-    MKHMD Team
-    """
-    
+    """Send the sign-up / login verification code."""
+    from django.core.mail import EmailMultiAlternatives
+    from django.utils.html import escape
+
+    subject = f'Your mkhmd.uk verification code: {code}'
+    text = (
+        f"Hello!\n\n"
+        f"Your verification code for mkhmd.uk is: {code}\n\n"
+        f"It expires in 10 minutes. If you didn't request it, you can ignore this email.\n\n"
+        f"Abdurohman\nhttps://mkhmd.uk\n"
+    )
+    html = f"""<!DOCTYPE html><html><body style="margin:0;background:#f4f4f7;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
+<table role="presentation" width="100%" style="padding:32px 0;"><tr><td align="center">
+<table role="presentation" width="480" style="max-width:100%;background:#fff;border-radius:14px;overflow:hidden;">
+<tr><td style="background:linear-gradient(135deg,#7c3aed,#5b21b6);padding:24px 32px;color:#fff;font-family:monospace;font-size:15px;">&lt;abdurohman/&gt;</td></tr>
+<tr><td style="padding:32px;color:#1f2937;font-size:15px;line-height:1.6;">
+<h1 style="margin:0 0 12px;font-size:20px;">Your verification code</h1>
+<p style="margin:0 0 20px;">Enter this code on mkhmd.uk to continue:</p>
+<div style="font-size:34px;font-weight:700;letter-spacing:10px;background:#f3f0ff;color:#5b21b6;border-radius:12px;padding:18px;text-align:center;font-family:monospace;">{escape(code)}</div>
+<p style="margin:20px 0 0;color:#6b7280;font-size:13px;">It expires in 10 minutes. If you didn't request it, you can safely ignore this email.</p>
+</td></tr>
+<tr><td style="padding:16px 32px;background:#fafafa;color:#9ca3af;font-size:12px;">Sent by mkhmd.uk</td></tr>
+</table></td></tr></table></body></html>"""
+
     try:
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
+        mail = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [email])
+        mail.attach_alternative(html, 'text/html')
+        mail.send(fail_silently=False)
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        import sys
+        print(f"Failed to send verification email to {email}: {e!r}", file=sys.stderr)
         return False
 
 # API Views for AJAX requests
