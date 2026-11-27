@@ -45,7 +45,7 @@ CSRF_TRUSTED_ORIGINS = ['https://mkhmd.uk', 'https://www.mkhmd.uk']
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "mkhmd.apps.MkhmdAdminConfig",  # custom admin dashboard
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -70,7 +70,7 @@ ROOT_URLCONF = "mkhmd.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

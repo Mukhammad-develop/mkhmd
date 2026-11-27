@@ -1,5 +1,7 @@
 from django.contrib import admin
-from django.utils.html import format_html
+from mkhmd.admin_site import FriendlyAdminMixin
+from django.utils.html import format_html, format_html_join, escape
+from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.utils import timezone
 from django.db import models
@@ -7,34 +9,72 @@ from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage, AIChat
 
 
 @admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'status', 'is_featured', 'is_active', 'order', 'created_at')
+class ProjectAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    list_display = ('title', 'category', 'status', 'is_featured', 'is_active', 'order', 'links')
+    list_display_links = ('title',)
+    save_on_top = True
     list_filter = ('status', 'category', 'is_featured', 'is_active', 'created_at')
     search_fields = ('title', 'description', 'technologies')
     prepopulated_fields = {'slug': ('title',)}
     list_editable = ('is_featured', 'is_active', 'order')
     
     fieldsets = (
-        ('Basic Information', {
+        ('1. The basics', {
+            'description': 'The title and a one or two sentence summary. This is what visitors read on the project card.',
             'fields': ('title', 'slug', 'description', 'detailed_description')
         }),
-        ('Project Details', {
+        ('2. Where and how it is shown', {
+            'description': '"Visible on website" shows the project on the Portfolio and Projects pages. '
+                           '"Featured" makes it the big card on the homepage (only the first featured project is used). '
+                           'Lower position numbers are shown first.',
+            'fields': ('is_active', 'is_featured', 'order')
+        }),
+        ('3. Details', {
+            'description': 'Status and category appear as small badges. Technologies are comma-separated, e.g. "Python, Django, Selenium". '
+                           'Features: one per line.',
             'fields': ('category', 'status', 'technologies', 'features')
         }),
-        ('Links', {
+        ('4. Links', {
+            'description': 'Leave empty if there is no link. Each filled link becomes a button on the card.',
             'fields': ('github_url', 'demo_url', 'documentation_url')
         }),
-        ('Media', {
-            'fields': ('icon', 'image')
+        ('5. Icon and image (optional)', {
+            'description': 'Icon uses Font Awesome names, e.g. "fas fa-robot", "fas fa-spider", "fab fa-telegram". Browse icons at fontawesome.com/icons.',
+            'fields': ('icon', 'image'),
+            'classes': ('collapse',)
         }),
-        ('Statistics', {
+        ('6. Numbers (optional)', {
+            'description': 'Shown under the featured project only. Use real numbers, e.g. "2,000+" lines of code.',
             'fields': ('lines_of_code', 'success_rate', 'availability'),
             'classes': ('collapse',)
         }),
-        ('Display Options', {
-            'fields': ('is_featured', 'is_active', 'order')
-        }),
     )
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        labels = {
+            'is_active': 'Visible on website',
+            'is_featured': 'Featured on homepage',
+            'order': 'Position',
+            'slug': 'Web address name',
+            'description': 'Short summary',
+            'detailed_description': 'Longer description',
+        }
+        for field, label in labels.items():
+            if field in form.base_fields:
+                form.base_fields[field].label = label
+        if 'slug' in form.base_fields:
+            form.base_fields['slug'].help_text = 'Filled in automatically from the title. Letters, numbers and dashes only.'
+        return form
+
+    @admin.display(description='Links')
+    def links(self, obj):
+        parts = []
+        if obj.github_url:
+            parts.append(format_html('<a href="{}" target="_blank" rel="noopener">GitHub</a>', obj.github_url))
+        if obj.demo_url:
+            parts.append(format_html('<a href="{}" target="_blank" rel="noopener">Demo</a>', obj.demo_url))
+        return mark_safe(' · '.join(parts)) if parts else '—'
     
     def save_model(self, request, obj, form, change):
         if not change:  # If creating new object
@@ -43,15 +83,23 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 @admin.register(TimeSlot)
-class TimeSlotAdmin(admin.ModelAdmin):
-    list_display = ('weekday', 'start_time', 'end_time', 'duration_minutes', 'is_active', 'created_at')
+class TimeSlotAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    list_display = ('weekday', 'start_time', 'end_time', 'duration_minutes', 'is_active')
     list_filter = ('weekday', 'is_active')
     list_editable = ('is_active',)
     ordering = ('weekday', 'start_time')
+    fieldsets = (
+        (None, {
+            'description': 'Add one row per block of free time, e.g. Monday 09:00 to 12:00. '
+                           'Times are in UTC (UK winter time; subtract 1 hour in UK summer time). '
+                           'Visitors can only book inside these hours. Untick "active" to pause a slot without deleting it.',
+            'fields': ('weekday', 'start_time', 'end_time', 'duration_minutes', 'is_active'),
+        }),
+    )
 
 
 @admin.register(Booking)
-class BookingAdmin(admin.ModelAdmin):
+class BookingAdmin(FriendlyAdminMixin, admin.ModelAdmin):
     list_display = (
         'client_info', 
         'meeting_datetime', 
@@ -68,6 +116,8 @@ class BookingAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Meeting Summary', {
+            'description': 'To answer this request: change "Status" below to Confirmed or Cancelled, then click Save. '
+                           'Email the client to let them know. Use the "Reply by email" link.',
             'fields': ('meeting_summary',),
             'classes': ('wide',)
         }),
@@ -96,13 +146,12 @@ class BookingAdmin(admin.ModelAdmin):
     
     def client_info(self, obj):
         """Display client information with contact details"""
-        html = f'<strong>{obj.name}</strong><br>'
-        html += f'<small>📧 {obj.email}</small><br>'
+        html = format_html('<strong>{}</strong><br><small>📧 {}</small><br>', obj.name, obj.email)
         if obj.phone:
-            html += f'<small>📞 {obj.phone}</small><br>'
+            html += format_html('<small>📞 {}</small><br>', obj.phone)
         if obj.company:
-            html += f'<small>🏢 {obj.company}</small>'
-        return format_html(html)
+            html += format_html('<small>🏢 {}</small>', obj.company)
+        return html
     client_info.short_description = 'Client'
     
     def meeting_datetime(self, obj):
@@ -120,7 +169,7 @@ class BookingAdmin(admin.ModelAdmin):
         time_str = f'🕐 {obj.start_time.strftime("%H:%M")} - {obj.end_time.strftime("%H:%M")}'
         duration_str = f'<small>({obj.duration_minutes} min)</small>'
         
-        return format_html(f'{date_str}<br>{time_str} {duration_str}')
+        return mark_safe(f'{date_str}<br>{time_str} {duration_str}')
     meeting_datetime.short_description = 'Meeting Date & Time'
     
     def booking_type_display(self, obj):
@@ -134,8 +183,8 @@ class BookingAdmin(admin.ModelAdmin):
         }
         icon = icons.get(obj.booking_type, '📋')
         return format_html(
-            f'{icon} <strong>{obj.get_booking_type_display()}</strong><br>'
-            f'<small>{obj.subject}</small>'
+            '{} <strong>{}</strong><br><small>{}</small>',
+            icon, obj.get_booking_type_display(), obj.subject
         )
     booking_type_display.short_description = 'Meeting Type'
     
@@ -159,41 +208,42 @@ class BookingAdmin(admin.ModelAdmin):
     def time_until_meeting(self, obj):
         """Show time remaining until meeting"""
         if not obj.is_upcoming:
-            return format_html('<span style="color: #6b7280;">Past</span>')
+            return mark_safe('<span style="color: #6b7280;">Past</span>')
         
         now = timezone.now()
         meeting_dt = timezone.make_aware(timezone.datetime.combine(obj.date, obj.start_time))
         delta = meeting_dt - now
         
         if delta.days > 0:
-            return format_html(f'<span style="color: #10b981;">In {delta.days} days</span>')
+            return format_html('<span style="color: #10b981;">In {} days</span>', delta.days)
         else:
             hours = delta.seconds // 3600
             if hours > 0:
-                return format_html(f'<span style="color: #f59e0b;">In {hours} hours</span>')
+                return format_html('<span style="color: #f59e0b;">In {} hours</span>', hours)
             else:
                 minutes = delta.seconds // 60
-                return format_html(f'<span style="color: #ef4444;">In {minutes} minutes</span>')
+                return format_html('<span style="color: #ef4444;">In {} minutes</span>', minutes)
     time_until_meeting.short_description = 'Time Until'
     
     def meeting_summary(self, obj):
         """Comprehensive meeting summary for detail view"""
         html = f'''
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+        <div style="background: #f3f4f6; color: #111; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
             <h3 style="margin-top: 0; color: #8b5cf6;">📅 Meeting Summary</h3>
-            <p><strong>Client:</strong> {obj.name} ({obj.email})</p>
-            {f'<p><strong>Company:</strong> {obj.company}</p>' if obj.company else ''}
-            {f'<p><strong>Phone:</strong> {obj.phone}</p>' if obj.phone else ''}
+            <p><strong>Client:</strong> {escape(obj.name)} ({escape(obj.email)})</p>
+            {f'<p><strong>Company:</strong> {escape(obj.company)}</p>' if obj.company else ''}
+            {f'<p><strong>Phone:</strong> {escape(obj.phone)}</p>' if obj.phone else ''}
             <p><strong>Meeting Type:</strong> {obj.get_booking_type_display()}</p>
-            <p><strong>Subject:</strong> {obj.subject}</p>
+            <p><strong>Subject:</strong> {escape(obj.subject)}</p>
             <p><strong>Date:</strong> {obj.date.strftime("%A, %B %d, %Y")}</p>
             <p><strong>Time:</strong> {obj.start_time.strftime("%H:%M")} - {obj.end_time.strftime("%H:%M")} ({obj.duration_minutes} minutes)</p>
             <p><strong>Status:</strong> {obj.get_status_display()}</p>
             <p><strong>Message:</strong></p>
-            <p style="background: white; padding: 10px; border-radius: 4px;">{obj.message}</p>
+            <p style="background: white; color: #111; padding: 10px; border-radius: 4px; white-space: pre-wrap;">{escape(obj.message)}</p>
+            <p><a href="mailto:{escape(obj.email)}?subject={escape(obj.subject)}">✉️ Reply by email</a></p>
         </div>
         '''
-        return format_html(html)
+        return mark_safe(html)
     meeting_summary.short_description = 'Meeting Overview'
     
     # Admin actions
@@ -232,7 +282,11 @@ class ChatMessageInline(admin.TabularInline):
 
 
 @admin.register(ChatSession)
-class ChatSessionAdmin(admin.ModelAdmin):
+class ChatSessionAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    def has_add_permission(self, request):
+        # Conversations are started by visitors on the website, not here.
+        return False
+
     list_display = ('visitor_info', 'unread_badge', 'last_message_preview', 'is_active', 'updated_at')
     list_filter = ('is_active', 'is_read_by_admin', 'created_at')
     search_fields = ('visitor_name', 'visitor_email', 'user__username', 'user__email')
@@ -291,18 +345,19 @@ class ChatSessionAdmin(admin.ModelAdmin):
         unread = obj.unread_messages_count
         
         html = f'''
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+        <div style="background: #f3f4f6; color: #111; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
             <h3 style="margin-top: 0; color: #8b5cf6;">💬 Chat Session Summary</h3>
-            <p><strong>Visitor:</strong> {obj.visitor_name or obj.user.username if obj.user else 'Anonymous'}</p>
-            <p><strong>Contact:</strong> {obj.visitor_email or (obj.user.email if obj.user else 'N/A')}</p>
+            <p><strong>Visitor:</strong> {escape(obj.visitor_name or (obj.user.username if obj.user else 'Anonymous'))}</p>
+            <p><strong>Contact:</strong> {escape(obj.visitor_email or (obj.user.email if obj.user else 'N/A'))}</p>
             <p><strong>Total Messages:</strong> {total}</p>
             <p><strong>Unread Messages:</strong> {unread}</p>
             <p><strong>Status:</strong> {'🟢 Active' if obj.is_active else '🔴 Closed'}</p>
             <p><strong>Started:</strong> {obj.created_at.strftime("%B %d, %Y at %H:%M")}</p>
             <p><strong>Last Activity:</strong> {obj.updated_at.strftime("%B %d, %Y at %H:%M")}</p>
+            <p><a href="{reverse('website:support_chat')}">💬 Open the Support Chat page to reply</a></p>
         </div>
         '''
-        return format_html(html)
+        return mark_safe(html)
     conversation_summary.short_description = 'Chat Overview'
     
     def mark_as_read(self, request, queryset):
@@ -320,7 +375,11 @@ class ChatSessionAdmin(admin.ModelAdmin):
 
 
 @admin.register(ChatMessage)
-class ChatMessageAdmin(admin.ModelAdmin):
+class ChatMessageAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    def has_add_permission(self, request):
+        # Conversations are started by visitors on the website, not here.
+        return False
+
     list_display = ('session_info', 'sender_badge', 'message_preview', 'created_at', 'is_read')
     list_filter = ('is_from_admin', 'is_read', 'created_at')
     search_fields = ('message', 'session__visitor_name', 'session__visitor_email')
@@ -358,13 +417,17 @@ class AIChatMessageInline(admin.TabularInline):
 
 
 @admin.register(AIChat)
-class AIChatAdmin(admin.ModelAdmin):
+class AIChatAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    def has_add_permission(self, request):
+        # Conversations are started by visitors on the website, not here.
+        return False
+
     list_display = ('user_info', 'title', 'message_count_display', 'last_activity', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at', 'updated_at')
     search_fields = ('user__username', 'user__email', 'title')
     readonly_fields = ('created_at', 'updated_at', 'conversation_stats', 'message_count')
     inlines = [AIChatMessageInline]
-    actions = ['mark_as_inactive', 'mark_as_active', 'export_conversation']
+    actions = ['mark_as_inactive', 'mark_as_active']
     
     fieldsets = (
         ('Conversation Overview', {
@@ -415,10 +478,10 @@ class AIChatAdmin(admin.ModelAdmin):
         avg_response_time = messages.aggregate(models.Avg('response_time_ms'))['response_time_ms__avg'] or 0
         
         html = f'''
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+        <div style="background: #f3f4f6; color: #111; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
             <h3 style="margin-top: 0; color: #3b82f6;">🤖 AI Chat Statistics</h3>
-            <p><strong>User:</strong> {obj.user.username} ({obj.user.email})</p>
-            <p><strong>Conversation Title:</strong> {obj.title}</p>
+            <p><strong>User:</strong> {escape(obj.user.username)} ({escape(obj.user.email)})</p>
+            <p><strong>Conversation Title:</strong> {escape(obj.title)}</p>
             <p><strong>Total Messages:</strong> {total}</p>
             <p><strong>Average Temperature:</strong> {avg_temp:.2f}</p>
             <p><strong>Average Max Tokens:</strong> {avg_tokens:.0f}</p>
@@ -428,7 +491,7 @@ class AIChatAdmin(admin.ModelAdmin):
             <p><strong>Last Updated:</strong> {obj.updated_at.strftime("%B %d, %Y at %H:%M")}</p>
         </div>
         '''
-        return format_html(html)
+        return mark_safe(html)
     conversation_stats.short_description = 'Conversation Overview'
     
     def mark_as_inactive(self, request, queryset):
@@ -448,7 +511,11 @@ class AIChatAdmin(admin.ModelAdmin):
 
 
 @admin.register(AIChatMessage)
-class AIChatMessageAdmin(admin.ModelAdmin):
+class AIChatMessageAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    def has_add_permission(self, request):
+        # Conversations are started by visitors on the website, not here.
+        return False
+
     list_display = ('chat_info', 'user_prompt_preview', 'ai_response_preview', 'temperature', 'max_tokens', 'response_time_display', 'created_at')
     list_filter = ('created_at', 'temperature')
     search_fields = ('prompt', 'response', 'chat__user__username')
@@ -491,8 +558,8 @@ class AIChatMessageAdmin(admin.ModelAdmin):
         if obj.response_time_ms:
             seconds = obj.response_time_ms / 1000
             if seconds < 1:
-                return format_html('<span style="color: #10b981;">{:.0f}ms</span>', obj.response_time_ms)
+                return format_html('<span style="color: #10b981;">{}ms</span>', f'{obj.response_time_ms:.0f}')
             else:
-                return format_html('<span style="color: #f59e0b;">{:.2f}s</span>', seconds)
-        return format_html('<span style="color: #6b7280;">N/A</span>')
+                return format_html('<span style="color: #f59e0b;">{}s</span>', f'{seconds:.2f}')
+        return mark_safe('<span style="color: #6b7280;">N/A</span>')
     response_time_display.short_description = 'Response Time'

@@ -1,33 +1,65 @@
 from django.contrib import admin
+from mkhmd.admin_site import FriendlyAdminMixin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from .models import User, EmailVerification, UserProfile, TurnitinSubmission
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
-    fieldsets = BaseUserAdmin.fieldsets + (
-        ('Additional Info', {
-            'fields': ('is_email_verified', 'bio', 'location', 'website', 'avatar', 'turnitin_balance')
+class UserAdmin(FriendlyAdminMixin, BaseUserAdmin):
+    fieldsets = (
+        ('Login', {
+            'description': 'People sign in with their email address and password.',
+            'fields': ('email', 'username', 'password'),
+        }),
+        ('Name and profile', {
+            'fields': ('first_name', 'last_name', 'bio', 'location', 'website', 'avatar'),
+        }),
+        ('Turnitin credits', {
+            'description': 'How many Turnitin checks this person can still run. Each check uses 1 credit. '
+                           'To give credits, increase the number and click Save.',
+            'fields': ('turnitin_balance',),
+        }),
+        ('Account status', {
+            'description': '"Active": can sign in (untick to block someone without deleting them). '
+                           '"Staff status": can open this admin panel. '
+                           '"Superuser": can do everything here and reply to all support chats. Only give these to people you fully trust.',
+            'fields': ('is_active', 'is_email_verified', 'is_staff', 'is_superuser'),
+        }),
+        ('Detailed permissions (advanced)', {
+            'fields': ('groups', 'user_permissions'),
+            'classes': ('collapse',),
+        }),
+        ('Important dates', {
+            'fields': ('last_login', 'date_joined'),
+            'classes': ('collapse',),
         }),
     )
-    list_display = ('email', 'username', 'first_name', 'last_name', 'is_email_verified', 'turnitin_balance', 'is_staff')
+    list_display = ('email', 'username', 'get_full_name', 'is_email_verified', 'turnitin_balance', 'is_staff', 'date_joined')
+    list_editable = ('turnitin_balance',)
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'is_email_verified', 'date_joined')
     search_fields = ('email', 'username', 'first_name', 'last_name')
     ordering = ('-date_joined',)
-    
+
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
+            'description': 'Create the account here. You can add a name, credits and permissions on the next screen.',
             'fields': ('email', 'username', 'password1', 'password2'),
         }),
     )
-    
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if 'turnitin_balance' in form.base_fields:
+            form.base_fields['turnitin_balance'].label = 'Turnitin credits'
+        return form
+
+    @admin.display(description='Full name')
     def get_full_name(self, obj):
         return obj.get_full_name() or '-'
-    get_full_name.short_description = 'Full Name'
 
 @admin.register(EmailVerification)
-class EmailVerificationAdmin(admin.ModelAdmin):
+class EmailVerificationAdmin(FriendlyAdminMixin, admin.ModelAdmin):
     list_display = ('user', 'email', 'code', 'created_at', 'is_used', 'expires_at')
     list_filter = ('is_used', 'created_at', 'expires_at')
     search_fields = ('user__email', 'email', 'code')
@@ -51,7 +83,7 @@ class UserProfileInline(admin.StackedInline):
     )
 
 @admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
+class UserProfileAdmin(FriendlyAdminMixin, admin.ModelAdmin):
     list_display = ('user', 'phone', 'company', 'job_title', 'profile_visibility', 'created_at')
     list_filter = ('profile_visibility', 'created_at', 'updated_at')
     search_fields = ('user__email', 'user__username', 'company', 'job_title')
@@ -68,8 +100,8 @@ class UserProfileAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(TurnitinSubmission)
-class TurnitinSubmissionAdmin(admin.ModelAdmin):
-    list_display = ('submission_id', 'owner', 'submission_status', 'similarity_percentage', 'ai_percentage', 'submission_date', 'created_at')
+class TurnitinSubmissionAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    list_display = ('submission_id', 'owner', 'get_status_display', 'similarity_percentage', 'ai_percentage', 'submission_date', 'created_at')
     list_filter = ('submission_status', 'turnitin_type', 'submission_date', 'created_at')
     search_fields = ('owner__email', 'owner__username', 'submission_id', 'access_code')
     readonly_fields = ('created_at', 'updated_at')
