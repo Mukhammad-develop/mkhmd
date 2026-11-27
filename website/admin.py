@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.utils import timezone
 from django.db import models
-from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage, AIChat, AIChatMessage
+from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage, AIChat, AIChatMessage, GitHubRepo
 
 
 @admin.register(Project)
@@ -563,3 +563,16 @@ class AIChatMessageAdmin(FriendlyAdminMixin, admin.ModelAdmin):
                 return format_html('<span style="color: #f59e0b;">{}s</span>', f'{seconds:.2f}')
         return mark_safe('<span style="color: #6b7280;">N/A</span>')
     response_time_display.short_description = 'Response Time'
+
+
+@admin.register(GitHubRepo)
+class GitHubRepoAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    """The list page sends you to the friendlier GitHub repos manager."""
+    list_display = ('name', 'visible', 'pinned', 'order', 'title')
+
+    def changelist_view(self, request, extra_context=None):
+        from django.shortcuts import redirect
+        return redirect('admin:mkhmd_github')
+
+    def has_add_permission(self, request):
+        return False

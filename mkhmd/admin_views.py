@@ -280,3 +280,105 @@ def notifications(site, request):
         'levels': [('info', 'Info', '🔔'), ('success', 'Good news', '🎉'), ('warning', 'Important', '⚠️')],
     }
     return TemplateResponse(request, 'admin/mkhmd/notifications.html', context)
+
+
+# ---------------------------------------------------------------------------
+# GitHub repos shown on the website
+# ---------------------------------------------------------------------------
+
+def github_repos(site, request):
+    from django.core.cache import cache
+    from website.models import GitHubDisplaySettings, GitHubRepo
+    from website.views import apply_repo_settings, fetch_github_projects
+
+    username = 'mukhammad-develop'
+    settings_obj = GitHubDisplaySettings.load()
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body or '{}')
+        except ValueError:
+            return HttpResponseBadRequest('Invalid JSON')
+        action = data.get('action')
+
+        if action == 'save':
+            name = (data.get('name') or '').strip()
+            if not name:
+                return JsonResponse({'success': False, 'error': 'Missing repo name'}, status=400)
+            repo, _ = GitHubRepo.objects.get_or_create(
+                name=name, defaults={'visible': settings_obj.show_new_automatically})
+            for field in ('visible', 'pinned'):
+                if field in data:
+                    setattr(repo, field, bool(data[field]))
+            if 'order' in data:
+                try:
+                    repo.order = int(data['order'] or 0)
+                except (TypeError, ValueError):
+                    repo.order = 0
+            if 'title' in data:
+                repo.title = (data['title'] or '').strip()[:200]
+            if 'description' in data:
+                repo.description = (data['description'] or '').strip()
+            repo.save()
+            return JsonResponse({'success': True})
+
+        if action == 'settings':
+            if 'show_new_automatically' in data:
+                settings_obj.show_new_automatically = bool(data['show_new_automatically'])
+            if 'homepage_count' in data:
+                try:
+                    settings_obj.homepage_count = max(0, min(24, int(data['homepage_count'])))
+                except (TypeError, ValueError):
+                    pass
+            settings_obj.save()
+            return JsonResponse({'success': True, 'homepage_count': settings_obj.homepage_count})
+
+        if action == 'bulk':
+            visible = bool(data.get('visible'))
+            for name in data.get('names', []):
+                GitHubRepo.objects.update_or_create(name=name, defaults={'visible': visible})
+            return JsonResponse({'success': True})
+
+        if action == 'refresh':
+            cache.delete(f'github_repos_{username}')
+            cache.delete(f'github_profile_{username}')
+            return JsonResponse({'success': True})
+
+        return JsonResponse({'success': False, 'error': 'Unknown action'}, status=400)
+
+    live = fetch_github_projects(username)
+    choices = {r.name: r for r in GitHubRepo.objects.all()}
+    shown, _ = apply_repo_settings(live)
+    position = {r['name']: i + 1 for i, r in enumerate(shown)}
+
+    rows = []
+    for repo in live:
+        choice = choices.get(repo['name'])
+        rows.append({
+            'name': repo['name'],
+            'default_title': repo['name'].replace('-', ' ').replace('_', ' ').title(),
+            'github_description': repo.get('description') or '',
+            'url': repo.get('github_url'),
+            'language': repo.get('language') or '',
+            'stars': repo.get('stars', 0),
+            'updated': repo.get('updated'),
+            'visible': choice.visible if choice else settings_obj.show_new_automatically,
+            'pinned': bool(choice and choice.pinned),
+            'order': choice.order if choice else 0,
+            'title': choice.title if choice else '',
+            'description': choice.description if choice else '',
+            'is_new': choice is None,
+            'position': position.get(repo['name']),
+        })
+    rows.sort(key=lambda r: (r['position'] is None, r['position'] or 0))
+
+    context = {
+        **site.each_context(request),
+        'title': 'GitHub repos on the website',
+        'rows': rows,
+        'settings': settings_obj,
+        'shown_count': len(shown),
+        'total_count': len(live),
+        'loaded': bool(live),
+    }
+    return TemplateResponse(request, 'admin/mkhmd/github_repos.html', context)

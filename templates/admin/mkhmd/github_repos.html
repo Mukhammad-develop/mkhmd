@@ -1,0 +1,252 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Dashboard</a> › GitHub repos</div>{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+    .gh-sub { color: var(--mk-muted); margin: -10px 0 20px; max-width: 720px; }
+    .gh-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-bottom: 20px; }
+    .gh-setting { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .gh-setting b { font-size: 13.5px; }
+    .gh-setting small { color: var(--mk-muted); font-size: 12.5px; line-height: 1.4; }
+    .gh-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .gh-big { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+    .gh-count-input { width: 72px !important; text-align: center; }
+
+    /* Switch */
+    .switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: 12.5px; font-weight: 600; color: var(--mk-muted); }
+    .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .switch .track { width: 38px; height: 22px; border-radius: 999px; background: var(--mk-border); position: relative; transition: background .15s; flex-shrink: 0; }
+    .switch .track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+    .switch input:checked + .track { background: var(--mk-accent); }
+    .switch input:checked + .track::after { transform: translateX(16px); }
+    .switch input:focus-visible + .track { box-shadow: 0 0 0 3px color-mix(in srgb, var(--mk-accent) 30%, transparent); }
+    .switch.pin input:checked + .track { background: #f59e0b; }
+
+    .gh-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--mk-border); }
+    .gh-search { position: relative; flex: 1 1 220px; }
+    .gh-search .mk-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--mk-muted); }
+    .gh-search input { width: 100%; box-sizing: border-box; padding-left: 34px !important; }
+    .gh-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .gh-tab { border: 1px solid var(--mk-border); background: none; color: var(--mk-muted); border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    .gh-tab.active { background: var(--mk-accent-soft); color: var(--mk-accent-text); border-color: transparent; }
+
+    .gh-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--mk-border); }
+    .gh-row:last-child { border-bottom: 0; }
+    .gh-row.hidden-repo .gh-info { opacity: .5; }
+    .gh-pos { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; background: var(--mk-accent-soft); color: var(--mk-accent-text); }
+    .gh-row.hidden-repo .gh-pos { background: var(--mk-hover); color: var(--mk-muted); }
+    .gh-name { font-weight: 700; font-size: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .gh-name a { color: var(--mk-text) !important; text-decoration: none; }
+    .gh-name a:hover { color: var(--mk-accent-text) !important; }
+    .gh-desc { color: var(--mk-muted); font-size: 13px; margin-top: 2px; }
+    .gh-meta { display: flex; gap: 12px; flex-wrap: wrap; color: var(--mk-muted); font-size: 12px; margin-top: 6px; }
+    .gh-controls { display: flex; gap: 14px; align-items: center; }
+    .gh-order { width: 58px !important; text-align: center; padding: 6px !important; }
+    .gh-edit { grid-column: 2 / -1; display: none; gap: 10px; padding-top: 4px; }
+    .gh-row.editing .gh-edit { display: grid; }
+    .gh-edit label { font-size: 12px; font-weight: 700; color: var(--mk-text); display: block; margin-bottom: 4px; }
+    .gh-edit input, .gh-edit textarea { width: 100%; box-sizing: border-box; font-family: inherit; }
+    .gh-edit textarea { min-height: 70px; resize: vertical; }
+    .gh-edit-actions { display: flex; gap: 8px; }
+    .gh-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--mk-text); color: var(--mk-surface); padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 1000; opacity: 0; transition: opacity .2s; pointer-events: none; }
+    .gh-toast.show { opacity: 1; }
+
+    @media (max-width: 900px) { .gh-top { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 640px) {
+        .gh-row { grid-template-columns: 30px minmax(0, 1fr); padding: 14px; }
+        .gh-controls { grid-column: 1 / -1; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-top: 4px; }
+        .gh-edit { grid-column: 1 / -1; }
+        .gh-toolbar { padding: 12px 14px; }
+        html body .gh-controls input.gh-order { width: 64px !important; flex: 0 0 auto; }
+        html body .gh-setting-row input.gh-count-input { width: 72px !important; }
+        .gh-controls .js-edit { margin-left: auto; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p class="gh-sub">Your public repos come live from GitHub. Choose which ones appear on the homepage, Portfolio and Projects pages, which come first, and how they're described. Changes save instantly.</p>
+
+<div class="gh-top">
+    <div class="mk-card gh-setting">
+        <span class="mk-muted" style="font-size:12.5px;font-weight:600;">Shown on the website</span>
+        <div><span class="gh-big" id="shownCount">{{ shown_count }}</span> <span class="mk-muted">of {{ total_count }} repos</span></div>
+        <a href="/" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;">Preview homepage ↗</a>
+    </div>
+    <div class="mk-card gh-setting">
+        <div class="gh-setting-row">
+            <b>New repos appear automatically</b>
+            <label class="switch"><input type="checkbox" id="autoShow" {% if settings.show_new_automatically %}checked{% endif %}><span class="track"></span></label>
+        </div>
+        <small>On: a repo you create on GitHub shows up on the site straight away. Off: new repos stay hidden until you switch them on here.</small>
+    </div>
+    <div class="mk-card gh-setting">
+        <div class="gh-setting-row">
+            <b>Repos on the homepage</b>
+            <input type="number" min="0" max="24" class="gh-count-input" id="homeCount" value="{{ settings.homepage_count }}">
+        </div>
+        <small>The homepage shows the first repos in the order below. Portfolio and Projects show every repo that's switched on.</small>
+    </div>
+</div>
+
+<div class="mk-card">
+    <div class="gh-toolbar">
+        <div class="gh-search"><svg class="mk-ico"><use href="#i-search"/></svg><input type="search" id="ghSearch" placeholder="Search repos…"></div>
+        <div class="gh-tabs">
+            <button class="gh-tab active" data-filter="all" type="button">All</button>
+            <button class="gh-tab" data-filter="shown" type="button">Shown</button>
+            <button class="gh-tab" data-filter="hidden" type="button">Hidden</button>
+            <button class="gh-tab" data-filter="pinned" type="button">Pinned</button>
+        </div>
+        <button class="mk-btn sm ghost" type="button" id="bulkShow">Show all</button>
+        <button class="mk-btn sm ghost" type="button" id="bulkHide">Hide all</button>
+        <button class="mk-btn sm ghost" type="button" id="refreshBtn" title="Load the latest repos from GitHub"><svg class="mk-ico" style="width:14px;height:14px"><use href="#i-refresh"/></svg> Refresh</button>
+    </div>
+
+    {% if not loaded %}
+    <div class="mk-empty">Couldn't reach GitHub right now. Click <b>Refresh</b> in a minute.</div>
+    {% endif %}
+
+    <div id="ghList">
+    {% for r in rows %}
+    <div class="gh-row {% if not r.visible %}hidden-repo{% endif %}" data-name="{{ r.name }}" data-visible="{{ r.visible|yesno:'1,0' }}" data-pinned="{{ r.pinned|yesno:'1,0' }}" data-search="{{ r.name|lower }} {{ r.title|lower }} {{ r.language|lower }}">
+        <div class="gh-pos" title="Position on the website">{% if r.position %}{{ r.position }}{% else %}–{% endif %}</div>
+        <div class="gh-info" style="min-width:0">
+            <div class="gh-name">
+                <a href="{{ r.url }}" target="_blank" rel="noopener">{% firstof r.title r.default_title %}</a>
+                {% if r.pinned %}<span class="mk-pill amber">📌 Pinned</span>{% endif %}
+                {% if r.is_new %}<span class="mk-pill">New</span>{% endif %}
+                {% if r.title %}<span class="mk-muted" style="font-weight:500;font-size:12px;">({{ r.name }})</span>{% endif %}
+            </div>
+            <div class="gh-desc">{% firstof r.description r.github_description "No description on GitHub" %}</div>
+            <div class="gh-meta">
+                {% if r.language %}<span>{{ r.language }}</span>{% endif %}
+                {% if r.stars %}<span>★ {{ r.stars }}</span>{% endif %}
+                {% if r.updated %}<span>Updated {{ r.updated|date:"j M Y" }}</span>{% endif %}
+            </div>
+        </div>
+        <div class="gh-controls">
+            <label class="switch" title="Show on the website"><input type="checkbox" class="js-visible" {% if r.visible %}checked{% endif %}><span class="track"></span> Show</label>
+            <label class="switch pin" title="Show before the others"><input type="checkbox" class="js-pinned" {% if r.pinned %}checked{% endif %}><span class="track"></span> Pin</label>
+            <input type="number" class="gh-order js-order" value="{{ r.order }}" title="Order: lower numbers first" aria-label="Order">
+            <button type="button" class="mk-btn sm ghost js-edit"><svg class="mk-ico" style="width:14px;height:14px"><use href="#i-edit"/></svg> Edit text</button>
+        </div>
+        <div class="gh-edit">
+            <div><label>Title on the website</label><input type="text" class="js-title" value="{{ r.title }}" placeholder="{{ r.default_title }}"></div>
+            <div><label>Description on the website</label><textarea class="js-desc" placeholder="{{ r.github_description|default:'Write a short description' }}">{{ r.description }}</textarea></div>
+            <div class="gh-edit-actions">
+                <button type="button" class="mk-btn sm js-save">Save text</button>
+                <button type="button" class="mk-btn sm ghost js-cancel">Cancel</button>
+                <span class="mk-muted" style="font-size:12px;align-self:center;">Leave empty to use GitHub's.</span>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    {% if loaded %}<div class="mk-empty">No public repos found.</div>{% endif %}
+    {% endfor %}
+    </div>
+    <div class="mk-empty" id="noMatch" hidden>Nothing matches.</div>
+</div>
+<div class="gh-toast" id="toast" role="status" aria-live="polite"></div>
+{% csrf_token %}
+
+<script>
+(function () {
+    const URL_ = '{% url "admin:mkhmd_github" %}';
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const $ = (id) => document.getElementById(id);
+    function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('show'); clearTimeout(e._h); e._h = setTimeout(() => e.classList.remove('show'), 2000); }
+    async function post(body) {
+        const r = await fetch(URL_, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }, body: JSON.stringify(body) });
+        const d = await r.json();
+        if (!d.success) throw new Error(d.error || 'Failed');
+        return d;
+    }
+    function updateCount() {
+        $('shownCount').textContent = document.querySelectorAll('.gh-row[data-visible="1"]').length;
+    }
+
+    // Per-repo controls
+    document.querySelectorAll('.gh-row').forEach(row => {
+        const name = row.dataset.name;
+        const save = async (fields, msg) => {
+            try { await post(Object.assign({ action: 'save', name }, fields)); toast(msg || 'Saved ✓'); }
+            catch (e) { toast('Could not save. Try again.'); }
+        };
+        row.querySelector('.js-visible').addEventListener('change', (e) => {
+            row.dataset.visible = e.target.checked ? '1' : '0';
+            row.classList.toggle('hidden-repo', !e.target.checked);
+            updateCount();
+            save({ visible: e.target.checked }, e.target.checked ? 'Now shown on the website' : 'Hidden from the website');
+        });
+        row.querySelector('.js-pinned').addEventListener('change', (e) => {
+            row.dataset.pinned = e.target.checked ? '1' : '0';
+            save({ pinned: e.target.checked }, e.target.checked ? 'Pinned to the top. Reload to see the new order' : 'Unpinned');
+        });
+        let orderTimer;
+        row.querySelector('.js-order').addEventListener('input', (e) => {
+            clearTimeout(orderTimer);
+            orderTimer = setTimeout(() => save({ order: e.target.value }, 'Order saved. Reload to see the new order'), 500);
+        });
+        row.querySelector('.js-edit').addEventListener('click', () => row.classList.toggle('editing'));
+        row.querySelector('.js-cancel').addEventListener('click', () => row.classList.remove('editing'));
+        row.querySelector('.js-save').addEventListener('click', async () => {
+            const title = row.querySelector('.js-title').value, description = row.querySelector('.js-desc').value;
+            await save({ title, description }, 'Text saved ✓');
+            const link = row.querySelector('.gh-name a');
+            link.textContent = title || link.closest('.gh-row').querySelector('.js-title').placeholder;
+            const descEl = row.querySelector('.gh-desc');
+            descEl.textContent = description || row.querySelector('.js-desc').placeholder;
+            row.classList.remove('editing');
+        });
+    });
+
+    // Site-wide settings
+    $('autoShow').addEventListener('change', async (e) => {
+        try { await post({ action: 'settings', show_new_automatically: e.target.checked }); toast(e.target.checked ? 'New repos will appear automatically' : 'New repos will stay hidden until you switch them on'); }
+        catch (err) { toast('Could not save'); }
+    });
+    let countTimer;
+    $('homeCount').addEventListener('input', (e) => {
+        clearTimeout(countTimer);
+        countTimer = setTimeout(async () => {
+            try { const d = await post({ action: 'settings', homepage_count: e.target.value }); e.target.value = d.homepage_count; toast('Homepage will show ' + d.homepage_count + ' repos'); }
+            catch (err) { toast('Could not save'); }
+        }, 500);
+    });
+
+    // Bulk + refresh
+    async function bulk(visible) {
+        const rows = [...document.querySelectorAll('.gh-row')].filter(r => r.style.display !== 'none');
+        if (!rows.length || !confirm((visible ? 'Show ' : 'Hide ') + rows.length + ' repos on the website?')) return;
+        await post({ action: 'bulk', visible, names: rows.map(r => r.dataset.name) });
+        rows.forEach(r => { r.dataset.visible = visible ? '1' : '0'; r.classList.toggle('hidden-repo', !visible); r.querySelector('.js-visible').checked = visible; });
+        updateCount(); toast('Updated ' + rows.length + ' repos');
+    }
+    $('bulkShow').addEventListener('click', () => bulk(true));
+    $('bulkHide').addEventListener('click', () => bulk(false));
+    $('refreshBtn').addEventListener('click', async () => { await post({ action: 'refresh' }); location.reload(); });
+
+    // Search + filter
+    let filter = 'all';
+    function applyFilter() {
+        const q = $('ghSearch').value.toLowerCase();
+        let shown = 0;
+        document.querySelectorAll('.gh-row').forEach(r => {
+            const ok = r.dataset.search.includes(q) &&
+                (filter === 'all' || (filter === 'shown' && r.dataset.visible === '1') ||
+                 (filter === 'hidden' && r.dataset.visible === '0') || (filter === 'pinned' && r.dataset.pinned === '1'));
+            r.style.display = ok ? '' : 'none';
+            if (ok) shown++;
+        });
+        $('noMatch').hidden = shown !== 0 || !document.querySelector('.gh-row');
+    }
+    $('ghSearch').addEventListener('input', applyFilter);
+    document.querySelectorAll('.gh-tab').forEach(t => t.addEventListener('click', () => {
+        document.querySelectorAll('.gh-tab').forEach(x => x.classList.toggle('active', x === t));
+        filter = t.dataset.filter; applyFilter();
+    }));
+})();
+</script>
+{% endblock %}

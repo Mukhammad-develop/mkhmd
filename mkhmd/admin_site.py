@@ -20,6 +20,7 @@ ADMIN_SECTIONS = [
         'description': 'What visitors see on mkhmd.uk.',
         'models': [
             ('website', 'Project', 'Projects', 'Projects shown on the homepage, Portfolio and Projects pages.'),
+            ('website', 'GitHubRepo', 'GitHub repos', 'Choose which GitHub repos show on the site, and in what order.'),
             ('website', 'TimeSlot', 'Weekly availability', 'The hours people can book a meeting with you.'),
         ],
     },
@@ -73,7 +74,7 @@ ADMIN_SECTIONS = [
 
 
 MODEL_ICONS = {
-    'Project': 'folder', 'TimeSlot': 'clock', 'Booking': 'calendar',
+    'Project': 'folder', 'GitHubRepo': 'github', 'TimeSlot': 'clock', 'Booking': 'calendar',
     'ChatSession': 'chat', 'AIChat': 'sparkle', 'User': 'users', 'UserProfile': 'user',
     'Notification': 'bell', 'TurnitinSubmission': 'file',
 }
@@ -107,6 +108,7 @@ class MkhmdAdminSite(AdminSite):
             path('inbox/api/<int:session_id>/send/', view(v.inbox_send), name='mkhmd_inbox_send'),
             path('inbox/api/<int:session_id>/toggle/', view(v.inbox_toggle), name='mkhmd_inbox_toggle'),
             path('notifications/', view(v.notifications), name='mkhmd_notifications'),
+            path('github/', view(v.github_repos), name='mkhmd_github'),
         ]
         return custom + super().get_urls()
 
@@ -138,8 +140,11 @@ class MkhmdAdminSite(AdminSite):
                 if not model:
                     continue
                 used.add((app_label_, object_name))
-                models.append(dict(model, name=name, description=description,
-                                   icon=MODEL_ICONS.get(object_name, 'sliders')))
+                entry = dict(model, name=name, description=description,
+                             icon=MODEL_ICONS.get(object_name, 'sliders'))
+                if object_name == 'GitHubRepo':
+                    entry.update(admin_url=reverse('admin:mkhmd_github'), add_url=None)
+                models.append(entry)
             if models:
                 sections.append(self._section(section, models))
 
@@ -244,6 +249,7 @@ class MkhmdAdminSite(AdminSite):
 
         quick_actions = [
             {'icon': 'plus', 'label': 'Add a project', 'url': _url('admin:website_project_add')},
+            {'icon': 'github', 'label': 'Choose GitHub repos', 'url': _url('admin:mkhmd_github')},
             {'icon': 'clock', 'label': 'Add available hours', 'url': _url('admin:website_timeslot_add')},
             {'icon': 'chat', 'label': 'Open chat inbox', 'url': _url('admin:mkhmd_inbox')},
             {'icon': 'bell', 'label': 'Send a notification', 'url': _url('admin:mkhmd_notifications')},

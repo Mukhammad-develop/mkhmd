@@ -240,6 +240,7 @@ def home(request):
 
     github_repos = fetch_github_projects('mukhammad-develop')
     github_profile = get_github_profile('mukhammad-develop')
+    shown_repos, repo_settings = apply_repo_settings(github_repos)
     
     context = {
         'title': 'Software Developer & Web-Scraper Engineer',
@@ -253,7 +254,7 @@ def home(request):
         # Dynamic Projects
         'featured_project': featured_project,
         'coming_soon_projects': coming_soon_projects,
-        'github_repos': github_repos[:6],
+        'github_repos': shown_repos[:repo_settings.homepage_count],
         'github_profile': github_profile,
         'github_stats': github_summary(github_repos, github_profile),
         'skills': [
@@ -282,6 +283,7 @@ def portfolio(request):
     
     live_repos = fetch_github_projects('mukhammad-develop')
     live_profile = get_github_profile('mukhammad-develop')
+    shown_live_repos = apply_repo_settings(live_repos)[0]
 
     # Get GitHub projects from database (projects with GitHub URLs)
     github_projects_db = all_portfolio_projects.filter(
@@ -314,7 +316,8 @@ def portfolio(request):
         'github_projects': github_projects,
 
         # Live GitHub repositories and real stats
-        'github_repos': live_repos,
+        'github_repos': shown_live_repos,
+        'repo_languages': sorted({r['language'] for r in shown_live_repos if r.get('language')}),
         'stats': github_summary(live_repos, live_profile),
         
         # GitHub Integration
@@ -846,7 +849,7 @@ def projects(request):
         'turnitin_project': turnitin_project,
         
         # Live GitHub Projects
-        'github_projects': github_projects[:12],
+        'github_projects': apply_repo_settings(github_projects)[0],
         
         # GitHub Stats
         'github_stats': {
@@ -2002,6 +2005,33 @@ def github_summary(repos, profile):
     }
 
 
+def apply_repo_settings(repos):
+    """
+    Apply the choices made in Admin > GitHub repos:
+    hide/show, pin, order, custom title/description.
+    Returns (visible_repos, settings).
+    """
+    from .models import GitHubRepo, GitHubDisplaySettings
+    settings_obj = GitHubDisplaySettings.load()
+    choices = {r.name: r for r in GitHubRepo.objects.all()}
+    shown = []
+    for index, repo in enumerate(repos):
+        choice = choices.get(repo.get('name'))
+        visible = choice.visible if choice else settings_obj.show_new_automatically
+        if not visible:
+            continue
+        item = dict(repo)
+        item['pinned'] = bool(choice and choice.pinned)
+        item['_sort'] = (0 if item['pinned'] else 1, choice.order if choice else 0, index)
+        if choice and choice.title:
+            item['title'] = choice.title
+        if choice and choice.description:
+            item['description'] = choice.description
+        shown.append(item)
+    shown.sort(key=lambda r: r['_sort'])
+    return shown, settings_obj
+
+
 def fetch_github_projects(username='mukhammad-develop'):
     """Fetch GitHub projects dynamically using GitHub API (cached for an hour)"""
     from django.core.cache import cache
@@ -2045,6 +2075,7 @@ def _fetch_github_projects_uncached(username):
             for repo in repos:
                 if not repo.get('fork', False):  # Skip forked repositories
                     project = {
+                        'name': repo.get('name', ''),
                         'title': repo.get('name', '').replace('-', ' ').replace('_', ' ').title(),
                         'description': repo.get('description') or '',
                         'github_url': repo.get('html_url', ''),

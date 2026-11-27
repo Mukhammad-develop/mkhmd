@@ -406,10 +406,10 @@
     {% if github_repos %}
     <h2 class="section-title" style="font-size: 1.6rem; text-align: left; margin: 1rem 0 1.5rem;">Open Source on GitHub</h2>
 
-    {% if stats.languages %}
+    {% if repo_languages|length > 1 %}
     <div class="filter-tabs" role="tablist" aria-label="Filter by language">
         <button class="filter-tab active" data-filter="all"><i class="fas fa-th"></i> All</button>
-        {% for lang in stats.languages %}
+        {% for lang in repo_languages %}
         <button class="filter-tab" data-filter="{{ lang }}">{{ lang }}</button>
         {% endfor %}
     </div>

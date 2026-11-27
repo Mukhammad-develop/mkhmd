@@ -318,3 +318,44 @@ class AIChatMessage(models.Model):
     
     def __str__(self):
         return f"User: {self.prompt[:50]}... | AI: {self.response[:50]}..."
+
+
+class GitHubRepo(models.Model):
+    """How one GitHub repository is shown on the website (repos come live from GitHub)."""
+
+    name = models.CharField(max_length=200, unique=True, help_text="Repository name exactly as on GitHub")
+    visible = models.BooleanField(default=True, help_text="Show this repo on the website")
+    pinned = models.BooleanField(default=False, help_text="Show this repo before the others")
+    order = models.IntegerField(default=0, help_text="Lower numbers are shown first (within pinned / not pinned)")
+    title = models.CharField(max_length=200, blank=True, help_text="Custom title (leave empty to use the repo name)")
+    description = models.TextField(blank=True, help_text="Custom description (leave empty to use GitHub's)")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-pinned', 'order', 'name']
+        verbose_name = 'GitHub repo'
+        verbose_name_plural = 'GitHub repos'
+
+    def __str__(self):
+        return self.name
+
+
+class GitHubDisplaySettings(models.Model):
+    """Site-wide options for the GitHub sections (single row)."""
+
+    show_new_automatically = models.BooleanField(
+        default=True,
+        help_text="New repos you create on GitHub appear on the website without you doing anything")
+    homepage_count = models.PositiveSmallIntegerField(default=6, help_text="How many repos the homepage shows")
+
+    class Meta:
+        verbose_name = 'GitHub display settings'
+        verbose_name_plural = 'GitHub display settings'
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return 'GitHub display settings'
