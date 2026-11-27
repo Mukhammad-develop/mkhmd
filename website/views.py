@@ -226,7 +226,7 @@ def parse_turnitin_results(html_content, access_code):
 # Create your views here.
 
 def home(request):
-    """Software Developer & Web-Scraper Engineer Landing page"""
+    """Software Engineer & Web-Scraping Specialist Landing page"""
     
     # Get featured project (only one featured project for home page)
     featured_project = Project.objects.filter(is_featured=True, is_active=True).first()
@@ -243,9 +243,9 @@ def home(request):
     shown_repos, repo_settings = apply_repo_settings(github_repos)
     
     context = {
-        'title': 'Software Developer & Web-Scraper Engineer',
-        'name': 'Abdurakhmon',
-        'tagline': 'Software Developer & Web-Scraping Specialist',
+        'title': 'Software Engineer & Web-Scraping Specialist',
+        'name': 'Abdurohman',
+        'tagline': 'Software Engineer & Web-Scraping Specialist',
         'description': 'Building innovative software solutions and extracting valuable data through advanced web-scraping techniques',
         'email': 'abdurakhmon@mkhmd.uk',
         'github': 'https://github.com/mukhammad-develop',
@@ -305,7 +305,7 @@ def portfolio(request):
     
     context = {
         'title': 'Portfolio & Projects',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         
         # Dynamic Projects from Database
         'dev_projects': featured_projects,
@@ -343,7 +343,7 @@ def portfolio(request):
         ],
         'testimonials': [
             {
-                'text': 'Abdurakhmon built our entire data collection infrastructure, processing millions of records daily.',
+                'text': 'Abdurohman built our entire data collection infrastructure, processing millions of records daily.',
                 'author': 'Sarah Johnson',
                 'role': 'CTO, DataCorp Inc.',
                 'avatar': 'testimonial1.jpg'
@@ -434,7 +434,7 @@ def achievements(request):
     """Achievements and credentials page - Web-Scraping Engineer focused"""
     context = {
         'title': 'Achievements & Recognition',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'certifications': [
             {'name': 'AWS Solutions Architect Professional', 'issuer': 'Amazon Web Services', 'year': '2024', 'icon': 'fab fa-aws'},
             {'name': 'Google Cloud Professional Developer', 'issuer': 'Google Cloud', 'year': '2023', 'icon': 'fab fa-google'},
@@ -448,7 +448,7 @@ def achievements(request):
         ],
         'testimonials': [
             {
-                'text': 'Abdurakhmon built our entire data collection infrastructure, processing millions of records daily.',
+                'text': 'Abdurohman built our entire data collection infrastructure, processing millions of records daily.',
                 'author': 'Sarah Johnson',
                 'role': 'CTO, DataCorp Inc.',
                 'avatar': 'testimonial1.jpg'
@@ -473,7 +473,7 @@ def timeline(request):
     """Combined Timeline page - Web-Scraping Engineer focused"""
     context = {
         'title': 'Timeline & Metrics',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         
         # Web-Scraping Timeline Content
         'timeline_events': [
@@ -587,7 +587,7 @@ def schedule(request):
     
     context = {
         'title': 'Schedule & Booking',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'time_slots': time_slots,
         'slots_by_day': slots_by_day,
         'upcoming_bookings': upcoming_bookings,
@@ -674,7 +674,7 @@ def blog(request):
     """Blog and insights page - Web-Scraping Engineer focused"""
     context = {
         'title': 'Insights & Thoughts',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'featured_posts': [
             {
                 'title': 'Advanced Anti-Bot Detection Bypass Techniques',
@@ -708,7 +708,7 @@ def metrics(request):
     """Live metrics dashboard - Web-Scraping Engineer focused"""
     context = {
         'title': 'Live Metrics Dashboard',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'live_stats': [
             {'label': 'GitHub Commits', 'value': '2,847', 'trend': '+12%', 'icon': 'fab fa-github'},
             {'label': 'Data Records Scraped', 'value': '10M+', 'trend': '+25%', 'icon': 'fas fa-database'},
@@ -728,7 +728,7 @@ def booking(request):
     """Web-Scraping consultation booking system"""
     context = {
         'title': 'Book Consultation',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'services': [
             {
                 'name': 'Web Scraping Consultation',
@@ -759,7 +759,7 @@ def resources(request):
     """Web-Scraping Resources and Tools page"""
     context = {
         'title': 'Web-Scraping Resources',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         
         # Web-Scraping Tools
         'tools': [
@@ -842,7 +842,7 @@ def projects(request):
     
     context = {
         'title': 'Projects & Tools',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         
         # All Active Projects
         'all_projects': all_projects,
@@ -947,7 +947,7 @@ def turnitin(request):
     # GET request - show upload form
     context = {
         'title': 'Turnitin Submission',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'user_balance': request.user.turnitin_balance,
     }
     return render(request, 'website/turnitin.html', context)
@@ -1004,7 +1004,7 @@ def turnitin_results(request):
     
     context = {
         'title': 'My Turnitin Submissions',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'submissions': user_submissions,
         'user_balance': request.user.turnitin_balance,
         'ongoing_count': ongoing_submissions.count(),
@@ -2285,7 +2285,7 @@ def chat_hub(request):
     """Chat hub - choose between AI chat and support chat"""
     context = {
         'title': 'Chat',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
     }
     return render(request, 'website/chat_hub.html', context)
 
@@ -2298,7 +2298,7 @@ def ai_chat(request):
     
     context = {
         'title': 'AI Chat Assistant',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'user_chats': user_chats,
     }
     
@@ -2570,7 +2570,7 @@ def ai_chat_delete(request):
 
 @login_required
 def support_chat(request):
-    """Support chat page - talk to Abdurakhmon"""
+    """Support chat page - talk to Abdurohman"""
     # Superusers see ALL chats, regular users see only their own
     if request.user.is_superuser:
         user_sessions = ChatSession.objects.filter(user__isnull=False).order_by('-updated_at')
@@ -2579,7 +2579,7 @@ def support_chat(request):
     
     context = {
         'title': 'Support Chat',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'user_sessions': user_sessions,
         'is_admin': request.user.is_superuser,
     }
@@ -2792,7 +2792,7 @@ This is an automated notification from your website.
                     'message': chat_message.message,
                     'is_from_admin': chat_message.is_from_admin,
                     'created_at': chat_message.created_at.isoformat(),
-                    'sender_name': 'Abdurakhmon' if is_from_admin else session.user.username,
+                    'sender_name': 'Abdurohman' if is_from_admin else session.user.username,
                 }
             })
             
@@ -2833,7 +2833,7 @@ def support_chat_messages(request):
                     'is_from_admin': msg.is_from_admin,
                     'created_at': msg.created_at.isoformat(),
                     'is_read': msg.is_read,
-                    'sender_name': 'Abdurakhmon' if msg.is_from_admin else session.user.username,
+                    'sender_name': 'Abdurohman' if msg.is_from_admin else session.user.username,
                 })
                 
                 # Mark as read if user is viewing

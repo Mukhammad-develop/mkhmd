@@ -403,32 +403,6 @@
     </div>
     {% endif %}
 
-    {% if github_repos %}
-    <h2 class="section-title" style="font-size: 1.6rem; text-align: left; margin: 1rem 0 1.5rem;">Open Source on GitHub</h2>
-
-    {% if repo_languages|length > 1 %}
-    <div class="filter-tabs" role="tablist" aria-label="Filter by language">
-        <button class="filter-tab active" data-filter="all"><i class="fas fa-th"></i> All</button>
-        {% for lang in repo_languages %}
-        <button class="filter-tab" data-filter="{{ lang }}">{{ lang }}</button>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="repo-grid" id="repoGrid">
-        {% for repo in github_repos %}
-            {% include 'website/partials/repo_card.html' %}
-        {% endfor %}
-    </div>
-    <p class="portfolio-empty" id="noMatches" hidden>No repositories in this language yet.</p>
-    <div style="text-align: center; margin-top: 2.5rem;">
-        <a href="https://github.com/mukhammad-develop" target="_blank" rel="noopener noreferrer" class="btn btn-secondary"><i class="fab fa-github"></i> See everything on GitHub</a>
-    </div>
-    {% elif not all_projects %}
-    <div class="portfolio-empty">
-        <p>Projects are loading from GitHub. <a href="https://github.com/mukhammad-develop" target="_blank" rel="noopener noreferrer" style="color: var(--light-purple);">View them on GitHub</a> in the meantime.</p>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
 

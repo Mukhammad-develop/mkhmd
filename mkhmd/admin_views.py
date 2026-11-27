@@ -167,7 +167,7 @@ def inbox_send(site, request, session_id):
     # Registered users get a bell notification so they see the reply next visit.
     if session.user_id:
         from accounts.notifications import notify
-        notify([session.user], 'New reply from Abdurakhmon', text[:300],
+        notify([session.user], 'New reply from Abdurohman', text[:300],
                link='/support-chat/', level='info', sent_by=request.user,
                email=bool(data.get('email')))
         notified = True
@@ -178,8 +178,8 @@ def inbox_send(site, request, session_id):
             body = (f"<p>Hi {escape(session.visitor_name or 'there')},</p>"
                     f"{linebreaks(escape(text))}"
                     f"<p>You can reply in the chat on <a href='https://mkhmd.uk/'>mkhmd.uk</a>.</p>"
-                    f"<p>— Abdurakhmon</p>")
-            mail = EmailMultiAlternatives('Reply from Abdurakhmon (mkhmd.uk)', text,
+                    f"<p>— Abdurohman</p>")
+            mail = EmailMultiAlternatives('Reply from Abdurohman (mkhmd.uk)', text,
                                           settings.DEFAULT_FROM_EMAIL, [session.visitor_email])
             mail.attach_alternative(body, 'text/html')
             mail.send()

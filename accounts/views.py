@@ -283,7 +283,7 @@ def notifications_page(request):
     unread_ids = [n.id for n in items if not n.is_read]
     response = render(request, 'accounts/notifications.html', {
         'title': 'Notifications',
-        'name': 'Abdurakhmon',
+        'name': 'Abdurohman',
         'items': items,
         'unread_ids': unread_ids,
     })

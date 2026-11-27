@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block page_title %}{{ name|default:"Abdurakhmon" }}{% if title %} - {{ title }}{% endif %}{% endblock %}</title>
-    {% with desc="Abdurakhmon is a software developer and web-scraping engineer building automation tools, data extraction pipelines and web apps with Python and Django." %}
+    <title>{% block page_title %}{{ name|default:"Abdurohman" }}{% if title %} - {{ title }}{% endif %}{% endblock %}</title>
+    {% with desc="Abdurohman is a software engineer specialising in web scraping and automation, building automation tools, data extraction pipelines and web apps with Python and Django." %}
     <meta name="description" content="{% block meta_description %}{{ desc }}{% endblock %}">
     <meta name="theme-color" content="#000000">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Abdurakhmon">
-    <meta property="og:title" content="{{ name|default:'Abdurakhmon' }}{% if title %} - {{ title }}{% endif %}">
+    <meta property="og:site_name" content="Abdurohman">
+    <meta property="og:title" content="{{ name|default:'Abdurohman' }}{% if title %} - {{ title }}{% endif %}">
     <meta property="og:description" content="{{ desc }}">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:image" content="https://avatars.githubusercontent.com/u/115652500?v=4">
@@ -701,7 +701,7 @@
 
     <nav class="navbar">
         <div class="nav-container">
-            <a href="{% url 'website:home' %}" class="logo">&lt;{{ name|default:"Abdurakhmon"|lower }}/&gt;</a>
+            <a href="{% url 'website:home' %}" class="logo">&lt;{{ name|default:"Abdurohman"|lower }}/&gt;</a>
             <ul class="nav-links" id="nav-links">
                 <li><a href="{% url 'website:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
                 <li><a href="{% url 'website:portfolio' %}" {% if request.resolver_match.url_name in 'portfolio,achievements,blog' %}class="active"{% endif %}>Portfolio</a></li>
@@ -753,8 +753,8 @@
     <footer>
         <div class="footer-inner">
             <div class="footer-brand">
-                <a href="{% url 'website:home' %}" class="logo">&lt;abdurakhmon/&gt;</a>
-                <p>Software developer &amp; web-scraping engineer</p>
+                <a href="{% url 'website:home' %}" class="logo">&lt;abdurohman/&gt;</a>
+                <p>Software engineer &amp; web-scraping specialist</p>
             </div>
             <nav class="footer-links" aria-label="Footer">
                 <a href="{% url 'website:home' %}">Home</a>
@@ -769,7 +769,7 @@
                 <a href="mailto:abdurakhmon@mkhmd.uk" aria-label="Email"><i class="fas fa-envelope"></i></a>
             </div>
         </div>
-        <p class="footer-copy">&copy; {% now "Y" %} Abdurakhmon. Crafted with precision and passion.</p>
+        <p class="footer-copy">&copy; {% now "Y" %} Abdurohman. Crafted with precision and passion.</p>
     </footer>
 
     <script>

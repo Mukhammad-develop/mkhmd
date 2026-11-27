@@ -23,7 +23,7 @@ def _send_email(user, title, message, link):
 <table role="presentation" width="100%" style="padding:32px 0;"><tr><td align="center">
 <table role="presentation" width="560" style="max-width:100%;background:#fff;border-radius:14px;overflow:hidden;">
 <tr><td style="background:linear-gradient(135deg,#7c3aed,#5b21b6);padding:28px 32px;color:#fff;">
-<div style="font-family:monospace;font-size:14px;opacity:.85;">&lt;abdurakhmon/&gt;</div>
+<div style="font-family:monospace;font-size:14px;opacity:.85;">&lt;abdurohman/&gt;</div>
 <h1 style="margin:8px 0 0;font-size:22px;">{escape(title)}</h1></td></tr>
 <tr><td style="padding:28px 32px;color:#1f2937;font-size:15px;line-height:1.6;">{linebreaks(escape(message))}
 <p style="margin:28px 0 0;"><a href="{escape(url)}" style="background:#7c3aed;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:600;display:inline-block;">Open mkhmd.uk</a></p>

@@ -345,7 +345,7 @@
             <div class="empty-state">
                 <i class="fas fa-user-tie"></i>
                 <h2>Start a Conversation</h2>
-                <p>Send a message to Abdurakhmon and get personalized support</p>
+                <p>Send a message to Abdurohman and get personalized support</p>
             </div>
         </div>
 
@@ -411,7 +411,7 @@
                     <div class="empty-state">
                         <i class="fas fa-user-tie"></i>
                         <h2>Start a Conversation</h2>
-                        <p>Send a message to Abdurakhmon</p>
+                        <p>Send a message to Abdurohman</p>
                     </div>
                 `;
                 document.getElementById('chatInput').value = '';
@@ -553,8 +553,8 @@
                               : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
         const icon = type === 'user' ? 'fa-user' : 'fa-user-tie';
-        // Use provided senderName, or default to "You" for user messages and "Abdurakhmon" for admin
-        const sender = senderName || (type === 'user' ? 'You' : 'Abdurakhmon');
+        // Use provided senderName, or default to "You" for user messages and "Abdurohman" for admin
+        const sender = senderName || (type === 'user' ? 'You' : 'Abdurohman');
         
         messageDiv.innerHTML = `
             <div class="message-avatar"><i class="fas ${icon}"></i></div>

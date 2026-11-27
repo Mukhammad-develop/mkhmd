@@ -27,7 +27,7 @@
 {% block content %}
 <div class="notif-page">
     <h1>Notifications</h1>
-    <p class="lead">Updates and messages from Abdurakhmon.</p>
+    <p class="lead">Updates and messages from Abdurohman.</p>
 
     {% for n in items %}
         {% if n.link %}<a href="{{ n.link }}" class="notif-item {{ n.level }} {% if n.id in unread_ids %}unread{% endif %}">{% else %}<div class="notif-item {{ n.level }} {% if n.id in unread_ids %}unread{% endif %}">{% endif %}
