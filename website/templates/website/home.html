@@ -382,6 +382,8 @@
             <a href="#contact" class="btn btn-secondary"><i class="fas fa-envelope"></i> Get In Touch</a>
         </div>
         <div class="hero-facts">
+            <span class="hero-fact"><i class="fas fa-location-dot"></i> {{ location }}</span>
+            {% if years_experience %}<span class="hero-fact"><i class="fas fa-briefcase"></i> {{ years_experience }}+ years experience</span>{% endif %}
             <span class="hero-fact"><i class="fas fa-code"></i> Python &middot; Django &middot; Automation</span>
             {% if github_stats.public_repos %}
             <span class="hero-fact"><i class="fab fa-github"></i> {{ github_stats.public_repos }} public repositories</span>
@@ -406,9 +408,9 @@
     </div>
     <div class="about-grid">
         <div class="about-text">
-            <p>I'm a software engineer who loves turning repetitive work into reliable automation. Most of my work is in Python: web scrapers that collect and clean data, Telegram bots, trading and workflow automation, and web apps built with Django.</p>
+            <p>I'm a London-based software engineer with {{ years_experience|default:"several" }}+ years of Python experience, most recently as a Senior Python Software Engineer. I build back-end systems and APIs with Django and Django REST Framework, work with PostgreSQL, MySQL and MongoDB, and turn repetitive work into reliable automation: web scrapers, Telegram bots and workflow tools.</p>
             <p>I care about tools that keep running without babysitting: clear code, sensible error handling, and data you can actually trust.</p>
-            <p>Have a project in mind? <a href="#contact" style="color: var(--light-purple);">Get in touch</a> or <a href="{% url 'website:schedule' %}" style="color: var(--light-purple);">book a call</a>.</p>
+            <p><a href="{% url 'website:portfolio' %}" style="color: var(--light-purple);">See my experience</a> · Have a project in mind? <a href="#contact" style="color: var(--light-purple);">Get in touch</a> or <a href="{% url 'website:schedule' %}" style="color: var(--light-purple);">book a call</a>.</p>
         </div>
         <div class="skills-grid">
             {% for skill in skills %}

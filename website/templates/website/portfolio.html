@@ -346,22 +346,72 @@
     /* Portfolio overrides */
     @media (max-width: 480px) {
         .portfolio-stats { grid-template-columns: repeat(2, 1fr) !important; }
-        .filter-tabs { flex-direction: row !important; flex-wrap: wrap; max-width: none !important; justify-content: center; }
-        .filter-tab { width: auto !important; padding: 0.5rem 1rem !important; font-size: 0.8rem !important; }
     }
-    .stat-hint { font-size: 0.75rem; color: var(--text-gray); margin-top: 0.25rem; }
-    .db-project .project-content { padding: 1.5rem; }
-    .db-project .project-image { font-size: 2rem; color: var(--primary-purple); padding: 1.5rem 1.5rem 0; }
-    .portfolio-empty { text-align: center; color: var(--text-gray); padding: 3rem 1rem; }
+    .pf-section { margin: 0 0 4rem; }
+    .pf-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
+    .pf-heading h2 { font-size: 1.6rem; font-weight: 300; letter-spacing: -0.5px; display: flex; align-items: center; gap: .75rem; }
+    .pf-heading h2 i { color: var(--primary-purple); font-size: 1.2rem; }
+    .pf-link { color: var(--light-purple); text-decoration: none; font-size: .9rem; display: inline-flex; gap: .4rem; align-items: center; }
+    .pf-link:hover { text-decoration: underline; }
+
+    /* Experience timeline */
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(var(--primary-purple), rgba(139, 92, 246, .1)); }
+    .tl-item { position: relative; margin-bottom: 1.25rem; }
+    .tl-item::before { content: ''; position: absolute; left: -2rem; top: 1.6rem; width: 16px; height: 16px; border-radius: 50%; background: #000; border: 3px solid var(--primary-purple); box-sizing: border-box; }
+    .tl-item.current::before { background: var(--primary-purple); box-shadow: 0 0 0 6px rgba(139, 92, 246, .2); }
+    .tl-card { padding: 1.5rem 1.75rem; }
+    .tl-top { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+    .tl-role { font-size: 1.15rem; font-weight: 600; }
+    .tl-company { color: var(--light-purple); font-weight: 500; margin-top: .15rem; }
+    .tl-company a { color: inherit; text-decoration: none; }
+    .tl-when { text-align: right; font-size: .85rem; color: var(--text-gray); white-space: nowrap; }
+    .tl-when b { display: block; color: #d4d4d8; font-weight: 500; }
+    .tl-loc { font-size: .85rem; color: var(--text-gray); margin-top: .35rem; }
+    .tl-points { margin: 1rem 0 0; padding-left: 1.1rem; color: #d4d4d8; font-size: .95rem; }
+    .tl-points li { margin-bottom: .35rem; }
+    .tl-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; }
+    .tl-tag { font-size: .75rem; padding: .25rem .6rem; border-radius: 6px; background: rgba(139, 92, 246, .1); color: var(--light-purple); }
+    .now-badge { display: inline-block; font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px; background: rgba(34, 197, 94, .15); color: #4ade80; margin-left: .5rem; vertical-align: middle; }
+
+    /* Education + skills */
+    .pf-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 2rem; }
+    .edu-card { padding: 1.5rem 1.75rem; margin-bottom: 1rem; display: flex; gap: 1rem; }
+    .edu-icon { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(139, 92, 246, .15); color: var(--light-purple); font-size: 1.1rem; }
+    .edu-school { font-weight: 600; }
+    .edu-degree { color: #d4d4d8; font-size: .95rem; margin-top: .2rem; }
+    .edu-when { color: var(--text-gray); font-size: .85rem; margin-top: .35rem; }
+    .skill-group { margin-bottom: 1.25rem; }
+    .skill-group h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-gray); font-weight: 600; margin-bottom: .6rem; }
+    .skill-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .skill-chip { padding: .45rem .85rem; border-radius: 999px; border: 1px solid var(--border-gray); background: var(--soft-black); font-size: .85rem; transition: border-color .2s, color .2s; }
+    .skill-chip:hover { border-color: var(--primary-purple); color: var(--light-purple); }
+
+    @media (max-width: 860px) { .pf-two { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 560px) {
+        .timeline { padding-left: 1.5rem; }
+        .tl-item::before { left: -1.5rem; }
+        .timeline::before { left: 5px; }
+        .tl-card, .edu-card { padding: 1.25rem; }
+        .tl-when { text-align: left; }
+    }
 </style>
 <div class="section">
     <div class="section-header">
         <h1 class="section-title">Portfolio</h1>
-        <p class="section-subtitle">Things I've built: automation tools, scrapers, bots and web apps. Every card links to the real code.</p>
+        <p class="section-subtitle">{{ years_experience|default:"Several" }}+ years building back-end systems, automation and web scrapers with Python. Here's where I've worked and what I've built.</p>
     </div>
 
-    <!-- Real stats, pulled from GitHub -->
+    <!-- Real numbers -->
     <div class="portfolio-stats">
+        <div class="stat-card">
+            <div class="stat-number">{% if years_experience %}{{ years_experience }}+{% else %}&mdash;{% endif %}</div>
+            <div class="stat-label">Years of Experience</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ companies }}</div>
+            <div class="stat-label">Companies</div>
+        </div>
         <div class="stat-card">
             <div class="stat-number">{{ stats.public_repos }}</div>
             <div class="stat-label">Public Repositories</div>
@@ -370,18 +420,79 @@
             <div class="stat-number">{{ stats.language_count }}</div>
             <div class="stat-label">Languages Used</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ stats.total_stars }}</div>
-            <div class="stat-label">GitHub Stars</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{% if stats.years %}{{ stats.years }}+{% else %}&mdash;{% endif %}</div>
-            <div class="stat-label">Years on GitHub</div>
-        </div>
     </div>
 
+    {% if experience %}
+    <section class="pf-section">
+        <div class="pf-heading">
+            <h2><i class="fas fa-briefcase"></i> Experience</h2>
+            <a class="pf-link" href="https://linkedin.com/in/abdurakhmon-dev" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i> Full profile on LinkedIn</a>
+        </div>
+        <div class="timeline">
+            {% for job in experience %}
+            <div class="tl-item {% if job.is_current %}current{% endif %}">
+                <div class="card tl-card">
+                    <div class="tl-top">
+                        <div>
+                            <div class="tl-role">{{ job.role }}{% if job.is_current %}<span class="now-badge">Now</span>{% endif %}</div>
+                            <div class="tl-company">{% if job.company_url %}<a href="{{ job.company_url }}" target="_blank" rel="noopener noreferrer">{{ job.company }}</a>{% else %}{{ job.company }}{% endif %}</div>
+                            {% if job.location %}<div class="tl-loc"><i class="fas fa-location-dot"></i> {{ job.location }}</div>{% endif %}
+                        </div>
+                        <div class="tl-when">
+                            <b>{{ job.start_date|date:"M Y" }} – {% if job.end_date %}{{ job.end_date|date:"M Y" }}{% else %}Present{% endif %}</b>
+                            {{ job.duration }}
+                        </div>
+                    </div>
+                    {% if job.get_points %}
+                    <ul class="tl-points">{% for point in job.get_points %}<li>{{ point }}</li>{% endfor %}</ul>
+                    {% endif %}
+                    {% if job.get_technologies_list %}
+                    <div class="tl-tags">{% for tech in job.get_technologies_list %}<span class="tl-tag">{{ tech }}</span>{% endfor %}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if education or skill_groups %}
+    <section class="pf-section pf-two">
+        {% if education %}
+        <div>
+            <div class="pf-heading"><h2><i class="fas fa-graduation-cap"></i> Education</h2></div>
+            {% for edu in education %}
+            <div class="card edu-card">
+                <div class="edu-icon"><i class="fas fa-building-columns"></i></div>
+                <div>
+                    <div class="edu-school">{{ edu.school }}</div>
+                    <div class="edu-degree">{{ edu.degree }}{% if edu.degree and edu.field %}, {% endif %}{{ edu.field }}</div>
+                    <div class="edu-when">
+                        {% if edu.start_date %}{{ edu.start_date|date:"M Y" }} – {% endif %}{% if edu.end_date %}{{ edu.end_date|date:"M Y" }}{% endif %}
+                        {% if edu.in_progress %}<span class="now-badge">In progress</span>{% endif %}
+                    </div>
+                    {% if edu.description %}<p style="color:#d4d4d8;font-size:.9rem;margin-top:.5rem;">{{ edu.description }}</p>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if skill_groups %}
+        <div>
+            <div class="pf-heading"><h2><i class="fas fa-layer-group"></i> Skills</h2></div>
+            {% for group, names in skill_groups %}
+            <div class="skill-group">
+                <h3>{{ group }}</h3>
+                <div class="skill-chips">{% for n in names %}<span class="skill-chip">{{ n }}</span>{% endfor %}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
     {% if all_projects %}
-    <h2 class="section-title" style="font-size: 1.6rem; text-align: left; margin: 1rem 0 1.5rem;">Highlighted Work</h2>
+    <div class="pf-heading"><h2><i class="fas fa-rocket"></i> Highlighted Work</h2><a class="pf-link" href="{% url 'website:projects' %}">All projects &rarr;</a></div>
     <div class="repo-grid" style="margin-bottom: 3rem;">
         {% for project in all_projects %}
         <div class="card">
@@ -406,26 +517,4 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-    // Filter repositories by language
-    (function () {
-        const tabs = document.querySelectorAll('.filter-tab');
-        const cards = document.querySelectorAll('#repoGrid .repo-card');
-        const empty = document.getElementById('noMatches');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const filter = tab.dataset.filter;
-                tabs.forEach(t => t.classList.toggle('active', t === tab));
-                let shown = 0;
-                cards.forEach(card => {
-                    const match = filter === 'all' || card.dataset.language === filter;
-                    card.style.display = match ? '' : 'none';
-                    if (match) shown++;
-                });
-                if (empty) empty.hidden = shown !== 0;
-            });
-        });
-    })();
-</script>
-{% endblock %}
+{% block extra_js %}{% endblock %}

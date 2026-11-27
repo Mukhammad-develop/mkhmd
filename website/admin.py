@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.utils import timezone
 from django.db import models
-from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage, AIChat, AIChatMessage, GitHubRepo
+from .models import Project, TimeSlot, Booking, ChatSession, ChatMessage, AIChat, AIChatMessage, GitHubRepo, Experience, Education, Skill
 
 
 @admin.register(Project)
@@ -576,3 +576,45 @@ class GitHubRepoAdmin(FriendlyAdminMixin, admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+@admin.register(Experience)
+class ExperienceAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    list_display = ('role', 'company', 'start_date', 'end_date', 'visible', 'order')
+    list_editable = ('visible', 'order')
+    list_display_links = ('role',)
+    fieldsets = (
+        ('The job', {
+            'description': 'Shown in the Experience timeline on the Portfolio page, newest first.',
+            'fields': ('role', 'company', 'company_url', 'location'),
+        }),
+        ('Dates', {
+            'description': 'Pick any day in the month. Leave "End date" empty if you still work there. It will show "Present" and a "Now" badge.',
+            'fields': ('start_date', 'end_date'),
+        }),
+        ('What you did', {
+            'description': 'Write one achievement per line; each line becomes a bullet point. Technologies are comma-separated.',
+            'fields': ('description', 'technologies'),
+        }),
+        ('Display', {'fields': ('visible', 'order')}),
+    )
+
+
+@admin.register(Education)
+class EducationAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    list_display = ('school', 'degree', 'field', 'start_date', 'end_date', 'visible')
+    list_editable = ('visible',)
+    fieldsets = (
+        (None, {
+            'description': 'Shown under Education on the Portfolio page. An end date in the future shows an "In progress" badge.',
+            'fields': ('school', 'degree', 'field', 'location', 'start_date', 'end_date', 'description', 'visible', 'order'),
+        }),
+    )
+
+
+@admin.register(Skill)
+class SkillAdmin(FriendlyAdminMixin, admin.ModelAdmin):
+    list_display = ('name', 'category', 'visible', 'order')
+    list_editable = ('category', 'visible', 'order')
+    list_filter = ('category',)
+    search_fields = ('name',)

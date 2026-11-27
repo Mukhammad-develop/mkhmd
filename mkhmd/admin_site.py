@@ -25,6 +25,16 @@ ADMIN_SECTIONS = [
         ],
     },
     {
+        'title': 'Portfolio',
+        'icon': 'briefcase',
+        'description': 'Your CV on the Portfolio page.',
+        'models': [
+            ('website', 'Experience', 'Experience', 'Jobs in your timeline: role, company, dates and what you did.'),
+            ('website', 'Education', 'Education', 'Degrees and schools.'),
+            ('website', 'Skill', 'Skills', 'Skill tags, grouped by category.'),
+        ],
+    },
+    {
         'title': 'Meetings',
         'icon': 'calendar',
         'description': 'Meeting requests from the Schedule page.',
@@ -74,7 +84,8 @@ ADMIN_SECTIONS = [
 
 
 MODEL_ICONS = {
-    'Project': 'folder', 'GitHubRepo': 'github', 'TimeSlot': 'clock', 'Booking': 'calendar',
+    'Project': 'folder', 'GitHubRepo': 'github',
+    'Experience': 'briefcase', 'Education': 'cap', 'Skill': 'tag', 'TimeSlot': 'clock', 'Booking': 'calendar',
     'ChatSession': 'chat', 'AIChat': 'sparkle', 'User': 'users', 'UserProfile': 'user',
     'Notification': 'bell', 'TurnitinSubmission': 'file',
 }

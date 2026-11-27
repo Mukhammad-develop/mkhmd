@@ -359,3 +359,95 @@ class GitHubDisplaySettings(models.Model):
 
     def __str__(self):
         return 'GitHub display settings'
+
+
+class Experience(models.Model):
+    """A job shown in the Experience timeline on the Portfolio page."""
+
+    company = models.CharField(max_length=200)
+    role = models.CharField(max_length=200, help_text="Job title, e.g. Senior Python Software Engineer")
+    location = models.CharField(max_length=200, blank=True, help_text="e.g. London, UK or Remote")
+    company_url = models.URLField(blank=True)
+    start_date = models.DateField(help_text="Any day in the first month is fine")
+    end_date = models.DateField(null=True, blank=True, help_text="Leave empty if you still work here")
+    description = models.TextField(blank=True, help_text="What you did. One point per line becomes a bullet list.")
+    technologies = models.CharField(max_length=500, blank=True, help_text="Comma-separated, e.g. Python, Django, PostgreSQL")
+    visible = models.BooleanField(default=True, help_text="Show on the website")
+    order = models.IntegerField(default=0, help_text="Lower numbers first. Leave 0 to sort by date (newest first).")
+
+    class Meta:
+        ordering = ['order', '-start_date']
+
+    def __str__(self):
+        return f"{self.role} at {self.company}"
+
+    @property
+    def is_current(self):
+        return self.end_date is None
+
+    @property
+    def duration(self):
+        from datetime import date
+        end = self.end_date or date.today()
+        months = (end.year - self.start_date.year) * 12 + end.month - self.start_date.month + 1
+        years, months = divmod(max(months, 1), 12)
+        parts = []
+        if years:
+            parts.append(f"{years} yr{'s' if years > 1 else ''}")
+        if months:
+            parts.append(f"{months} mo{'s' if months > 1 else ''}")
+        return ' '.join(parts)
+
+    def get_points(self):
+        return [line.strip(' -•\t') for line in self.description.splitlines() if line.strip(' -•\t')]
+
+    def get_technologies_list(self):
+        return [t.strip() for t in self.technologies.split(',') if t.strip()]
+
+
+class Education(models.Model):
+    """A school / degree shown on the Portfolio page."""
+
+    school = models.CharField(max_length=200)
+    degree = models.CharField(max_length=200, blank=True, help_text="e.g. Bachelor's degree")
+    field = models.CharField(max_length=200, blank=True, help_text="e.g. Global Business Management and Marketing")
+    location = models.CharField(max_length=200, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True, help_text="Expected end date is fine")
+    description = models.TextField(blank=True)
+    visible = models.BooleanField(default=True)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', '-start_date']
+        verbose_name_plural = 'Education'
+
+    def __str__(self):
+        return f"{self.degree} – {self.school}" if self.degree else self.school
+
+    @property
+    def in_progress(self):
+        from datetime import date
+        return bool(self.end_date and self.end_date > date.today())
+
+
+class Skill(models.Model):
+    """A skill chip on the Portfolio page."""
+
+    CATEGORY_CHOICES = [
+        ('languages', 'Languages & frameworks'),
+        ('data', 'Databases & data'),
+        ('automation', 'Scraping & automation'),
+        ('tools', 'Tools & practices'),
+    ]
+
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='languages')
+    visible = models.BooleanField(default=True)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['category', 'order', 'name']
+
+    def __str__(self):
+        return self.name

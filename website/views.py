@@ -225,6 +225,30 @@ def parse_turnitin_results(html_content, access_code):
 
 # Create your views here.
 
+def career_summary():
+    """Experience, education and skills for the Portfolio (editable in the admin)."""
+    from datetime import date
+    from .models import Experience, Education, Skill
+    jobs = list(Experience.objects.filter(visible=True))
+    first = min((j.start_date for j in jobs), default=None)
+    years = None
+    if first:
+        today = date.today()
+        years = today.year - first.year - ((today.month, today.day) < (first.month, first.day))
+    skills = {label: [] for _, label in Skill.CATEGORY_CHOICES}
+    labels = dict(Skill.CATEGORY_CHOICES)
+    for skill in Skill.objects.filter(visible=True).order_by('order', 'name'):
+        skills.setdefault(labels.get(skill.category, skill.category), []).append(skill.name)
+    skills = {k: v for k, v in skills.items() if v}
+    return {
+        'experience': jobs,
+        'education': list(Education.objects.filter(visible=True)),
+        'skill_groups': list(skills.items()),
+        'years_experience': years,
+        'companies': len({j.company for j in jobs}),
+    }
+
+
 def home(request):
     """Software Engineer & Web-Scraping Specialist Landing page"""
     
@@ -242,7 +266,10 @@ def home(request):
     github_profile = get_github_profile('mukhammad-develop')
     shown_repos, repo_settings = apply_repo_settings(github_repos)
     
+    career = career_summary()
     context = {
+        'years_experience': career['years_experience'],
+        'location': 'London, UK',
         'title': 'Software Engineer & Web-Scraping Specialist',
         'name': 'Abdurohman',
         'tagline': 'Software Engineer & Web-Scraping Specialist',
@@ -260,11 +287,11 @@ def home(request):
         'skills': [
             {'name': 'Python', 'icon': 'fab fa-python'},
             {'name': 'Django', 'icon': 'fas fa-server'},
+            {'name': 'Django REST Framework', 'icon': 'fas fa-plug'},
+            {'name': 'PostgreSQL', 'icon': 'fas fa-database'},
             {'name': 'Selenium', 'icon': 'fas fa-robot'},
             {'name': 'Web Scraping', 'icon': 'fas fa-spider'},
-            {'name': 'TypeScript', 'icon': 'fab fa-js'},
             {'name': 'Telegram Bots', 'icon': 'fab fa-telegram'},
-            {'name': 'REST APIs', 'icon': 'fas fa-plug'},
             {'name': 'Automation', 'icon': 'fas fa-cogs'},
         ],
     }
@@ -304,6 +331,7 @@ def portfolio(request):
         })
     
     context = {
+        **career_summary(),
         'title': 'Portfolio & Projects',
         'name': 'Abdurohman',
         
