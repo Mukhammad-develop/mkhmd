@@ -273,8 +273,9 @@ def home(request):
         'title': 'Software Engineer',
         'name': 'Abdurohman',
         'tagline': 'Software Engineer',
-        'description': 'Building innovative software solutions and extracting valuable data through advanced web-scraping techniques',
-        'email': 'abdurakhmon@mkhmd.uk',
+        'description': 'Senior back-end Python engineer: Django, REST APIs, PostgreSQL and web scraping',
+        'email': 'me@mkhmd.uk',
+        'phone': '+44 7570 439924',
         'github': 'https://github.com/mukhammad-develop',
         'linkedin': 'https://linkedin.com/in/abdurakhmon-dev',
         
@@ -289,10 +290,12 @@ def home(request):
             {'name': 'Django', 'icon': 'fas fa-server'},
             {'name': 'Django REST Framework', 'icon': 'fas fa-plug'},
             {'name': 'PostgreSQL', 'icon': 'fas fa-database'},
-            {'name': 'Selenium', 'icon': 'fas fa-robot'},
+            {'name': 'REST APIs & OpenAPI', 'icon': 'fas fa-code'},
+            {'name': 'JWT & OAuth2', 'icon': 'fas fa-shield-halved'},
             {'name': 'Web Scraping', 'icon': 'fas fa-spider'},
+            {'name': 'Selenium & Playwright', 'icon': 'fas fa-robot'},
             {'name': 'Telegram Bots', 'icon': 'fab fa-telegram'},
-            {'name': 'Automation', 'icon': 'fas fa-cogs'},
+            {'name': 'Testing & CI', 'icon': 'fas fa-vial'},
         ],
     }
     return render(request, 'website/home.html', context)

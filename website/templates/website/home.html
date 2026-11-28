@@ -294,7 +294,7 @@
 
     .contact-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 1.5rem;
     }
 
@@ -408,8 +408,9 @@
     </div>
     <div class="about-grid">
         <div class="about-text">
-            <p>I'm a London-based software engineer with {{ years_experience|default:"several" }}+ years of Python experience, most recently as a Senior Python Software Engineer. I build back-end systems and APIs with Django and Django REST Framework, work with PostgreSQL, MySQL and MongoDB, and turn repetitive work into reliable automation: web scrapers, Telegram bots and workflow tools.</p>
-            <p>I care about tools that keep running without babysitting: clear code, sensible error handling, and data you can actually trust.</p>
+            <p>I'm a London-based senior back-end Python engineer with {{ years_experience|default:"5" }}+ years of experience designing, scaling and maintaining back-end systems for startups and enterprise platforms. My core stack is Django, Django REST Framework, REST APIs and PostgreSQL, with a focus on clean system architecture.</p>
+            <p>I've led small engineering teams, built internal admin platforms, and delivered secure, production-grade solutions. I also build web scraping and data extraction systems that stay stable against dynamic sites and anti-bot protection.</p>
+            <p>I speak English, Russian and Uzbek.</p>
             <p><a href="{% url 'website:portfolio' %}" style="color: var(--light-purple);">See my experience</a> · Have a project in mind? <a href="#contact" style="color: var(--light-purple);">Get in touch</a> or <a href="{% url 'website:schedule' %}" style="color: var(--light-purple);">book a call</a>.</p>
         </div>
         <div class="skills-grid">
@@ -517,6 +518,12 @@
                 <h3>Email</h3>
                 <span class="contact-value">{{ email }}</span>
                 <span class="contact-cta">Send an email <i class="fas fa-arrow-right"></i></span>
+            </a>
+            <a class="contact-item card" href="tel:{{ phone|cut:' ' }}">
+                <i class="fas fa-phone"></i>
+                <h3>Phone</h3>
+                <span class="contact-value">{{ phone }}</span>
+                <span class="contact-cta">Call me <i class="fas fa-arrow-right"></i></span>
             </a>
             <a class="contact-item card" href="{{ github }}" target="_blank" rel="noopener noreferrer">
                 <i class="fab fa-github"></i>

@@ -439,6 +439,7 @@ class Skill(models.Model):
         ('data', 'Databases & data'),
         ('automation', 'Scraping & automation'),
         ('tools', 'Tools & practices'),
+        ('spoken', 'Spoken languages'),
     ]
 
     name = models.CharField(max_length=100)
